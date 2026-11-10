@@ -3069,7 +3069,7 @@ function pProf(b){
  if(P.lvl<10){b.append(el(`<div class="sect">🔒 Profissões</div><p>Você poderá escolher uma profissão ao alcançar o <b>nível 10</b>. Nível atual: <b>${P.lvl}</b>.</p><p>Você poderá escolher quando quiser após desbloquear.</p>`));return}
  if(P.profession&&PROFESSIONS[P.profession]){
   const q=PROFESSIONS[P.profession];
-  b.append(el(`<div class="sect">${q.icon} ${q.n}</div><p>${q.desc}</p><p><b>Profissão nível ${P.profLv||1}</b> · ${profXpText()}</p><p><b>Local de trabalho:</b> ${q.place} · X: ${q.x}, Y: ${q.y}</p><p style="color:var(--muted)">Receitas exclusivas, habilidades profissionais e mercado compartilhado serão implementados em etapas futuras.</p><button class="gold" id="profGo">🎯 Rastrear minha oficina em Missões</button>`));
+  b.append(el(`<div class="sect">${q.icon} ${q.n}</div><p>${q.desc}</p><p><b>Profissão nível ${P.profLv||1}</b> · ${profXpText()}</p>${professionPerkHtml(P.profession)}<p><b>Local de trabalho:</b> ${q.place} · X: ${q.x}, Y: ${q.y}</p><p style="color:var(--muted)">Receitas exclusivas, habilidades profissionais e mercado compartilhado serão implementados em etapas futuras.</p><button class="gold" id="profGo">🎯 Rastrear minha oficina em Missões</button>`));
   b.querySelector('#profGo').onclick=profGuide;
   const reset=el('<div class="quest"><h4>🔄 Reiniciar profissão</h4><p>Você poderá escolher outra profissão, mas perderá <b>todo o nível, XP e progresso de habilidades profissionais</b>. Seu nível de combate, atributos e equipamentos não serão alterados.</p><button id="profResetStart">Reiniciar profissão</button></div>').firstElementChild;b.append(reset);
   reset.querySelector('#profResetStart').onclick=()=>{profResetStep=1;renderPanel()};
@@ -3478,7 +3478,8 @@ function forgeRecipes(lv,sl){return Object.keys(IT).filter(id=>{
 })}
 
 function forgeCost(lv,base){
- const cat=equipmentCategory(base);return 6+2*Math.ceil(Math.max(0,lv-10)/40)+Math.max(0,(cat?cat.rank:0)-1);
+ const cat=equipmentCategory(base),raw=6+2*Math.ceil(Math.max(0,lv-10)/40)+Math.max(0,(cat?cat.rank:0)-1);
+ return P&&P.profession==='ferreiro'&&typeof professionPerkBonus==='function'?Math.max(2,Math.ceil(raw*(1-professionPerkBonus('ferreiro').save))):raw;
 }
 function forgeModel(base){
  const b=IT[base];if(!b)return null;
@@ -3494,7 +3495,7 @@ function forgeModel(base){
   if(!groups.has(rank))groups.set(rank,{rank,min:v,max:v,outcomes:[],weight:0});
   const group=groups.get(rank),weight=Math.exp(-3*(v-lo)/(hi-lo));group.max=v;group.weight+=weight;group.outcomes.push({mods,value:v,weight});
  }
- const list=[...groups.values()],first=list[0].rank,decay=.4+(skill-1)*.002;
+ const list=[...groups.values()],first=list[0].rank,decay=.4+(skill-1)*.002+(P&&P.profession==='ferreiro'?professionPerkBonus('ferreiro').quality:0);
  let total=0;for(const group of list){group.mass=Math.pow(decay,group.rank-first);total+=group.mass}
  for(const group of list)group.chance=group.mass/total;
  return {base,stat,min:lo,max:hi,groups:list,total,skill};
@@ -7830,18 +7831,18 @@ function workstationMenu(key){
  const w=WORKSHOPS[key],q=PROFESSIONS[key];if(!w||!P)return;
  if(P.lvl<10){say(w.station,'As profissões ficam disponíveis a partir do nível 10.',[['Fechar',closeAll]]);return}
  if(P.profession!==key){say(w.station,'Esta estação pertence à profissão '+q.n+'. Você pode visitar a oficina, mas precisa escolher essa profissão na aba Profissões para trabalhar aqui.',[['Fechar',closeAll]]);return}
- const status=`<b>${w.icon} ${q.n}</b><br>Profissão nível ${(profSync(),P.profLv||1)} · ${profXpText()}<br><small>Oficina: ${w.name}</small>`;
+ const status=`<b>${w.icon} ${q.n}</b><br>Profissão nível ${(profSync(),P.profLv||1)} · ${profXpText()}${professionPerkHtml(key)}<small>Oficina: ${w.name}</small>`;
  if(key==='ferreiro'){
   say(w.station,status+'<br><br><b>Escolha o que deseja fazer:</b><br>⚒️ <b>Forjar:</b> consome minérios iguais, com custo crescente conforme a receita. Ataque ou defesa e categoria final são sorteados; resultados mais fortes são mais raros. Escolha a faixa de nível do equipamento; ela libera conforme o nível do personagem e precisa de um minério compatível.<br><br>💎 <b>Encantar:</b> usa gemas do inventário para melhorar um equipamento que você está vestindo. Cada peça aceita até 3 gemas.<br><br>🧰 <b>Desmontar:</b> no futuro, permitirá recuperar materiais de equipamentos.<br><br>✨ <b>Armas exclusivas:</b> receitas especiais de Ferreiro, ainda em desenvolvimento.',[
    ['⚒️ Forjar armas e armaduras — ver custos e chances',()=>forgeDlg(()=>workstationMenu(key))],
    ['💎 Aplicar gemas em equipamento — até 3',()=>enchantDlg(()=>workstationMenu(key))],
-   ['🧰 Desmontagem profissional (em desenvolvimento)',()=>workstationComing(key,'Desmontagem')],
+   ['🧰 Desmontar equipamentos',()=>dismantleDlg(()=>workstationMenu(key))],
    ['✨ Armas exclusivas da profissão (em desenvolvimento)',()=>workstationComing(key,'Armas exclusivas')],
    ['Sair',closeAll]]);
  }else if(key==='alquimista'){
   say(w.station,status+'<br><br>Prepare poções e elixires com materiais obtidos na aventura.',[
    ['🧪 Preparar poções e elixires',()=>professionCraftMenu('alquimista')],
-   ['🌿 Receitas exclusivas (em desenvolvimento)',()=>workstationComing(key,'Receitas exclusivas')],
+   ['🌿 Receitas exclusivas',()=>productionLevelMenu('alquimista','exclusive')],
    ['Sair',closeAll]]);
  }else if(key==='explosion'){
   professionCraftMenu('explosion');
@@ -8023,13 +8024,21 @@ const PROF_RECIPES={
   {key:'furia',name:'Elixir de Ataque',kind:'atk',mats:['presa_orc','ferrao']},
   {key:'pele',name:'Elixir de Defesa',kind:'def',mats:['couro','pele_lobo']},
   {key:'sabedoria',name:'Elixir de Experiência',kind:'xp',mats:['orelha_goblin','chifre']},
-  {key:'sorte',name:'Elixir da Sorte',kind:'drop',mats:['mel','seda']}
+  {key:'sorte',name:'Elixir da Sorte',kind:'drop',mats:['mel','seda']},
+  {key:'antichamas',name:'Elixir Antichamas',kind:'res_fogo',mats:['ferrao','escama_fogo'],exclusive:1,minLv:50},
+  {key:'degelo',name:'Elixir do Degelo',kind:'res_gelo',mats:['pelo_gelo','cristal_gelo'],exclusive:1,minLv:50},
+  {key:'isolante',name:'Elixir Isolante',kind:'res_raio',mats:['perola_negra','nucleo_magma'],exclusive:1,minLv:80},
+  {key:'abissal',name:'Elixir Abissal',kind:'abissal',mats:['casco_coral','perola_negra'],exclusive:1,minLv:80}
  ],
  explosion:[
   {key:'explosiva',name:'Bomba Explosiva',kind:'blast',mats:['osso']},
   {key:'incendiaria',name:'Bomba Incendiária',kind:'fire',mats:['ferrao']},
   {key:'congelante',name:'Bomba Congelante',kind:'ice',mats:['seda']},
-  {key:'venenosa',name:'Bomba Venenosa',kind:'poison',mats:['gosma']}
+  {key:'venenosa',name:'Bomba Venenosa',kind:'poison',mats:['gosma']},
+  {key:'mina',name:'Mina Terrestre',kind:'mina',mats:['osso'],device:1},
+  {key:'torre',name:'Torre de Faíscas',kind:'torre',mats:['asa_morcego'],device:1},
+  {key:'barreira',name:'Barreira de Ferro',kind:'barreira',mats:['couro'],device:1},
+  {key:'detonador',name:'Detonador Remoto',kind:'detonador',mats:['presa_orc'],detonator:1}
  ]
 };
 PROFN.bombas='Fabricação de Bombas';PROFN.montaria='Criação de Montarias';
@@ -8053,7 +8062,7 @@ function professionMigrateItems(){
  bagKey='';return moved;
 }
 function professionMaterials(key,recipe,lv){
- const cost=6+2*Math.ceil(Math.max(0,lv-10)/40),ore=lv<=30?'minerio_ferro':lv<=70?'minerio_prata':lv<=120?'minerio_ouro':'minerio_mithril';
+ const cost=Math.max(2,Math.ceil((6+2*Math.ceil(Math.max(0,lv-10)/40))*(1-(P&&P.profession===key?professionPerkBonus(key).save:0)))),ore=lv<=30?'minerio_ferro':lv<=70?'minerio_prata':lv<=120?'minerio_ouro':'minerio_mithril';
  return key==='explosion'?[[ore,cost],[recipe.mats[0],Math.ceil(cost/2)]]:[[recipe.mats[0],Math.ceil(cost*.6)],[recipe.mats[1],Math.ceil(cost*.4)]];
 }
 const PROF_RANK_T=[0,20,40,65,100,140,180,230,280,350,500];
@@ -8064,15 +8073,29 @@ function professionModel(key,lv){
   group.max=v;group.weight+=weight;group.outcomes.push({value:v,mods:{strength:v},weight});
  }
  const list=[...groups.values()],first=list[0].rank;let total=0;
- for(const g of list){g.mass=Math.pow(.4+Math.min(49,skill-1)*.002,g.rank-first);total+=g.mass}
+ const perk=P&&P.profession===key?professionPerkBonus(key).quality:0;
+ for(const g of list){g.mass=Math.pow(.4+Math.min(49,skill-1)*.002+perk,g.rank-first);total+=g.mass}
  for(const g of list)g.chance=g.mass/total;return{groups:list,skill,min:lo,max:hi,stat:'strength'};
 }
 function professionEffect(key,recipe,lv,strength){
  const min=2+Math.floor(lv/150);
+ if(key==='explosion'&&(recipe.device||recipe.detonator)){
+  const base=Math.round(40+8*strength);
+  if(recipe.kind==='mina'){const damage=Math.round(base*1.2);return{use:{},device:{kind:'mina',damage,radius:1,dur:90},text:'Instala uma mina no seu quadrado. Explode quando um monstro chega perto: '+damage+' de dano em raio 1. Dura 90 s.'}}
+  if(recipe.kind==='torre'){const damage=Math.round(base*.15);return{use:{},device:{kind:'torre',damage,radius:5,dur:30},text:'Instala uma torre que atira sozinha no monstro mais próximo (até 5 quadrados): '+damage+' de dano a cada 1,5 s por 30 s.'}}
+  if(recipe.kind==='barreira')return{use:{},device:{kind:'barreira',damage:Math.round(base*.6),radius:1,dur:15},text:'Ergue uma barreira de 3 quadrados à sua frente que os monstros não atravessam. Dura 15 s.'};
+  const damage=Math.round(base*.8);return{use:{},detonator:{damage},text:'Explode todos os seus dispositivos de uma vez: cada um causa '+damage+' de dano em raio 2 (minas causam o dobro).'};
+ }
  if(key==='explosion'){
   const damage=Math.round(40+8*strength),radius=lv>=200?3:lv>=50?2:1;
   const extra=recipe.kind==='fire'?' + queimadura por 4 s':recipe.kind==='poison'?' + veneno por 8 s':recipe.kind==='ice'?' + atordoamento por até 2 s (chefes: até 1 s)':'';
   return{use:{},bomb:{kind:recipe.kind,damage,radius},text:'Dano base '+damage+' em raio '+radius+extra+'. Selecione um monstro a até 6 quadrados e use a bomba. Intervalo de 3 s entre bombas.'};
+ }
+ if(recipe.exclusive){
+  const mins=10+2*Math.floor(lv/100);
+  if(recipe.kind==='abissal'){const v=Math.min(30,10+Math.floor(strength/20));return{use:{buff:'abissal',v,min:mins,alq2:1},text:'Por '+mins+' minutos, o Agarrão do Kraken dura metade do tempo para você. Se estiver mergulhando, a Concha ganha +'+v+' minutos.'}}
+  const el=recipe.kind.slice(4),v=Math.round(Math.min(.35,.08+strength*.0006)*100)/100;
+  return{use:{buff:recipe.kind,v,min:mins,alq2:1},text:'-'+Math.round(v*100)+'% de dano de '+({fogo:'fogo',gelo:'gelo',raio:'raio'}[el])+' por '+mins+' minutos. Substitui o efeito anterior do mesmo elixir.'};
  }
  if(recipe.kind==='hp'||recipe.kind==='mp'){
   const value=Math.round(50+10*strength);return{use:{[recipe.kind]:value},text:'Recupera '+value+' de '+(recipe.kind==='hp'?'vida':'mana')+'. Intervalo de 2 s entre poções.'};
@@ -8082,6 +8105,7 @@ function professionEffect(key,recipe,lv,strength){
 }
 function professionCraftBlock(key,recipe,lv){
  if(!P||P.profession!==key)return 'Escolha esta profissão na aba Profissões.';
+ if(recipe.minLv&&lv<recipe.minLv)return 'Receita disponível a partir do nível '+recipe.minLv+'.';
  if(!FORGE_LEVELS.includes(lv)||P.lvl<lv)return 'Requer personagem nível '+lv+'.';
  if(P.map!==WORKSHOPS[key].map&&!amz63ProfessionNear(key))return 'Use a estação da sua oficina para fabricar.';
  if(!PROF_RECIPES[key].includes(recipe))return 'Receita inválida.';
@@ -8099,7 +8123,7 @@ function professionItem(key,recipe,lv,rank,strength){
  const id='pc_'+key+'_'+recipe.key+'_'+lv+'_'+rank+'_'+strength;
  if(IT[id])return{id,created:false};
  const cat=EQUIP_CATEGORIES[rank],effect=professionEffect(key,recipe,lv,strength),base=key==='explosion'?'minerio_ferro':'pocao_vida';
- const def=Object.assign({},IT[base],{n:recipe.name+' N'+lv+' ('+cat[1]+')',lv,use:effect.use,bomb:effect.bomb,loot:false,slot:null,ic:key==='explosion'?'loot':'potion',c:cat[2],price:Math.round(lv*strength),profCraft:{key,kind:recipe.kind,rank,strength},craftMaterials:professionMaterials(key,recipe,lv),craftDesc:effect.text},{custom:1,base});
+ const def=Object.assign({},IT[base],{n:recipe.name+' N'+lv+' ('+cat[1]+')',lv,use:effect.use,bomb:effect.bomb,device:effect.device,detonator:effect.detonator,loot:false,slot:null,ic:key==='explosion'?'loot':'potion',c:cat[2],price:Math.round(lv*strength),profCraft:{key,kind:recipe.kind,rank,strength},craftMaterials:professionMaterials(key,recipe,lv),craftDesc:effect.text},{custom:1,base});
  delete def.legendary;IT[id]=def;P.cust=P.cust||{};P.cust[id]=def;return{id,created:true};
 }
 function professionCraft(key,recipe,lv){
@@ -8111,8 +8135,8 @@ function professionCraft(key,recipe,lv){
  save(true);toast(itemIcon(id),'Produzido: '+IT[id].n);return id;
 }
 const PRODUCTION_GROUPS={
- alquimista:[{id:'potions',name:'Poções',icon:'🧪',accept:r=>r.kind==='hp'||r.kind==='mp'},{id:'elixirs',name:'Elixires',icon:'⚗️',accept:r=>r.kind!=='hp'&&r.kind!=='mp'}],
- explosion:[{id:'bombs',name:'Bombas',icon:'💣',accept:()=>true},{id:'devices',name:'Dispositivos',icon:'💥',accept:()=>false},{id:'detonators',name:'Detonadores',icon:'🎛️',accept:()=>false}]
+ alquimista:[{id:'potions',name:'Poções',icon:'🧪',accept:r=>r.kind==='hp'||r.kind==='mp'},{id:'elixirs',name:'Elixires',icon:'⚗️',accept:r=>r.kind!=='hp'&&r.kind!=='mp'&&!r.exclusive},{id:'exclusive',name:'Receitas exclusivas',icon:'🌿',accept:r=>!!r.exclusive}],
+ explosion:[{id:'bombs',name:'Bombas',icon:'💣',accept:r=>!r.device&&!r.detonator},{id:'devices',name:'Dispositivos',icon:'💥',accept:r=>!!r.device},{id:'detonators',name:'Detonadores',icon:'🎛️',accept:r=>!!r.detonator}]
 };
 function productionLevelMenu(key,groupId){
  const group=PRODUCTION_GROUPS[key].find(g=>g.id===groupId),recipes=(PROF_RECIPES[key]||[]).filter(group.accept);
@@ -8130,11 +8154,11 @@ function professionCraftMenu(key,selected,groupId){
  const lv=FORGE_LEVELS.includes(selected)?selected:10;
  if(P.lvl<lv){productionLevelMenu(key,groupId);return}
  say(w.station+' · '+group.name+' · nível '+lv,'Escolha o item abaixo. Confira os materiais e toque em <b>Fabricar</b>. Resultados mais fortes são mais raros.',[['← Escolher outro nível',()=>productionLevelMenu(key,groupId)],['← Tipos de item',()=>professionCraftMenu(key)]]);
- const body=$('#dlgBody'),recipes=(PROF_RECIPES[key]||[]).filter(group.accept);
- if(!recipes.length){body.append(el(`<div class="quest" style="margin:10px 0"><h4>${group.name} · nível ${lv}</h4><p>Em desenvolvimento. Nenhum material será consumido.</p></div>`));return}
+ const body=$('#dlgBody'),all=(PROF_RECIPES[key]||[]).filter(group.accept),recipes=all.filter(r=>!r.minLv||lv>=r.minLv);
+ if(!recipes.length){const need=all.length?Math.min(...all.map(r=>r.minLv||0)):0;body.append(el(`<div class="quest" style="margin:10px 0"><h4>${group.name} · nível ${lv}</h4><p>${need?'Estas receitas começam no nível '+need+'. Escolha uma faixa de nível maior.':'Em desenvolvimento. Nenhum material será consumido.'}</p></div>`));return}
  const model=professionModel(key,lv);
  for(const recipe of recipes){
-  const materials=professionMaterials(key,recipe,lv),reason=professionCraftBlock(key,recipe,lv),low=professionEffect(key,recipe,lv,model.min),high=professionEffect(key,recipe,lv,model.max),icon=key==='explosion'?'💣':'🧪';
+  const materials=professionMaterials(key,recipe,lv),reason=professionCraftBlock(key,recipe,lv),low=professionEffect(key,recipe,lv,model.min),high=professionEffect(key,recipe,lv,model.max),icon=key==='explosion'?(recipe.device?'💥':recipe.detonator?'🎛️':'💣'):'🧪';
   const row=el(`<div class="quest" style="padding:10px;margin:8px 0;border-radius:8px"><div style="display:flex;align-items:center;gap:10px"><span style="font-size:28px">${icon}</span><div><b>${recipe.name}</b><br><small>${group.name} · nível ${lv}</small></div></div><p style="font-size:12px">${esc(low.text)}</p><p style="font-size:12px"><b>Materiais:</b><br>${materials.map(([id,q])=>`${esc(IT[id].n)}: ${countItem(id)} disponíveis / custo ${q}`).join('<br>')}</p><details style="font-size:12px;margin:7px 0"><summary>Ver detalhes e chances</summary><p><b>Resultado máximo:</b> ${esc(high.text)}</p>${model.groups.map(g=>`<div style="color:${EQUIP_CATEGORIES[g.rank][2]}">${EQUIP_CATEGORIES[g.rank][1]}: ${(g.chance*100).toFixed(2)}%</div>`).join('')}<p>A fabricação entrega uma unidade, sem falha. Para usar, coloque o item na bolsa.</p></details><p style="font-size:12px;color:var(--muted)">${reason||'Materiais disponíveis. Pronto para fabricar.'}</p><button ${reason?'disabled':''} class="gold" style="width:100%;min-height:40px">⚒️ Fabricar ${recipe.name}</button></div>`).firstElementChild;
   row.querySelector('button').onclick=()=>{if(professionCraft(key,recipe,lv))professionCraftMenu(key,lv,groupId)};body.append(row);
  }
@@ -11933,7 +11957,7 @@ function tameData(mo){return mo&&MON[mo.type]&&MON[mo.type].tame}
 function tameAsleep(mo){return !!(mo&&!mo.dead&&tameData(mo)&&mo.tameSleep>nowT)}
 function tameChance(mo){
  const d=tameData(mo),lv=prof('montaria').lv,weak=1-mo.hp/Math.max(1,mo.mhp);
- return Math.min(.9,.3+lv*.01+Math.max(0,weak-.7)*.5-Math.max(0,d.prof-lv)*.02);
+ return Math.min(.9,.3+lv*.01+professionPerkBonus('cowboy').tier*.02+Math.max(0,weak-.7)*.5-Math.max(0,d.prof-lv)*.02);
 }
 function useTameDart(){
  const mo=P.target,now=Date.now();
@@ -11989,7 +12013,7 @@ function tameGuideHtml(){
 }
 function cowboyMenu(){
  const w=WORKSHOPS.cowboy;profSync();
- say(w.station,`<b>🐎 Cowboy</b><br>Profissão nível ${P.profLv||1} · ${profXpText()}<br><br><b>Como domar:</b> compre <b>Dardos Tranquilizantes</b> com o Zelador. Atire em um animal domável até ele ficar <b>💤 sonolento</b> (abaixo de 30% da vida) e toque nele para laçar. Chance atual: até <b>${Math.round(Math.min(.9,.3+prof('montaria').lv*.01)*100)}%</b>. Se falhar, ele acorda.<br><br>A sela vai para a bolsa: use para montar ou venda no Grande Mercado.`,[['🏪 Grande Mercado',()=>auctionDlg()],['Sair',closeAll]]);
+ say(w.station,`<b>🐎 Cowboy</b><br>Profissão nível ${P.profLv||1} · ${profXpText()}${professionPerkHtml('cowboy')}<br><b>Como domar:</b> compre <b>Dardos Tranquilizantes</b> com o Zelador. Atire em um animal domável até ele ficar <b>💤 sonolento</b> (abaixo de 30% da vida) e toque nele para laçar. Chance atual: até <b>${Math.round(Math.min(.9,.3+prof('montaria').lv*.01)*100)}%</b>. Se falhar, ele acorda.<br><br>A sela vai para a bolsa: use para montar ou venda no Grande Mercado.`,[['🏪 Grande Mercado',()=>auctionDlg()],['Sair',closeAll]]);
  $('#dlgBody').append(el('<div>'+tameGuideHtml()+'</div>').firstElementChild);
 }
 /* Refúgio do Zelador: casa própria em Vussumi, ao lado do estábulo. */
@@ -12003,5 +12027,142 @@ function cowboyMenu(){
  NEWNPCS.push({id:'zelador_entrada',n:'Entrada: Refúgio do Zelador',map:'over',x:entry[0],y:entry[1],sign:1,wander:false,talk:()=>{teleport({to:map,tx:8,ty:10});toast(null,'🐾 Refúgio do Zelador')}});
  NEWNPCS.push({id:'zelador',n:'Zelador Tobias',map,x:8,y:5,wander:false,pal:{h:'#6a4a2a',c:'#4f7a3e',d:'#3a5a2e',s:'#c8955e'},lines:['Dardos para domar, sem ferir!'],
   talk:()=>shop('Zelador Tobias','Cuido dos animais de Endertell. Meus <b>Dardos Tranquilizantes</b> enfraquecem um animal domável sem matá-lo. Abaixo de 30% de vida ele fica sonolento e um Cowboy consegue laçá-lo.',[TAME_DART],[['🐾 Onde encontrar animais',()=>say('Zelador Tobias','Estes são os animais que aceitam sela:'+tameGuideHtml(),[['Voltar',()=>NPCS.find(n=>n.id==='zelador').talk()],['Até mais',closeAll]])]])});
+}
+</script>
+
+<script>
+/* ===== Profissões v2 ===== */
+'use strict';
+/* --- Ferreiro: Desmontagem ---
+   Devolve 30% a 50% dos minérios de forja (sobe com Ferraria), nunca mais que 40% do valor do item.
+   Chance de gema e, em peças Míticas ou melhores, de Fragmento Lendário. */
+function oreForLevel(lv){return lv<=30?'minerio_ferro':lv<=70?'minerio_prata':lv<=120?'minerio_ouro':'minerio_mithril'}
+function dismantleOk(id){const it=IT[id];return !!(it&&it.slot&&!it.unique&&!it.legendary&&!it.reserved&&!it.tool&&!it.mount&&!isQ(id)&&!isMainQ(id))}
+function dismantleQuote(id){
+ const it=IT[id];if(!dismantleOk(id))return null;
+ const lv=it.lv||1,fr=it.forgeRoll,ore=fr&&FORGE[fr.ore]?fr.ore:oreForLevel(lv),cat=equipmentCategory(id),rank=fr?fr.rank|0:cat?cat.rank:0;
+ let cost=fr&&fr.cost;if(!cost){try{cost=forgeCost(lv,it.base||id)}catch(e){cost=6}}
+ const skill=prof('ferr').lv,pct=.3+.2*Math.min(1,(skill-1)/49)+professionPerkBonus('ferreiro').yield;
+ const cap=Math.floor(economyValue(id)*.4/Math.max(1,IT[ore].price||1));
+ const q=Math.max(0,Math.min(Math.round(cost*pct),cap,cost-1));
+ return{ore,q,rank,lv,gem:Math.min(.25,.04+rank*.02),frag:rank>=3?Math.min(.2,.05+(rank-3)*.03):0,gems:it.gems||0,pct};
+}
+function customUnused(id){if(!IT[id]||!IT[id].custom||!P.cust||!P.cust[id])return false;return !JSON.stringify(Object.assign({},P,{cust:null})).includes('"'+id+'"')}
+function dismantle(id){
+ if(P.profession!=='ferreiro'){toast(null,'Só o Ferreiro pode desmontar equipamentos.');return false}
+ const d=dismantleQuote(id);if(!d||!d.q){toast(null,'Este equipamento não rende minério.');return false}
+ if(Object.values(P.eq||{}).includes(id)){toast(null,'Tire o equipamento antes de desmontar.');return false}
+ if(countItem(id)<1||!removeItem(id,1))return false;
+ const got=[];
+ if(!addItem(d.ore,d.q)){addItem(id,1);return false}got.push(d.q+'× '+IT[d.ore].n);
+ for(let i=0;i<d.gems;i++)if(R()<.5){const g=pick(['gema_rubi','gema_safira','gema_esmeralda']);if(addItem(g))got.push(IT[g].n+' (recuperada)')}
+ if(R()<d.gem){const g=pick(['gema_rubi','gema_safira','gema_esmeralda']);if(addItem(g))got.push(IT[g].n)}
+ if(d.frag&&IT.frag_lendario&&R()<d.frag&&addItem('frag_lendario'))got.push(IT.frag_lendario.n);
+ if(customUnused(id))delete P.cust[id]; // a definição sai do save; em memória fica até fechar o jogo (avisos na tela ainda podem citá-la)
+ profXp('ferr',6+Math.round(d.lv/5));profSync();sfx('loot');
+ toast(itemIcon(d.ore),'Desmontado: '+got.join(', '));log('Desmontagem: '+got.join(', '),'loot');save(true);return true;
+}
+function dismantleDlg(back=closeAll){
+ say('Bigorna · Desmontar','<b>Como funciona:</b> o equipamento é destruído e devolve parte dos minérios usados para forjá-lo. Quanto maior sua Ferraria, mais minério volta (de 30% a 50%). Gemas aplicadas têm 50% de chance de voltar, e peças melhores podem render gemas e Fragmentos Lendários.<br><small>Só aparecem equipamentos da bolsa e da mochila. Toque duas vezes para confirmar.</small>',[['Voltar à bigorna',back]]);
+ const body=$('#dlgBody'),ids=[...new Set(allItems().map(x=>x.e.id))].filter(dismantleOk);
+ if(!ids.length){body.append(el('<p style="color:var(--muted)">Nenhum equipamento na bolsa ou na mochila. Equipamentos vestidos não aparecem aqui.</p>'));return}
+ for(const id of ids){const d=dismantleQuote(id),it=IT[id];if(!d)continue;
+  const info=d.q?`${d.q}× ${IT[d.ore].n}`+(d.gems?` · ${d.gems} gema(s) aplicada(s)`:'')+` · gema ${Math.round(d.gem*100)}%`+(d.frag?` · fragmento ${Math.round(d.frag*100)}%`:''):'Não rende minério';
+  const r=shopItem(id,`<button ${d.q?'':'disabled'}>🧰 Desmontar</button>`,{note:`<small>${info}</small>`});
+  r.querySelector('button').onclick=e=>confirmBuy(e.currentTarget,()=>{dismantle(id);dismantleDlg(back)});body.append(r);
+ }
+}
+/* --- Vantagens por nível de profissão (a cada 10 níveis) --- */
+function professionPerkHtml(key){
+ if(!key||!PROF_SKILL[key])return '';const b=professionPerkBonus(key),lv=prof(PROF_SKILL[key]).lv,next=b.tier<5?(b.tier+1)*10:0;
+ const parts=key==='cowboy'?[`+${b.tier*2}% de chance de doma`]:[`qualidades altas mais comuns (bônus ${Math.round(b.quality*100)})`,`-${Math.round(b.save*100)}% de materiais`].concat(key==='ferreiro'?[`+${Math.round(b.yield*100)}% de minério na desmontagem`]:[]);
+ return `<div style="font-size:12px;margin:4px 0;color:var(--gold)">⭐ Vantagens (nível ${lv}): ${b.tier?parts.join(' · '):'nenhuma ainda'}${next?` · próxima no nível ${next}`:' · máximo'}</div>`;
+}
+function professionPerkBonus(key){
+ const lv=prof(PROF_SKILL[key]||'').lv||1,tier=Math.floor(lv/10);
+ return{tier,quality:tier*.02,save:Math.min(.25,tier*.05),yield:tier*.01};
+}
+</script>
+
+<script>
+/* --- Alquimista: receitas exclusivas (resistências e Elixir Abissal) --- */
+'use strict';
+function alqBuff(k){const b=P&&P.buf2&&P.buf2[k];return b&&b.until>Date.now()?b:null}
+{
+ const resBefore=elemRes;
+ elemRes=function(el){let r=resBefore.apply(this,arguments);const b=el&&alqBuff('res_'+el);if(b)r=Math.min(.75,r+b.v);return r};
+ const useBefore=useItem;
+ useItem=function(id){const it=IT[id];if(!it||!it.profCraft||!it.use||!it.use.alq2)return useBefore.apply(this,arguments);
+  if(!P||P.dead||countItem(id)<1)return false;if(P.lvl<(it.lv||1)){toast(null,'Requer nível '+it.lv);return false}
+  const now=Date.now();if(now<(P.profPotionAt||0)){toast(null,'Aguarde 2 segundos entre poções.');return false}
+  if(!removeItem(id,1))return false;P.profPotionAt=now+2000;const u=it.use;P.buf2=P.buf2||{};P.buf2[u.buff]={v:u.v,until:now+u.min*60000};
+  let extra='';if(u.buff==='abissal'&&diveRemaining()>0){P.fl.diveUntil+=u.v*60000;extra=' Mergulho +'+u.v+' min.'}
+  text(P,it.n.split(' N')[0],'#79d8a6',1400);sfx('skill');log(it.n.split(' N')[0]+' ativo por '+u.min+' minutos.'+extra,'q');bagKey='';save(true);return true};
+ const gripBefore=krakenGripActive;
+ krakenGripActive=function(actor){const on=gripBefore.apply(this,arguments);
+  if(on&&actor===P&&alqBuff('abissal')&&!actor.krakenGrip.cut){actor.krakenGrip.cut=1;actor.krakenGrip.until=nowT+(actor.krakenGrip.until-nowT)/2;text(P,'Elixir Abissal: solto mais cedo!','#79d8a6',1400);return gripBefore.apply(this,arguments)}
+  return on};
+ const arenaBefore=bossArenaDamage;
+ bossArenaDamage=function(mo,actor,fraction,name){if(name==='Agarrão do Kraken'&&actor===P&&alqBuff('abissal')&&!krakenGripActive(P))return;return arenaBefore.apply(this,arguments)};
+}
+</script>
+
+<script>
+/* --- Explosion: dispositivos (mina, torre, barreira) e Detonador Remoto --- */
+'use strict';
+let DEVICES=[];const DEVICE_MAX=4;
+function deviceBlocks(map,x,y){for(const d of DEVICES)if(d.kind==='barreira'&&d.map===map&&d.tiles.some(t=>t[0]===x&&t[1]===y))return true;return false}
+function deviceBoom(d,damage,radius,col){
+ ring({x:d.x,y:d.y},radius+.5,col||'#ffb040');sfx('hurt');
+ for(const mo of (MONBY[d.map]||[]).slice())if(!mo.dead&&cheb(mo,d)<=radius&&canFightMonster(P,mo))hit(mo,damage,col||'#ffb040',1);
+}
+function placeDevice(it){
+ const d0=it.device,now=Date.now();
+ if(HOUSES.has(P.map)||inSafe(MAPS[P.map],P.x,P.y)){toast(null,'Dispositivos só podem ser instalados fora da cidade e das casas.');return false}
+ if(now<(P.profBombAt||0)){toast(null,'Aguarde 3 segundos entre explosivos.');return false}
+ DEVICES=DEVICES.filter(d=>d.map===P.map&&d.until>nowT);
+ if(DEVICES.length>=DEVICE_MAX){toast(null,'Máximo de '+DEVICE_MAX+' dispositivos ativos. Use um Detonador ou espere.');return false}
+ const d={kind:d0.kind,damage:d0.damage,radius:d0.radius,map:P.map,x:P.x,y:P.y,until:nowT+d0.dur*1000,next:nowT+1500,col:it.c||'#ffb040'};
+ if(d.kind==='barreira'){
+  const t=P.target&&!P.target.dead&&P.target.map===P.map?P.target:null;
+  let dx=t?Math.sign(t.x-P.x):(P.face||1),dy=t?Math.sign(t.y-P.y):0;if(!dx&&!dy)dx=1;
+  const cx=P.x+dx*2,cy=P.y+dy*2,px=dy?1:0,py=dy?0:1;
+  d.tiles=[[cx-px,cy-py],[cx,cy],[cx+px,cy+py]].filter(([x,y])=>!SOLID.has(getT(MAPS[P.map],x,y)));
+  if(!d.tiles.length){toast(null,'Não há espaço para a barreira aqui.');return false}d.x=cx;d.y=cy;
+ }
+ if(!removeItem(it.id,1))return false;P.profBombAt=now+3000;DEVICES.push(d);
+ text(P,{mina:'mina armada',torre:'torre instalada',barreira:'barreira erguida'}[d.kind],'#ffd070',1200);sfx('click');bagKey='';save(true);return true;
+}
+function detonateAll(it){
+ const mine=DEVICES.filter(d=>d.map===P.map&&d.until>nowT);
+ if(!mine.length){toast(null,'Nenhum dispositivo ativo neste mapa. O detonador não foi usado.');return false}
+ if(!removeItem(it.id,1))return false;
+ for(const d of mine)deviceBoom(d,it.detonator.damage*(d.kind==='mina'?2:1),2,'#ff7030');
+ DEVICES=DEVICES.filter(d=>!mine.includes(d));text(P,'💥 DETONAR!','#ff9040',1400);bagKey='';save(true);return true;
+}
+function deviceTick(){
+ if(!P||!DEVICES.length)return;
+ DEVICES=DEVICES.filter(d=>d.until>nowT&&d.map===P.map);
+ for(const d of DEVICES.slice()){
+  if(d.kind==='mina'){const near=(MONBY[d.map]||[]).find(mo=>!mo.dead&&cheb(mo,d)<=1&&canFightMonster(P,mo));if(near){deviceBoom(d,d.damage,d.radius,d.col);DEVICES.splice(DEVICES.indexOf(d),1)}}
+  else if(d.kind==='torre'&&nowT>=d.next){d.next=nowT+1500;let best=null,bd=99;for(const mo of MONBY[d.map]||[])if(!mo.dead&&canFightMonster(P,mo)){const c=cheb(mo,d);if(c<=d.radius&&c<bd){bd=c;best=mo}}if(best){proj(d,best,'#9ad8ff');hit(best,d.damage,'#9ad8ff',1)}}
+ }
+}
+{
+ const useBefore=useItem;
+ useItem=function(id){const it=IT[id];if(it&&it.profCraft&&(it.device||it.detonator)){if(!P||P.dead||countItem(id)<1)return false;if(P.lvl<(it.lv||1)){toast(null,'Requer nível '+it.lv);return false}const x=Object.assign({id},it);return it.device?placeDevice(x):detonateAll(x)}return useBefore.apply(this,arguments)};
+ const walkBefore=canWalk;
+ canWalk=function(map,x,y,who){if(who&&who!==P&&who.type&&DEVICES.length&&deviceBlocks(map,x,y))return false;return walkBefore.apply(this,arguments)};
+ const updateBefore=update;
+ update=function(){const r=updateBefore.apply(this,arguments);try{deviceTick()}catch(e){console.error(e)}return r};
+ const drawBefore=drawExtra;
+ drawExtra=function(camX,camY){drawBefore.apply(this,arguments);if(!P||!DEVICES.length)return;
+  ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=Math.round(S*.62)+'px sans-serif';
+  for(const d of DEVICES){if(d.map!==P.map)continue;const left=Math.max(0,(d.until-nowT)/1000);
+   const cells=d.kind==='barreira'?d.tiles:[[d.x,d.y]];
+   for(const [tx,ty] of cells){const px=tx*S-camX,py=ty*S-camY;if(px<-S||py<-S||px>cv.width||py>cv.height)continue;
+    if(d.kind==='barreira'){ctx.fillStyle='rgba(120,130,140,.85)';ctx.fillRect(px+S*.1,py+S*.1,S*.8,S*.8);ctx.strokeStyle='#2a2d33';ctx.lineWidth=2;ctx.strokeRect(px+S*.1,py+S*.1,S*.8,S*.8)}
+    else{ctx.globalAlpha=d.kind==='mina'&&left<5&&((nowT/200|0)%2)?.4:1;ctx.fillText(d.kind==='mina'?'💣':'🗼',px+S/2,py+S/2);ctx.globalAlpha=1}}
+  }ctx.restore()};
 }
 </script>

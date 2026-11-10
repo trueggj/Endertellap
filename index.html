@@ -3029,10 +3029,10 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const PROFESSIONS={
  ferreiro:{n:'Ferreiro',icon:'⚒️',desc:'Forje armas exclusivas usando o sistema de qualidade existente, desmonte equipamentos e trabalhe com minérios e fragmentos.',map:'over',x:95,y:94,place:'Bigorna do Ferreiro Duran, Vussumi'},
  alquimista:{n:'Alquimista',icon:'🧪',desc:'Produza poções para usar ou vender, aprenda técnicas de alquimia e colete ingredientes exclusivos.',map:'over',x:96,y:97,place:'Laboratório da Alquimista Mira, Vussumi'},
- explosion:{n:'Explosion',icon:'💥',soon:1,desc:'Especialize-se em dispositivos fantásticos de área e itens arremessáveis, com habilidades próprias.',map:'over',x:95,y:97,place:'Área de oficinas de Vussumi (estação exclusiva planejada)'},
- cowboy:{n:'Cowboy',icon:'💣',desc:'Fabrique bombas de dano, fogo, gelo e veneno. Receitas mais fortes exigem níveis e materiais maiores.',map:'over',x:61,y:109,place:'Estábulo do Cavalariço Beto, Vussumi'}
+ explosion:{n:'Explosion',icon:'💥',desc:'Fabrique bombas de dano, fogo, gelo e veneno. Receitas mais fortes exigem níveis e materiais maiores. Dispositivos e detonadores em desenvolvimento.',map:'over',x:95,y:97,place:'Área de oficinas de Vussumi (estação exclusiva planejada)'},
+ cowboy:{n:'Cowboy',icon:'🐎',soon:1,desc:'Crie e venda montarias para outros aventureiros.',map:'over',x:61,y:109,place:'Estábulo do Cavalariço Beto, Vussumi'}
 };
-const PROF_SKILL={ferreiro:'ferr',alquimista:'alq',cowboy:'bombas',explosion:'explosion'};
+const PROF_SKILL={ferreiro:'ferr',alquimista:'alq',cowboy:'montaria',explosion:'bombas'};
 function profSync(){if(!P||!P.profession||!PROF_SKILL[P.profession])return;const p=prof(PROF_SKILL[P.profession]);P.profLv=p.lv;P.profXp=p.xp}
 function profXpText(){profSync();const lv=P.profLv||1;return lv>=50?'nível máximo':`XP ${P.profXp||0}/${profNeed(lv)}`}
 function profGuide(){const q=PROFESSIONS[P.profession];if(!q)return;P.guide=null;P.track='profession';save(true);closeAll();toast(null,'🎯 Oficina rastreada em Missões: '+q.place)}
@@ -6292,7 +6292,7 @@ function facApply(){const elf=P&&P.fac==='elfo',M=elf?(P.cls==='knight'?ELFSK:XA
  for(const k in SPECO)SPEC[k][1]=SPECO[k];if(elf&&P.cls==='knight'){SPEC.giro[1]='Flecha Vampira';SPEC.golpe[1]='Tiro na Mosca';SPEC.terremoto[1]='Céu de Flechas'}
  if(isArch()){const cv=L=>{for(const e of L||[])if(IT[e.id]&&IT[e.id].slot==='weapon')e.id=arConv(e.id)};cv(P.bag);cv(P.inv);cv(P.depot);if(P.eq.weapon)P.eq.weapon=arConv(P.eq.weapon);if(!P.fl.arrows){P.fl.arrows=1;addItem('flecha',100)}}
  pImgKey='';try{renderHot()}catch(e){}}
-function begin(sv){begin_x(sv);try{vMigrate();vApplyRecon()}catch(e){console.error(e)}try{if(professionMigrateItems())save(true);profSync()}catch(e){console.error(e)}facApply();elSync();try{renderHot()}catch(e){}}
+function begin(sv){begin_x(sv);try{vMigrate();vApplyRecon()}catch(e){console.error(e)}try{P.fl=P.fl||{};if(P.profession==='cowboy'&&!P.fl.cowboyV){P.profession='explosion';setTimeout(()=>say('Profissões atualizadas','As bombas agora pertencem à profissão <b>💥 Explosion</b>. Sua profissão foi trocada de Cowboy para Explosion, e seu nível e XP de bombas foram mantidos.<br><br>A profissão <b>🐎 Cowboy</b> será dedicada à criação e venda de montarias.',[['Entendi',closeAll]]),800)}const firstFix=!P.fl.cowboyV;P.fl.cowboyV=1;if(professionMigrateItems()||firstFix)save(true);profSync()}catch(e){console.error(e)}facApply();elSync();try{renderHot()}catch(e){}}
 function archSplash(){const t=P.target&&!P.target.dead&&P.target.map===P.map&&cheb(P.target,P)<=5?P.target:autoTarget(5);return t?MONS.filter(o=>!o.dead&&o.map===P.map&&cheb(o,t)<=1):[]}
 
 /* ========== HISTÓRIA: O Rei Corrupto (entre o Ato I e o Ato II) · Ezequiel ========== */
@@ -7799,7 +7799,7 @@ const WORKSHOPS={
  ferreiro:{map:'prof_forja',name:'Forja das Brasas',icon:'⚒️',entry:[95,93],accent:'#e9a34c',station:'Bigorna de Mestre'},
  alquimista:{map:'prof_alquimia',name:'Laboratório das Essências',icon:'🧪',entry:[97,96],accent:'#79d8a6',station:'Mesa de Alquimia'},
  explosion:{map:'prof_explosion',name:'Oficina dos Inventores',icon:'💥',entry:[101,97],accent:'#f2b85e',station:'Bancada Explosion'},
- cowboy:{map:'prof_estabulo',name:'Oficina de Bombas do Cowboy',icon:'💣',entry:[62,109],accent:'#c49a68',station:'Bancada de Bombas'}
+ cowboy:{map:'prof_estabulo',name:'Estábulo do Cowboy',icon:'🐎',entry:[62,109],accent:'#c49a68',station:'Cercado das Montarias'}
 };
 for(const [key,w] of Object.entries(WORKSHOPS)){
  const m=M(17,13,TL.EFLOOR,TL.EWALL);
@@ -7846,7 +7846,7 @@ function workstationMenu(key){
  }else if(key==='explosion'){
   professionCraftMenu('explosion');
  }else{
-  professionCraftMenu('cowboy');
+  workstationComing(key,'Criação de montarias');
  }
 }
 function workstationComing(key,section){const w=WORKSHOPS[key];say(w.station,`<b>${section}</b><br><br>Esta função está planejada para uma próxima etapa. Nenhum material ou ouro será consumido.`,[['Voltar à estação',()=>workstationMenu(key)],['Fechar',closeAll]])}
@@ -8025,23 +8025,24 @@ const PROF_RECIPES={
   {key:'sabedoria',name:'Elixir de Experiência',kind:'xp',mats:['orelha_goblin','chifre']},
   {key:'sorte',name:'Elixir da Sorte',kind:'drop',mats:['mel','seda']}
  ],
- cowboy:[
+ explosion:[
   {key:'explosiva',name:'Bomba Explosiva',kind:'blast',mats:['osso']},
   {key:'incendiaria',name:'Bomba Incendiária',kind:'fire',mats:['ferrao']},
   {key:'congelante',name:'Bomba Congelante',kind:'ice',mats:['seda']},
   {key:'venenosa',name:'Bomba Venenosa',kind:'poison',mats:['gosma']}
  ]
 };
-PROFN.bombas='Fabricação de Bombas';
+PROFN.bombas='Fabricação de Bombas';PROFN.montaria='Criação de Montarias';
 /* Converte itens fabricados antigos (um item diferente por fabricação) para itens empilháveis
    e apaga do save as definições que não são mais usadas. */
 function professionMigrateItems(){
  if(!P||!P.cust)return 0;let moved=0;const map={};
  for(const [old,def] of Object.entries(P.cust)){
-  const pc=def&&def.profCraft;if(!pc||old.startsWith('pc_'))continue;
-  const recipe=(PROF_RECIPES[pc.key]||[]).find(r=>r.kind===pc.kind);if(!recipe||!def.lv)continue;
+  const pc=def&&def.profCraft;if(!pc)continue;const key=pc.key==='cowboy'?'explosion':pc.key;
+  const recipe=(PROF_RECIPES[key]||[]).find(r=>r.kind===pc.kind);if(!recipe||!def.lv)continue;
   const rank=Math.max(0,Math.min(EQUIP_CATEGORIES.length-1,pc.rank|0));
-  map[old]=professionItem(pc.key,recipe,def.lv,rank,professionStrength(professionModel(pc.key,def.lv),rank)).id;
+  const strength=old.startsWith('pc_')?pc.strength:professionStrength(professionModel(key,def.lv),rank);
+  const id=professionItem(key,recipe,def.lv,rank,strength).id;if(id!==old)map[old]=id;
  }
  if(!Object.keys(map).length)return 0;
  const walk=o=>{if(!o||typeof o!=='object')return;for(const k of Object.keys(o)){if(o===P&&k==='cust')continue;const v=o[k];if(typeof v==='string'&&map[v]){o[k]=map[v];moved++}else if(v&&typeof v==='object')walk(v)}};
@@ -8053,11 +8054,11 @@ function professionMigrateItems(){
 }
 function professionMaterials(key,recipe,lv){
  const cost=6+2*Math.ceil(Math.max(0,lv-10)/40),ore=lv<=30?'minerio_ferro':lv<=70?'minerio_prata':lv<=120?'minerio_ouro':'minerio_mithril';
- return key==='cowboy'?[[ore,cost],[recipe.mats[0],Math.ceil(cost/2)]]:[[recipe.mats[0],Math.ceil(cost*.6)],[recipe.mats[1],Math.ceil(cost*.4)]];
+ return key==='explosion'?[[ore,cost],[recipe.mats[0],Math.ceil(cost/2)]]:[[recipe.mats[0],Math.ceil(cost*.6)],[recipe.mats[1],Math.ceil(cost*.4)]];
 }
 const PROF_RANK_T=[0,20,40,65,100,140,180,230,280,350,500];
 function professionModel(key,lv){
- const skill=prof(key==='cowboy'?'bombas':'alq').lv,lo=Math.max(1,Math.floor(lv*.75)),hi=Math.ceil(lv*(2.3+Math.min(49,skill-1)*.005)),thresholds=PROF_RANK_T,groups=new Map();
+ const skill=prof(PROF_SKILL[key]).lv,lo=Math.max(1,Math.floor(lv*.75)),hi=Math.ceil(lv*(2.3+Math.min(49,skill-1)*.005)),thresholds=PROF_RANK_T,groups=new Map();
  for(let v=lo;v<=hi;v++){let rank=0;for(let i=1;i<thresholds.length;i++)if(v>=thresholds[i])rank=i;
   if(!groups.has(rank))groups.set(rank,{rank,min:v,max:v,weight:0,outcomes:[]});const group=groups.get(rank),weight=Math.exp(-3*(v-lo)/Math.max(1,hi-lo));
   group.max=v;group.weight+=weight;group.outcomes.push({value:v,mods:{strength:v},weight});
@@ -8068,7 +8069,7 @@ function professionModel(key,lv){
 }
 function professionEffect(key,recipe,lv,strength){
  const min=2+Math.floor(lv/150);
- if(key==='cowboy'){
+ if(key==='explosion'){
   const damage=Math.round(40+8*strength),radius=lv>=200?3:lv>=50?2:1;
   const extra=recipe.kind==='fire'?' + queimadura por 4 s':recipe.kind==='poison'?' + veneno por 8 s':recipe.kind==='ice'?' + atordoamento por até 2 s (chefes: até 1 s)':'';
   return{use:{},bomb:{kind:recipe.kind,damage,radius},text:'Dano base '+damage+' em raio '+radius+extra+'. Selecione um monstro a até 6 quadrados e use a bomba. Intervalo de 3 s entre bombas.'};
@@ -8097,8 +8098,8 @@ function professionStrength(model,rank){
 function professionItem(key,recipe,lv,rank,strength){
  const id='pc_'+key+'_'+recipe.key+'_'+lv+'_'+rank+'_'+strength;
  if(IT[id])return{id,created:false};
- const cat=EQUIP_CATEGORIES[rank],effect=professionEffect(key,recipe,lv,strength),base=key==='cowboy'?'minerio_ferro':'pocao_vida';
- const def=Object.assign({},IT[base],{n:recipe.name+' N'+lv+' ('+cat[1]+')',lv,use:effect.use,bomb:effect.bomb,loot:false,slot:null,ic:key==='cowboy'?'loot':'potion',c:cat[2],price:Math.round(lv*strength),profCraft:{key,kind:recipe.kind,rank,strength},craftMaterials:professionMaterials(key,recipe,lv),craftDesc:effect.text},{custom:1,base});
+ const cat=EQUIP_CATEGORIES[rank],effect=professionEffect(key,recipe,lv,strength),base=key==='explosion'?'minerio_ferro':'pocao_vida';
+ const def=Object.assign({},IT[base],{n:recipe.name+' N'+lv+' ('+cat[1]+')',lv,use:effect.use,bomb:effect.bomb,loot:false,slot:null,ic:key==='explosion'?'loot':'potion',c:cat[2],price:Math.round(lv*strength),profCraft:{key,kind:recipe.kind,rank,strength},craftMaterials:professionMaterials(key,recipe,lv),craftDesc:effect.text},{custom:1,base});
  delete def.legendary;IT[id]=def;P.cust=P.cust||{};P.cust[id]=def;return{id,created:true};
 }
 function professionCraft(key,recipe,lv){
@@ -8106,13 +8107,12 @@ function professionCraft(key,recipe,lv){
  const model=professionModel(key,lv),rolled=forgeRoll(model),made=professionItem(key,recipe,lv,rolled.rank,professionStrength(model,rolled.rank)),id=made.id;
  if(!addItem(id)){if(made.created){delete IT[id];delete P.cust[id]}return false}
  for(const [mat,q]of professionMaterials(key,recipe,lv))removeItem(mat,q);
- const pk=key==='cowboy'?'bombas':'alq';profXp(pk,12+Math.round(lv/3));P.profLv=prof(pk).lv;P.profXp=prof(pk).xp;
+ const pk=PROF_SKILL[key];profXp(pk,12+Math.round(lv/3));P.profLv=prof(pk).lv;P.profXp=prof(pk).xp;
  save(true);toast(itemIcon(id),'Produzido: '+IT[id].n);return id;
 }
 const PRODUCTION_GROUPS={
  alquimista:[{id:'potions',name:'Poções',icon:'🧪',accept:r=>r.kind==='hp'||r.kind==='mp'},{id:'elixirs',name:'Elixires',icon:'⚗️',accept:r=>r.kind!=='hp'&&r.kind!=='mp'}],
- cowboy:[{id:'bombs',name:'Bombas',icon:'💣',accept:()=>true}],
- explosion:[{id:'devices',name:'Dispositivos',icon:'💥',accept:()=>false},{id:'detonators',name:'Detonadores',icon:'🎛️',accept:()=>false}]
+ explosion:[{id:'bombs',name:'Bombas',icon:'💣',accept:()=>true},{id:'devices',name:'Dispositivos',icon:'💥',accept:()=>false},{id:'detonators',name:'Detonadores',icon:'🎛️',accept:()=>false}]
 };
 function productionLevelMenu(key,groupId){
  const group=PRODUCTION_GROUPS[key].find(g=>g.id===groupId),recipes=(PROF_RECIPES[key]||[]).filter(group.accept);
@@ -8134,7 +8134,7 @@ function professionCraftMenu(key,selected,groupId){
  if(!recipes.length){body.append(el(`<div class="quest" style="margin:10px 0"><h4>${group.name} · nível ${lv}</h4><p>Em desenvolvimento. Nenhum material será consumido.</p></div>`));return}
  const model=professionModel(key,lv);
  for(const recipe of recipes){
-  const materials=professionMaterials(key,recipe,lv),reason=professionCraftBlock(key,recipe,lv),low=professionEffect(key,recipe,lv,model.min),high=professionEffect(key,recipe,lv,model.max),icon=key==='cowboy'?'💣':'🧪';
+  const materials=professionMaterials(key,recipe,lv),reason=professionCraftBlock(key,recipe,lv),low=professionEffect(key,recipe,lv,model.min),high=professionEffect(key,recipe,lv,model.max),icon=key==='explosion'?'💣':'🧪';
   const row=el(`<div class="quest" style="padding:10px;margin:8px 0;border-radius:8px"><div style="display:flex;align-items:center;gap:10px"><span style="font-size:28px">${icon}</span><div><b>${recipe.name}</b><br><small>${group.name} · nível ${lv}</small></div></div><p style="font-size:12px">${esc(low.text)}</p><p style="font-size:12px"><b>Materiais:</b><br>${materials.map(([id,q])=>`${esc(IT[id].n)}: ${countItem(id)} disponíveis / custo ${q}`).join('<br>')}</p><details style="font-size:12px;margin:7px 0"><summary>Ver detalhes e chances</summary><p><b>Resultado máximo:</b> ${esc(high.text)}</p>${model.groups.map(g=>`<div style="color:${EQUIP_CATEGORIES[g.rank][2]}">${EQUIP_CATEGORIES[g.rank][1]}: ${(g.chance*100).toFixed(2)}%</div>`).join('')}<p>A fabricação entrega uma unidade, sem falha. Para usar, coloque o item na bolsa.</p></details><p style="font-size:12px;color:var(--muted)">${reason||'Materiais disponíveis. Pronto para fabricar.'}</p><button ${reason?'disabled':''} class="gold" style="width:100%;min-height:40px">⚒️ Fabricar ${recipe.name}</button></div>`).firstElementChild;
   row.querySelector('button').onclick=()=>{if(professionCraft(key,recipe,lv))professionCraftMenu(key,lv,groupId)};body.append(row);
  }
@@ -8723,7 +8723,7 @@ function amz63Build(){
   MAPS[map]=room;MAPN[map]=name;m.portals.push({x:door[0],y:door[1],to:map,tx:8,ty:10,door:1});DOORS.push({map:'amazon',x:door[0],y:door[1],to:map,tx:8,ty:10,name,ico:'🚪',nodraw:true});
   const item={id,name,x:24+x,y:48+y,w,h,door,map,service};AMZ63.buildings.push(item);return item;
  };
- const blueprints=[['salao','Casa da Pajé Tainá',39,3,18,11,'healer'],['forja','Forja das Raízes',61,5,9,10,'forja'],['alquimia','Casa das Ervas',73,6,8,9,'alquimista'],['bombas','Oficina das Sementes',84,6,9,9,'cowboy'],['pousada','Pousada Folha Serena',8,17,14,10,'inn'],['banco','Banco de Amazônia',63,26,10,10,'bank'],['deposito','Depósito de Amazônia',77,26,15,11,'depot'],['guilda','Salão dos Caçadores',62,37,11,9,'hunts'],['casa1','Casa das Bromélias',23,5,8,7],['casa2','Casa dos Cipós',6,5,8,7],['casa3','Casa das Orquídeas',26,17,7,7],['casa4','Casa do Rio',4,32,8,7],['casa5','Casa das Folhas',22,43,8,7],['casa6','Casa das Sementes',33,43,8,7],['casa7','Casa dos Pescadores',83,42,8,7],['casa8','Casa da Ponte',4,43,8,7],['casa9','Casa das Águas',4,56,8,7],['casa10','Casa da Samaúma',26,55,9,8]];
+ const blueprints=[['salao','Casa da Pajé Tainá',39,3,18,11,'healer'],['forja','Forja das Raízes',61,5,9,10,'forja'],['alquimia','Casa das Ervas',73,6,8,9,'alquimista'],['bombas','Oficina das Sementes',84,6,9,9,'explosion'],['pousada','Pousada Folha Serena',8,17,14,10,'inn'],['banco','Banco de Amazônia',63,26,10,10,'bank'],['deposito','Depósito de Amazônia',77,26,15,11,'depot'],['guilda','Salão dos Caçadores',62,37,11,9,'hunts'],['casa1','Casa das Bromélias',23,5,8,7],['casa2','Casa dos Cipós',6,5,8,7],['casa3','Casa das Orquídeas',26,17,7,7],['casa4','Casa do Rio',4,32,8,7],['casa5','Casa das Folhas',22,43,8,7],['casa6','Casa das Sementes',33,43,8,7],['casa7','Casa dos Pescadores',83,42,8,7],['casa8','Casa da Ponte',4,43,8,7],['casa9','Casa das Águas',4,56,8,7],['casa10','Casa da Samaúma',26,55,9,8]];
  for(const a of blueprints)house(...a);
  // Connect doors to nearby avenues while never changing any roof or wall.
  for(const b of AMZ63.buildings){const x=b.door[0],sy=b.door[1]+1,localY=sy-48;const targetY=localY<19?67:localY<39?87:localY<51?97:111;for(let y=Math.min(sy,targetY);y<=Math.max(sy,targetY);y++)for(let dx=-1;dx<=1;dx++)if([TL.JGRASS,TL.FLOWER,TL.BUSH,TL.DIRT].includes(getT(m,x+dx,y)))setT(m,x+dx,y,TL.DIRT)}
@@ -8754,9 +8754,9 @@ function amz63Build(){
 amz63Build();
 function amz63Near(id){const n=NPCS.find(n=>n.id===id&&n.map===P.map);return !!(P&&n&&!P.dead&&cheb(P,n)<=1)}
 function amz63ProfessionNear(key){
- const id={ferreiro:'amz_forja',alquimista:'amz_alquimia',cowboy:'amz_bombas'}[key];
+ const id={ferreiro:'amz_forja',alquimista:'amz_alquimia',explosion:'amz_bombas'}[key];
  if(P&&P.map==='amazon')return amz63Near(id);
- const house={ferreiro:'amz63_forja',alquimista:'amz63_alquimia',cowboy:'amz63_bombas'}[key];return !!(P&&P.map===house&&cheb(P,{x:8,y:4})<=1);
+ const house={ferreiro:'amz63_forja',alquimista:'amz63_alquimia',explosion:'amz63_bombas'}[key];return !!(P&&P.map===house&&cheb(P,{x:8,y:4})<=1);
 }
 function amz63Work(key){if(amz63ProfessionNear(key))workstationMenu(key);else toast(null,'Aproxime-se da estação da sua profissão.')}
 function amz63Bank(){say('Banco de Amazônia','O saldo bancário acompanha seu personagem entre as cidades.',[['Fechar',closeAll]]);bankDlg($('#dlgBody'))}
@@ -8789,14 +8789,14 @@ fill(MAPS.amazon,70,76,73,78,AMZ63_T.ROOT);
 NEWNPCS.push(
  {id:'amz_forja',n:'Forja das Raízes',map:'amazon',x:0,y:0,sign:1,wander:false,talk:()=>amz63Work('ferreiro')},
  {id:'amz_alquimia',n:'Casa das Ervas',map:'amazon',x:0,y:0,sign:1,wander:false,talk:()=>amz63Work('alquimista')},
- {id:'amz_bombas',n:'Oficina das Sementes',map:'amazon',x:0,y:0,sign:1,wander:false,talk:()=>amz63Work('cowboy')},
+ {id:'amz_bombas',n:'Oficina das Sementes',map:'amazon',x:0,y:0,sign:1,wander:false,talk:()=>amz63Work('explosion')},
  {id:'amz_pousada',n:'Pousada Folha Serena',map:'amazon',x:0,y:0,wander:false,pal:{h:'#3e261b',c:'#946c45',d:'#65432b',s:'#ac784e'},talk:()=>say('Pousada Folha Serena','Bem-vindo à aldeia. A Pajé Tainá cuida dos viajantes junto à grande casa ao norte da praça.',[['Ver mapa da aldeia',amz63Overview],['Até mais',closeAll]])},
  {id:'amz_banco',n:'Banco de Amazônia',map:'amazon',x:0,y:0,wander:false,pal:{h:'#372317',c:'#608349',d:'#31492b',s:'#ac784e'},talk:amz63Bank},
  {id:'amz_guia',n:'Guia da Aldeia',map:'amazon',x:0,y:0,wander:false,pal:{h:'#3e261b',c:'#c8a65a',d:'#615134',s:'#ac784e'},talk:amz63Overview},
  {id:'amz_arvore',n:'Árvore Ancestral',map:'amazon',x:72,y:78,sign:1,wander:false,amz63Tree:true,img0:AMZ63_TREE,talk:()=>say('Árvore Ancestral','As raízes da aldeia guardam a memória da floresta. A Pajé Tainá e os homens-árvore sentem os sinais de Vorath.',[['Ver mapa da aldeia',amz63Overview],['Até mais',closeAll]])}
 );
 for(const b of AMZ63.buildings){
- const key={forja:'ferreiro',alquimista:'alquimista',cowboy:'cowboy'}[b.service];
+ const key={forja:'ferreiro',alquimista:'alquimista',explosion:'explosion'}[b.service];
  if(key)NEWNPCS.push({id:'amz63_station_'+key,n:PROFESSIONS[key].n+' · estação',map:b.map,x:8,y:4,sign:1,wander:false,talk:()=>amz63Work(key)});
  if(['bank','depot','healer','hunts'].includes(b.service))NEWNPCS.push({id:b.map+'_service',n:{bank:'Atendente do Banco',depot:'Atendente do Depósito',healer:'Curandeiro da Aldeia',hunts:'Caçador da Aldeia'}[b.service],map:b.map,x:8,y:4,wander:false,pal:{h:'#3e291b',c:'#59834d',d:'#35552e',s:'#ac784e'},talk:b.service==='bank'?amz63Bank:b.service==='depot'?()=>depot():b.service==='hunts'?()=>dqBoard('Caçador da Aldeia'):()=>say('Curandeiro da Aldeia','A floresta acolhe quem respeita suas raízes.',[['Curar ferimentos',()=>{restRecovery();closeAll()}],['Até mais',closeAll]])});
 }
@@ -8808,7 +8808,7 @@ for(const b of AMZ63.buildings){
  drawSprite=function(img,e,cx,cy,big,alpha){if(!e||!e.amz63Tree)return oldSprite(img,e,cx,cy,big,alpha);const x=(e.rx-3)*S-cx,y=(e.ry-6)*S-cy;ctx.drawImage(AMZ63_TREE,x,y,7*S,7*S);return{ox:x,oy:y,w:7*S,h:7*S}};
  pMap=function(body){if(P&&P.map==='amazon'){const button=el('<button class="gold" style="width:100%;min-height:44px;margin-bottom:8px">🌿 Mapa detalhado da aldeia</button>').firstElementChild;button.onclick=amz63Overview;body.append(button)}oldMap(body)};
  zoneName=function(){if(P&&P.map==='amazon'&&amz63In(P.x,P.y))return 'Amazônia · Aldeia das Raízes';if(P&&/^amz63_/.test(P.map))return MAPN[P.map];return oldZone()};
- questGoal=function(){if(P&&P.map==='amazon'&&P.track==='profession'&&P.profession){const id={ferreiro:'amz_forja',alquimista:'amz_alquimia',cowboy:'amz_bombas'}[P.profession],n=NPCS.find(n=>n.id===id);if(n)return{name:n.n,map:'amazon',x:n.x,y:n.y}}return oldQuest()};
+ questGoal=function(){if(P&&P.map==='amazon'&&P.track==='profession'&&P.profession){const id={ferreiro:'amz_forja',alquimista:'amz_alquimia',explosion:'amz_bombas'}[P.profession],n=NPCS.find(n=>n.id===id);if(n)return{name:n.n,map:'amazon',x:n.x,y:n.y}}return oldQuest()};
  forgeBlock=function(){if(P&&(P.map==='amazon'||/^amz63_/.test(P.map))&&!amz63ProfessionNear('ferreiro'))return 'Aproxime-se da estação da Forja das Raízes.';return oldForge.apply(this,arguments)};
 }
 function amz63Migrate(){

@@ -5498,7 +5498,7 @@ const NB=[
 const nbOn=()=>P&&P.nb!=null&&P.nb<NB.length;
 function nbNpc(){return nbOn()?NB[P.nb].npc:null}
 function npcIco_e(n){if(nbOn()&&n.id===nbNpc())return'❗';return npcIco_o(n)}
-function bought(id,price){if(P.fl&&/^pocao/.test(id))P.fl.potBuy=1;return bought_o(id,price)}
+function bought(id,price){if(P.fl&&/^pocao/.test(id))P.fl.potBuy=1;try{economyMarkNpc(id)}catch(e){}return bought_o(id,price)}
 function guideTalk2_k0(){P.fl=P.fl||{};if(!P.fl.kit&&P.lvl<=15){P.fl.kit=1;for(const id of['couro','capuz','calca_couro','botas_couro'])if(IT[id])addItem(id);addItem('pocao_vida',5);sfx('coin');save(true);
   say('Guia Tião','Bem-vindo a Vussumi! Tome este <b>kit de aventureiro</b>: armadura, capuz, calça, botas e 5 poções de vida. Abra a <b>bolsa</b> e toque em cada peça para vestir.',[['Obrigado!',closeAll],['Mais ajuda',guideTalk2_o]]);return}return guideTalk2_o()}
 /* ========== equipamentos para fechar os buracos do 16 ao 25 ========== */
@@ -8230,6 +8230,11 @@ function economyBid(id,city=economyCity()){
  // Fabricar e vender para uma loja não pode garantir lucro sobre os ingredientes.
  if(mats!==null)value=Math.min(value,Math.floor(mats*.15));return Math.max(0,value);
 }
+/* Trava contra revenda: itens que já foram comprados de um NPC só são aceitos pelos
+   jogadores de IA por até 105% do preço da loja (com as taxas, não dá lucro).
+   Loot e itens fabricados continuam aceitando até 135%. */
+function economyMarkNpc(id){if(!P||!IT[id])return;const e=economyState();(e.npc||(e.npc={}))[id]=1}
+function economyBotCap(id){const e=P&&P.economy;return e&&e.npc&&e.npc[id]?1.05:1.35}
 function economyTradable(id){const it=IT[id];return !!(it&&!it.unique&&!it.mount&&!it.tool&&!isQ(id)&&!isMainQ(id)&&economyValue(id)>0)}
 function economyAmount(q){return Number.isSafeInteger(q)&&q>0&&q<=1000000}
 function economyMoney(n){return Number.isSafeInteger(n)&&n>0&&n<=1000000000}
@@ -8313,7 +8318,7 @@ function economyWithdraw(uid){return economyTxn(()=>{economyState();const i=P.au
 function economySettle(uid,bid){return economyTxn(()=>{
  const e=economyState(),i=P.auc.findIndex(x=>x.uid===uid),b=BOTS.find(x=>x.id===bid&&!x.dead&&!x.follow&&!x.lead);if(i<0||!b)return false;
  const a=P.auc[i],duty=c71Duty(a.city,a.p,a.originMap||C71_FIELDS[a.city]?.map);if(a.owner!==e.owner||!economyAmount(a.q)||!economyMoney(duty.total)||b.gold<duty.total)return false;
- const fair=economyAsk(a.id,a.city)*a.q;if(a.p>fair*1.35)return false;
+ const fair=economyAsk(a.id,a.city)*a.q;if(a.p>fair*economyBotCap(a.id))return false;
  const stock=economyBotStock(b,a.city);if(stock.length>=24)return false;
  const fee=Math.ceil(a.p*ECONOMY_RULES.saleTax);b.gold-=duty.total;P.gold+=a.p-fee;e.fees+=fee;c71PayDuty(duty,a.city,'Compra de anúncio');
  stock.push({uid:'s'+(++e.seq),id:a.id,q:a.q});P.auc.splice(i,1);economyRecord(a.city,a.id,a.q,a.p,'bot:'+b.id,e.owner);
@@ -8321,7 +8326,7 @@ function economySettle(uid,bid){return economyTxn(()=>{
 })}
 function economyMarketTick(){if(!P)return;economyState();economyBatch=true;try{for(const a of [...P.auc]){
  if(!IT[a.id]||!economyAmount(a.q)||!economyMoney(a.p))continue;
- const fair=economyAsk(a.id,a.city)*a.q;if(a.p>fair*1.35)continue;
+ const fair=economyAsk(a.id,a.city)*a.q;if(a.p>fair*economyBotCap(a.id))continue;
  const chance=clamp(.4-.2*a.p/Math.max(1,fair),.02,.35);if(R()>=chance)continue;
  const buyers=BOTS.filter(b=>!b.dead&&!b.follow&&!b.lead&&b.gold>=a.p&&economyBotStock(b,a.city).length<24);if(buyers.length)economySettle(a.uid,pick(buyers).id);
 }}finally{economyBatch=false;if(economyDirty){economyDirty=false;save(true)}}}

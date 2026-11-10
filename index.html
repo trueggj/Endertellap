@@ -12702,3 +12702,41 @@ NEWNPCS.push(
  lyriaTalk=function(){if(P&&P.fac==='elfo'&&P.fl&&P.fl.ekit){const C=elfChapter();if(C&&C.back!=='lyria'){say('Anciã Ilmara','A Árvore-Mãe acompanha seus passos. Sua jornada continua com <b>'+esc(elfNpcName(C.back))+'</b>.',[['Até mais',closeAll]]);return}}return lyBefore.apply(this,arguments)};
 }
 </script>
+
+<script>
+/* ===== Correções do lado élfico: aba História, rastreamento e renascimento nos acampamentos ===== */
+'use strict';
+{
+ const questBefore=pQuest;
+ pQuest=function(b){
+  const r=questBefore.apply(this,arguments);
+  try{
+   if(P&&P.fac==='elfo'&&typeof QTAB!=='undefined'&&QTAB==='hist'){
+    const secs=[...b.querySelectorAll('.sect')],hist=secs.find(x=>x.textContent.startsWith('História principal'));
+    // esconde a história humana (Sábio Edrin e Mago Eldoran) para elfos
+    for(const q of [...b.querySelectorAll('.quest,.sect')])if(/Sábio Edrin|Mago Eldoran/.test(q.textContent))q.remove();
+    const E=elfS(),C=ELF_ACT[E.ch],g=C?storyGoal():null;
+    const box=el(`<div><div class="sect">🌿 Ato I élfico · As Raízes Escurecem <span>${Math.min(E.ch,ELF_ACT.length)}/${ELF_ACT.length}</span></div><div class="quest ${C?'':'done'}"><h4>${C?'Capítulo '+(E.ch+1)+': '+esc(C.n):'Concluído ✓'}${C?` <button id="elfTrk" style="float:right;font-size:11px;padding:2px 8px" class="${P.track==='story'?'gold':''}">${P.track==='story'?'Rastreando':'Rastrear'}</button>`:''}</h4><p>${C?(!(P.fl&&P.fl.ekit)?'Fale com a Anciã Ilmara, ao pé da Árvore-Mãe, em Sylvaren.':E.started?elfProg(C):(g?esc(g.name.replace('Ato I élfico: ','')):'')):'Você desmascarou o Lorde Vaelor. O Ato II élfico chega em uma próxima atualização.'}</p></div></div>`);
+    const nodes=[...box.childNodes];
+    if(hist){hist.before(...nodes);hist.remove()}else b.prepend(...nodes);
+    const bt=b.querySelector('#elfTrk');if(bt)bt.onclick=()=>{trackMission('story');renderPanel()};
+   }
+  }catch(e){console.error(e)}
+  return r};
+ // rastreia a história élfica automaticamente ao receber o kit e ao começar cada capítulo
+ const lyBefore=lyriaTalk;
+ lyriaTalk=function(){const had=P&&P.fl&&P.fl.ekit;const r=lyBefore.apply(this,arguments);if(P&&P.fac==='elfo'&&!had&&P.fl&&P.fl.ekit)offerTracking('story');return r};
+ const startBefore=elfStart;
+ elfStart=function(){const r=startBefore.apply(this,arguments);offerTracking('story');return r};
+ // renascer no acampamento da área élfica
+ // áreas élficas abertas: a luta contra o chefe só conta perto dele, como nas outras áreas abertas
+ for(const k of ['e_cristal','e_fronteira','e_bosque'])B70_ROOTS.add(k);
+ const ELF_CAMPS={e_cristal:{map:'e_cristal',x:40,y:5,name:'Acampamento da Floresta de Cristal'},e_fronteira:{map:'e_fronteira',x:50,y:5,name:'Acampamento da Fronteira'},e_bosque:{map:'e_bosque',x:5,y:40,name:'Acampamento do Bosque'},e_santuario_lua:{map:'e_bosque',x:5,y:40,name:'Acampamento do Bosque'}};
+ const spawnBefore=b70Spawn;
+ b70Spawn=function(map){const c=ELF_CAMPS[map];if(c){const p=Object.assign({},c),m=MAPS[p.map];
+   const ok=(x,y)=>!SOLID.has(getT(m,x,y))&&!m.portals.some(q=>q.x===x&&q.y===y)&&!NPCS.some(n=>n.map===p.map&&n.x===x&&n.y===y);
+   if(!ok(p.x,p.y))outer:for(let r=1;r<6;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++)if(ok(p.x+dx,p.y+dy)){p.x+=dx;p.y+=dy;break outer}
+   return p}
+  return spawnBefore.apply(this,arguments)};
+}
+</script>

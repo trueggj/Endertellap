@@ -3030,7 +3030,7 @@ const PROFESSIONS={
  ferreiro:{n:'Ferreiro',icon:'⚒️',desc:'Forje armas exclusivas usando o sistema de qualidade existente, desmonte equipamentos e trabalhe com minérios e fragmentos.',map:'over',x:95,y:94,place:'Bigorna do Ferreiro Duran, Vussumi'},
  alquimista:{n:'Alquimista',icon:'🧪',desc:'Produza poções para usar ou vender, aprenda técnicas de alquimia e colete ingredientes exclusivos.',map:'over',x:96,y:97,place:'Laboratório da Alquimista Mira, Vussumi'},
  explosion:{n:'Explosion',icon:'💥',desc:'Fabrique bombas de dano, fogo, gelo e veneno. Receitas mais fortes exigem níveis e materiais maiores. Dispositivos e detonadores em desenvolvimento.',map:'over',x:95,y:97,place:'Área de oficinas de Vussumi (estação exclusiva planejada)'},
- cowboy:{n:'Cowboy',icon:'🐎',soon:1,desc:'Crie e venda montarias para outros aventureiros.',map:'over',x:61,y:109,place:'Estábulo do Cavalariço Beto, Vussumi'}
+ cowboy:{n:'Cowboy',icon:'🐎',desc:'Dome animais selvagens e transforme-os em montarias. As selas das montarias domadas podem ser vendidas no Grande Mercado.',map:'over',x:61,y:109,place:'Estábulo do Cavalariço Beto, Vussumi'}
 };
 const PROF_SKILL={ferreiro:'ferr',alquimista:'alq',cowboy:'montaria',explosion:'bombas'};
 function profSync(){if(!P||!P.profession||!PROF_SKILL[P.profession])return;const p=prof(PROF_SKILL[P.profession]);P.profLv=p.lv;P.profXp=p.xp}
@@ -5280,7 +5280,7 @@ function guideTalk(who){P.fl.guide=1;const L=DEST.filter(destOk).sort((a,b)=>a[0
 function mountUrl(k){try{const im=MOUNTS[k].img(),c=document.createElement('canvas');c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0);return c.toDataURL()}catch(e){return''}}
 function stableTalk(){P.mounts=P.mounts||{};say('Cavalariço Beto','Montarias deixam você bem mais rápido! Depois de comprar, use a sela na bolsa para montar e desmontar.',[['Até mais',closeAll]]);
  const body=$('#dlgBody'),fmt=n=>n.toLocaleString('pt-BR');
- for(const[k,m]of Object.entries(MOUNTS)){const own=P.mounts[k],lvOk=P.lvl>=m.lv,ok=own||(lvOk&&P.gold>=m.price);
+ for(const[k,m]of Object.entries(MOUNTS)){if(m.tame)continue;const own=P.mounts[k],lvOk=P.lvl>=m.lv,ok=own||(lvOk&&P.gold>=m.price);
   const r=shopCard(m.n,`<img src="${mountUrl(k)}" alt="">`,`+${Math.round(m.spd*100)}% velocidade · <span style="color:${lvOk?'inherit':'#ff8a7a'}">nível ${m.lv}</span>`,`<button ${ok?'':'disabled'}>${own?'🐎 Montar':`Comprar por ${fmt(m.price)} ouro`}</button>`);
   r.querySelector('button').onclick=()=>{if(own){if(!countItem('sela_'+k))addItem('sela_'+k);toggleMount(k);closeAll();return}if(!lvOk){toast('',`Precisa do nível ${m.lv}`);return}if(P.gold<m.price){toast('','Ouro insuficiente');return}
    P.gold-=m.price;P.mounts[k]=1;addItem('sela_'+k);sfx('ach');toast(null,'🐎 Nova montaria: '+m.n);unlock('montaria');save(true);toggleMount(k);closeAll()};
@@ -7846,7 +7846,7 @@ function workstationMenu(key){
  }else if(key==='explosion'){
   professionCraftMenu('explosion');
  }else{
-  workstationComing(key,'Criação de montarias');
+  cowboyMenu();
  }
 }
 function workstationComing(key,section){const w=WORKSHOPS[key];say(w.station,`<b>${section}</b><br><br>Esta função está planejada para uma próxima etapa. Nenhum material ou ouro será consumido.`,[['Voltar à estação',()=>workstationMenu(key)],['Fechar',closeAll]])}
@@ -8259,7 +8259,7 @@ function economyAsk(id,city=economyCity()){
  return Math.max(1,Math.round(base*index));
 }
 function economyBid(id,city=economyCity()){
- const it=IT[id];if(!it||id==='frag_lendario'||it.unique||it.reserved||it.legendary||it.tool||it.mount||isQ(id)||isMainQ(id))return 0;
+ const it=IT[id];if(!it||id==='frag_lendario'||it.unique||it.reserved||it.legendary||it.tool||(it.mount&&!it.tame)||isQ(id)||isMainQ(id))return 0;
  let value=Math.floor(economyValue(id)*(it.loot?.4:.2)*economyIndex(id,city));const mats=economyMaterialCost(id);
  // Fabricar e vender para uma loja não pode garantir lucro sobre os ingredientes.
  if(mats!==null)value=Math.min(value,Math.floor(mats*.15));return Math.max(0,value);
@@ -8269,7 +8269,7 @@ function economyBid(id,city=economyCity()){
    Loot e itens fabricados continuam aceitando até 135%. */
 function economyMarkNpc(id){if(!P||!IT[id])return;const e=economyState();(e.npc||(e.npc={}))[id]=1}
 function economyBotCap(id){const e=P&&P.economy;return e&&e.npc&&e.npc[id]?1.05:1.35}
-function economyTradable(id){const it=IT[id];return !!(it&&!it.unique&&!it.mount&&!it.tool&&!isQ(id)&&!isMainQ(id)&&economyValue(id)>0)}
+function economyTradable(id){const it=IT[id];return !!(it&&!it.unique&&(!it.mount||it.tame)&&!it.tool&&!isQ(id)&&!isMainQ(id)&&economyValue(id)>0)}
 function economyAmount(q){return Number.isSafeInteger(q)&&q>0&&q<=1000000}
 function economyMoney(n){return Number.isSafeInteger(n)&&n>0&&n<=1000000000}
 function economyTxn(action){if(!P||P.dead||economyBusy)return false;economyBusy=true;let result;try{result=action()}finally{economyBusy=false}if(result){if(economyBatch)economyDirty=true;else save(true)}return result}
@@ -11902,4 +11902,106 @@ function krakenEncounterTick(mo){
  itemDesc=function(id){return descBefore(id)+(id===DIVE_SHELL?'<span class="note">1 hora de mergulho. Use no cais da Ilha dos Naufrágios.</span>':'')};
 }
 
+</script>
+
+<script>
+/* ===== Cowboy: doma de montarias, Dardo Tranquilizante e Refúgio do Zelador ===== */
+'use strict';
+const TAME=[
+ // id, nome do monstro, sprite base, cor, mapa, perto de, quantidade, nível min-max, montaria: velocidade, nível p/ montar, valor, nível de Cowboy
+ {k:'javali',n:'Javali Selvagem',spr:'wolf',col:'#7a4a28',map:'over',near:'lobo',count:5,lo:12,hi:15,spd:.42,lv:10,price:3000,prof:1},
+ {k:'raptor',n:'Raptor das Dunas',spr:'jLizard',col:'#d0a050',map:'desert',near:'cobra_areia',count:5,lo:32,hi:36,spd:.58,lv:30,price:12000,prof:5},
+ {k:'onca_rei',n:'Onça-Rei',spr:null,col:'#e8c040',map:'amazon',near:'onca',count:4,lo:46,hi:50,spd:.66,lv:40,price:20000,prof:10},
+ {k:'lobo_alfa',n:'Lobo Alfa das Neves',spr:'iceWolf',col:'#e8f4ff',map:'gelo',near:'lobo_gelo',count:4,lo:72,hi:76,spd:.78,lv:60,price:45000,prof:20},
+ {k:'grifo_real',n:'Grifo Real',spr:'griffin',col:'#f0c040',map:'ceu',near:'grifo',count:3,lo:215,hi:220,spd:.95,lv:200,price:300000,prof:35}
+];
+const TAME_DART='dardo_tranquilizante',TAME_SLEEP_MS=15000,TAME_WEAK=.30;
+for(const t of TAME){
+ const mob='tame_'+t.k,mount='tame_'+t.k,base=t.spr?MSPR[t.spr]:MSPR[MON.onca&&MON.onca.spr];
+ MSPR[mob]=tintSpr(base||MSPR.wolf,t.col,.55);
+ mkMon(mob,t.n,mob,t.lo,t.hi,{hp:1.4,atk:1.1,xp:1.2,loot:[['couro',.5]]});
+ MON[mob].tame={mount,prof:t.prof};REG[mob]=(MAPN[t.map]||t.map)+' · animal domável';SPAWNED.add(mob);
+ MOUNTS[mount]={n:t.n,price:t.price,lv:t.lv,spd:t.spd,tame:1,img:()=>MSPR[mob]};
+ IT['sela_'+mount]={n:'Sela: '+t.n,use:{},mount,tame:1,price:t.price,ic:'loot',c:t.col,lv:t.lv};
+ const m=MAPS[t.map];if(!m)continue;
+ const spots=(m.spawns||[]).filter(s=>s[0]===t.near);
+ for(let i=0;i<t.count&&spots.length;i++){const s=spots[Math.floor(i*spots.length/t.count)];m.spawns.push([mob,s[1]+2,s[2]+1])}
+}
+PROFN.montaria='Doma de Montarias';
+IT[TAME_DART]={n:'Dardo Tranquilizante',price:60,use:{},ic:'loot',c:'#7fc4a0',tameDart:1};
+function tameData(mo){return mo&&MON[mo.type]&&MON[mo.type].tame}
+function tameAsleep(mo){return !!(mo&&!mo.dead&&tameData(mo)&&mo.tameSleep>nowT)}
+function tameChance(mo){
+ const d=tameData(mo),lv=prof('montaria').lv,weak=1-mo.hp/Math.max(1,mo.mhp);
+ return Math.min(.9,.3+lv*.01+Math.max(0,weak-.7)*.5-Math.max(0,d.prof-lv)*.02);
+}
+function useTameDart(){
+ const mo=P.target,now=Date.now();
+ if(!mo||mo.dead||mo.map!==P.map||cheb(mo,P)>6){toast(null,'Selecione um animal domável a até 6 quadrados. O dardo não foi usado.');return false}
+ if(!tameData(mo)){toast(null,'O dardo só funciona em animais domáveis.');return false}
+ if(safeAttackNotice(mo)||!canFightMonster(P,mo))return false;
+ if(now<(P.dartAt||0)){toast(null,'Aguarde 2 segundos entre dardos.');return false}
+ if(tameAsleep(mo)){toast(null,'O animal já está sonolento.');return false}
+ if(!removeItem(TAME_DART,1))return false;P.dartAt=now+2000;
+ const dmg=Math.round(mo.mhp*.25);mo.hp=Math.max(1,mo.hp-dmg);mo.flash=nowT+150;mo.aggro=true;proj(P,mo,'#7fc4a0');
+ if(mo.hp<=mo.mhp*TAME_WEAK){mo.tameSleep=nowT+TAME_SLEEP_MS;mo.stun=Math.max(mo.stun||0,mo.tameSleep);text(mo,'💤 sonolento','#bfe0ff',1600);
+  log(P.profession==='cowboy'?`${MON[mo.type].n} está sonolento! Toque nele para laçar (15 s).`:`${MON[mo.type].n} está sonolento. Só um Cowboy consegue domá-lo.`,'q');}
+ else text(mo,'-'+dmg+' 🎯','#7fc4a0',1000);
+ bagKey='';save(true);return true;
+}
+function tameAttempt(mo){
+ const d=tameData(mo),m=MOUNTS[d.mount],lv=prof('montaria').lv;
+ if(nowT<(P.tameAt||0))return;P.tameAt=nowT+1200;
+ if(lv<d.prof){text(mo,'difícil demais','#ffb080',1200);toast(null,`Precisa de Doma nível ${d.prof} para laçar ${MON[mo.type].n}.`);return}
+ if(P.lvl<m.lv){toast(null,`Precisa do nível ${m.lv} para domar ${MON[mo.type].n}.`);return}
+ if(R()<tameChance(mo)){
+  if(!addItem('sela_'+d.mount)){toast(null,'Abra espaço na bolsa para receber a sela.');return}
+  mo.dead=true;mo.respawnAt=nowT+respMs(mo.type);mo.dot=null;mo.stun=0;mo.tameSleep=0;if(P.target===mo)P.target=null;
+  ring(mo,1.2,'#ffd070');text(P,'🪢 DOMADO!','#ffd070',1600);sfx('ach');profXp('montaria',25+Math.round(mo.lv/2));profSync();
+  toast(itemIcon('sela_'+d.mount),'Você domou: '+MON[mo.type].n+'! A sela está na bolsa.');log(`Sela: ${MON[mo.type].n} adicionada à bolsa. Use para montar ou venda no Grande Mercado.`,'loot');save(true);
+ }else{
+  mo.tameSleep=0;mo.stun=0;mo.aggro=true;text(mo,'escapou do laço!','#ff9a7a',1400);profXp('montaria',5);profSync();
+  log(`${MON[mo.type].n} acordou e escapou do laço. Use outro dardo para tentar de novo.`,'bad');
+ }
+}
+{
+ const hitBefore=hit;
+ hit=function(mo,base,proCol,sure){
+  if(tameAsleep(mo)&&mo===P.target&&P.profession==='cowboy'){tameAttempt(mo);return 0}
+  return hitBefore.apply(this,arguments);
+ };
+ const useBefore=useItem;
+ useItem=function(id){if(IT[id]&&IT[id].tameDart)return useTameDart();return useBefore.apply(this,arguments)};
+ const mountBefore=toggleMount;
+ toggleMount=function(k){const m=MOUNTS[k];if(m&&m.tame&&P.riding!==k&&P.lvl<m.lv){toast(null,'Precisa do nível '+m.lv+' para montar '+m.n+'.');return}return mountBefore.apply(this,arguments)};
+ const descBefore=itemDesc;
+ itemDesc=function(id){const it=IT[id];let extra='';
+  if(it&&it.tameDart)extra='<span class="note">Enfraquece um animal domável sem matá-lo (25% da vida, nunca abaixo de 1). Abaixo de 30% de vida, o animal fica sonolento por 15 s e um Cowboy pode laçá-lo tocando nele.</span>';
+  else if(it&&it.mount&&it.tame){const m=MOUNTS[it.mount];extra=`<span class="note">Montaria domada por um Cowboy: +${Math.round(m.spd*100)}% de velocidade · montar a partir do nível ${m.lv}. Pode ser vendida no Grande Mercado.</span>`}
+  return descBefore(id)+extra};
+ let zzzT=0;const updateBefore=update;
+ update=function(){const r=updateBefore.apply(this,arguments);if(P&&nowT>=zzzT){zzzT=nowT+1400;for(const mo of MONBY[P.map]||[])if(tameAsleep(mo))text(mo,'💤','#bfe0ff',1100)}return r};
+}
+function tameGuideHtml(){
+ const lv=prof('montaria').lv;
+ return TAME.map(t=>{const d=MON['tame_'+t.k],ok=lv>=t.prof&&P.lvl>=t.lv;
+  return `<div class="quest" style="margin:6px 0"><h4>${ok?'🐎':'🔒'} ${esc(t.n)}</h4><p style="font-size:12px">📍 ${esc(MAPN[t.map]||t.map)} · nível ${d.lv[0]}–${d.lv[1]}<br>Montaria: +${Math.round(t.spd*100)}% velocidade · montar a partir do nível ${t.lv}<br>Doma necessária: nível ${t.prof} · valor de mercado ${t.price.toLocaleString('pt-BR')} ouro</p></div>`}).join('');
+}
+function cowboyMenu(){
+ const w=WORKSHOPS.cowboy;profSync();
+ say(w.station,`<b>🐎 Cowboy</b><br>Profissão nível ${P.profLv||1} · ${profXpText()}<br><br><b>Como domar:</b> compre <b>Dardos Tranquilizantes</b> com o Zelador. Atire em um animal domável até ele ficar <b>💤 sonolento</b> (abaixo de 30% da vida) e toque nele para laçar. Chance atual: até <b>${Math.round(Math.min(.9,.3+prof('montaria').lv*.01)*100)}%</b>. Se falhar, ele acorda.<br><br>A sela vai para a bolsa: use para montar ou venda no Grande Mercado.`,[['🏪 Grande Mercado',()=>auctionDlg()],['Sair',closeAll]]);
+ $('#dlgBody').append(el('<div>'+tameGuideHtml()+'</div>').firstElementChild);
+}
+/* Refúgio do Zelador: casa própria em Vussumi, ao lado do estábulo. */
+{
+ const map='zelador_refugio',entry=[54,110],m=M(17,13,TL.EFLOOR,TL.EWALL);
+ box(m,0,0,16,12,TL.EWALL,TL.EFLOOR);setT(m,8,12,TL.EXIT);
+ m.portals.push({x:8,y:12,to:'over',tx:entry[0],ty:entry[1]+1});m.safe.push([1,1,15,11]);
+ MAPS[map]=m;MAPN[map]='Refúgio do Zelador';HOUSES.add(map);
+ deco(map,2,1,'trough',3,1,false);deco(map,12,1,'trough',3,1,false);deco(map,2,5,'crate',2,2,false);deco(map,13,5,'barrel',2,2,false);
+ deco(map,2,9,'plant',1,1,false);deco(map,14,9,'plant',1,1,false);deco(map,6,1,'bench',2,1,false);
+ NEWNPCS.push({id:'zelador_entrada',n:'Entrada: Refúgio do Zelador',map:'over',x:entry[0],y:entry[1],sign:1,wander:false,talk:()=>{teleport({to:map,tx:8,ty:10});toast(null,'🐾 Refúgio do Zelador')}});
+ NEWNPCS.push({id:'zelador',n:'Zelador Tobias',map,x:8,y:5,wander:false,pal:{h:'#6a4a2a',c:'#4f7a3e',d:'#3a5a2e',s:'#c8955e'},lines:['Dardos para domar, sem ferir!'],
+  talk:()=>shop('Zelador Tobias','Cuido dos animais de Endertell. Meus <b>Dardos Tranquilizantes</b> enfraquecem um animal domável sem matá-lo. Abaixo de 30% de vida ele fica sonolento e um Cowboy consegue laçá-lo.',[TAME_DART],[['🐾 Onde encontrar animais',()=>say('Zelador Tobias','Estes são os animais que aceitam sela:'+tameGuideHtml(),[['Voltar',()=>NPCS.find(n=>n.id==='zelador').talk()],['Até mais',closeAll]])]])});
+}
 </script>

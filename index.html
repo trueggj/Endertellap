@@ -1866,7 +1866,7 @@ function winsTick(){if(LOOTC&&(P.dead||LOOTC.map!==P.map||cheb(LOOTC,P)>1||!hasL
 
 /* ---------- Jogadores simulados (bots), chat e guildas ---------- */
 const BOTDEF=[
- {id:'kael',n:'Kaled',cls:'knight',lvl:8,pal:{h:'#2a1a10',c:'#7a2a2a',d:'#4a1a1a',p:'#2a2a3a'}},
+ {id:'kael',n:'Tavin',cls:'knight',lvl:8,pal:{h:'#2a1a10',c:'#7a2a2a',d:'#4a1a1a',p:'#2a2a3a'}},
  {id:'lucia',n:'Lucia',cls:'mage',lvl:14,pal:{h:'#e0b060',c:'#2a6a8a',d:'#1a4a6a',p:'#2a2a4a'}},
  {id:'joao',n:'João',cls:'knight',lvl:5,pal:{h:'#5a3a1a',c:'#4a7a3a',d:'#2a4a2a',p:'#3a3a2a'}},
  {id:'samantha',n:'Samantha',cls:'mage',lvl:22,pal:{h:'#c04020',c:'#6a3a8a',d:'#4a2a6a',p:'#2a1a3a'}},
@@ -4267,7 +4267,9 @@ const SPAWNED=new Set();for(const k in MAPS)for(const s of MAPS[k].spawns||[])if
 function monNear(L,ex){let best=null,bd=1e9;for(const k of SPAWNED){const d=MON[k];if(!d||d.boss||d.night||d.arena||(ex&&ex.includes(k)))continue;const mid=(d.lv[0]+d.lv[1])/2,dd=Math.abs(mid-L)+(mid>L+6?50:0);if(dd<bd){bd=dd;best=k}}return best}
 const SAGA_T=[['A Praga Começa','Os ratos estão saindo do esgoto em bando. Algo os assusta lá embaixo.'],['Tambores Goblin','Os goblins se organizam. Alguém os está armando.'],['Sombras no Brejo','Trolls atacam caravanas. Siga o rastro.'],['A Mina Desperta','A mina ruge à noite. Limpe o caminho.'],['Ecos do Castelo','O castelo caído guarda um segredo antigo.'],['Areias Malditas','Uma maldição sobe das pirâmides.'],['A Selva Sussurra','Na Ilha Amazônia, os animais enlouqueceram.'],['A Ilha Verde','Raízes vivas avançam pelo mar.'],['Gelo Eterno','As montanhas congelam o reino.'],['Fogo Submerso','Lava brota no meio do oceano.'],['Os Naufrágios','Navios afundam sem motivo. Investigue.'],['A Arena dos Deuses','Prove seu valor contra campeões.'],['Ilha das Cinzas','Um rei de cinzas reergue seu exército.'],['A Fornalha','No coração das cinzas, a chama negra arde.'],['O Inferno Abre','Demônios atravessam o portal.'],['O Vazio Chama','Uma ilha engolida pela escuridão aparece.'],['Senhores do Vazio','O Vazio tem um mestre.'],['O Céu Cai','Os guardiões celestes caíram em fúria.'],['O Último Selo','Restaure o equilíbrio de Endertell.']];
 const SAGA_L=[3,8,13,18,25,32,42,60,65,72,82,95,112,130,148,168,185,205,222];
-const SAGA=SAGA_L.map((L,i)=>({L,t:SAGA_T[i][0],d:SAGA_T[i][1],mon:monNear(L),n:20}));
+SAGA_T[11]=['A Fortaleza dos Condenados','Os carcereiros enlouqueceram e soltaram os cães do inferno.'];
+const SAGA_MON=['rato','goblin','troll','orc','esqueleto','mumia','onca','aranha_raiz','lobo_gelo','salamandra','pirata_fantasma','cao_infernal','golem_cinza','wyrm_cinza','demonio_cinza','espectro_vazio','cavaleiro_vazio','sentinela','anjo_caido'];
+const SAGA=SAGA_L.map((L,i)=>({L,t:SAGA_T[i][0],d:SAGA_T[i][1],mon:MON[SAGA_MON[i]]?SAGA_MON[i]:monNear(L),n:20}));
 function sagaTalk(){P.saga=P.saga||{ch:0,k:0,on:false};const S=P.saga,c=SAGA[S.ch];
  const opts=[['🎯 Onde ficam as caçadas do dia?',()=>say('Cronista Elara','As caçadas diárias são aceitas e entregues com a Caçadora Bruna no Salão das Missões.',[['Mostrar caminho',()=>{P.guide=npcQuestGoal('bruna','Salão das Missões');closeAll()}],['Fechar',closeAll]])],['Até mais',closeAll]];
  if(!c)return say('Cronista Elara','Você completou todas as <b>Crônicas de Endertell</b>! O reino canta seu nome. Ainda há a Torre Infinita esperando.',opts);
@@ -4548,7 +4550,7 @@ BM.tarnished_rei=function(mo){const en=mo.enr;
 /* ========== HISTÓRIA: ATO II (Mago Eldoran) ========== */
 const SAGA2=[
  {n:'O Mundo em Pedaços',t:'talk',intro:'Então você é quem derrotou Vorath. Sou Eldoran, guardião dos selos antigos, e velho amigo do Sábio Edrin. Ouça bem: <b>Vorath não fugiu da prisão sozinho</b>. Alguém abriu a porta para ele. Desde então o mundo está <b>caindo em pedaços</b>: rachaduras de sombra se abrem pela terra e os grandes guardiões estão sendo corrompidos, um a um. Cada chefe deste mundo virou uma âncora da escuridão. Para conter o mal, será preciso <b>derrotar todos eles</b>.'},
- {n:'Os Guardiões Corrompidos',bosses:['grak','rainha_aranha','senhor_magma','kraken'],rwL:2,intro:'Comece pelos guardiões das cavernas e ilhas: Grak, a Rainha Aranha, o Senhor do Magma e o Kraken Filhote.',done:'Todos carregavam a mesma marca roxa. Uma marca que eu e Edrin não víamos há trinta anos... Volte a falar comigo. Você precisa saber quem está por trás disso.',items:[['pocao_vida_g',10]]},
+ {n:'Os Guardiões Corrompidos',bosses:['grak','rainha_aranha','senhor_magma','kraken'],rwL:2,intro:'Comece pelos guardiões das cavernas e ilhas: Grak, a Rainha Aranha, o Senhor do Magma e o Kraken, no Oceano dos Naufrágios. O Kraken é um gigante: leve um grupo, Conchas de Mergulho e, se puder, Elixires Abissais.',done:'Todos carregavam a mesma marca roxa. Uma marca que eu e Edrin não víamos há trinta anos... Volte a falar comigo. Você precisa saber quem está por trás disso.',items:[['pocao_vida_g',10]]},
  {n:'O Herói Caído',t:'talk',intro:'Trinta anos atrás, eu, Edrin e um jovem cavaleiro enfrentamos Vorath. O cavaleiro se chamava <b>Maculado</b>. Foi ele quem prendeu o demônio e <b>salvou Vussumi</b>. Mas o selo exigia que alguém o vigiasse, e Maculado ficou. Por anos ouviu os sussurros de Vorath, até que, nas profundezas, encontrou um <b>simbionte</b>: uma criatura viva feita de trevas. Ele se rendeu, e ela o dominou por completo. Foi Maculado quem libertou Vorath.<br><br>Lembra do <b>cavaleiro encapuzado</b> que atacou a Gaivota Negra, o navio em que você chegou? <b>Era ele.</b> Você o derrotou no convés... ou pensou que sim. Aquela fumaça roxa era o simbionte fugindo com o corpo dele.'},
  {n:'Gelo e Cinzas',bosses:['dragao_gelo','rei_cinzas'],rwL:2,intro:'O simbionte espalhou sementes de trevas pelo mundo. Destrua as maiores: derrote o Dragão de Gelo Ancestral e o Rei das Cinzas.',done:'Quando o Rei das Cinzas caiu, vi o rosto de Maculado nas chamas. Ele está observando você.',items:[['frag_lendario',5]]},
  {n:'O Vazio',bosses:['senhor_vazio'],rwL:2,intro:'O Senhor do Vazio é o general de Maculado. Derrube-o.',done:'O Vazio gritou ao cair... e chamou um nome. O seu nome. Por que ele quer você?',items:[['frag_lendario',8]]},
@@ -4561,8 +4563,9 @@ function lyraTalk(){const S=s2(),C=SAGA2[S.ch];
  if(S.freed)return say('Lyra',pick(['Nunca vou esquecer que você foi me buscar.','Às vezes ainda sonho com aquele portal... mas agora estou em casa.','O Maculado... no fim, ele sorriu. Acho que ele estava em paz.']),[['Até mais',closeAll]]);
  const won=C&&C.bosses&&C.bosses[0]==='simbionte_final'&&s2Prog(C)[0][1];
  if(!won)return say('???','Uma jovem acorrentada por correntes de sombra. Ela mal consegue falar: <i>"Por favor... ele vai voltar... derrote-o..."</i>',[['Até mais',closeAll]]);
+ if(!(P.fl&&P.fl.maculadoLivre))return say('Lyra','As correntes ainda prendem Lyra, mas estão fracas. <i>"'+esc(P.name)+'... o cavaleiro... ele quer falar com você. Vá até ele antes que se apague."</i>',[['Até mais',closeAll]]);
  S.freed=1;S.ch=SAGA2.length;const xp=Math.round(need(Math.max(P.lvl,1))*2),gold=500000;P.gold+=gold;gainXp(xp);addItem('frag_lendario',25);unlock('x_lyra');sfx('ach');save(true);
- say('Lyra','<b>'+esc(P.name)+'... é você?</b> Eu sabia que viria.<br><br>As correntes se desfazem em fumaça. Atrás de vocês, os restos do simbionte viram cinza. Caído no chão, Maculado abre os olhos uma última vez, livre: <i>"Diga a Eldoran e Edrin... que eu sinto muito. Obrigado... por me libertar."</i> E se apaga, em paz.<br><br>Lyra volta com você para Vussumi.<br><br><b>Fim do Ato II.</b> +'+xp.toLocaleString('pt-BR')+' XP · +'+gold.toLocaleString('pt-BR')+' ouro · 25 Fragmentos Lendários · título <b>Salvador de Endertell</b>',[['🏠 Voltar para casa',()=>{closeAll();teleport({to:'over',tx:74,ty:73})}]])}
+ say('Lyra','<b>'+esc(P.name)+'... é você?</b> Eu sabia que viria.<br><br>As correntes se desfazem em fumaça. Atrás de vocês, os restos do simbionte viram cinza e o lugar onde Maculado caiu está vazio e em paz.<br><br><i>"Ele me protegeu do pior, sabia? Mesmo preso dentro daquela coisa, ele lutava."</i><br><br>Lyra volta com você para Vussumi. <b>Eldoran precisa ouvir o que Maculado disse.</b><br><br><b>Fim do Ato II.</b> +'+xp.toLocaleString('pt-BR')+' XP · +'+gold.toLocaleString('pt-BR')+' ouro · 25 Fragmentos Lendários · título <b>Salvador de Endertell</b>',[['🏠 Voltar para casa',()=>{closeAll();teleport({to:'over',tx:74,ty:73})}]])}
 let lyraPos=0;function lyraTick(){const n=NPCS.find(o=>o.id==='lyra');if(!n)return;const fr=P.saga2&&P.saga2.freed;if(fr&&n.map!=='over'){Object.assign(n,{map:'over',x:72,y:76,hx:39,hy:46,rx:39,ry:46,n:'Lyra',lines:['Obrigada por me salvar!','Vussumi é tão bonita.']})}else if(!fr&&n.map==='over'){Object.assign(n,{map:'covil_tarn',x:13,y:2,hx:13,hy:2,rx:13,ry:2})}if(!fr)n.n=s2().ch>=8?'Lyra':'???';if(!P.peak)P.peak=P.lvl;s2Reveal()}
 ACH.push(['x_lyra','Laços de Sangue','Salvador de Endertell','Liberte Lyra do Mundo Sombrio',()=>!!(P.saga2&&P.saga2.freed)]);
 NEWNPCS.push({id:'eldoran',n:'Mago Eldoran',map:'over',x:76,y:74,pal:{h:'#e8e8f0',c:'#2a2a6a',d:'#1a1a4a'},talk:()=>eldoranTalk(),lines:['O mundo está rachando...','Os selos antigos enfraquecem.']},
@@ -4820,12 +4823,12 @@ function divineStoryReview(){
 }
 function eldoranTalk(){const S=s2(),C=SAGA2[S.ch];const end=[['Até mais',closeAll]];
  if(divineStoryNotes(S).length)end.unshift(['Relatos sobre os deuses',divineStoryReview]);
- if(S.freed)return say('Mago Eldoran','Você trouxe Lyra de volta e libertou a alma de um herói. Vussumi jamais esquecerá.',end);
+ if(S.freed)return act3Talk(end);
  if(!C)return say('Mago Eldoran','Liberte Lyra no Portal do Herói Caído.',end);
  if(S.ch===0&&!(P.story&&P.story.ch>=STORY.length))return say('Mago Eldoran','Hmm... você ainda não está pronto para o que tenho a dizer. Termine sua jornada com o <b>Sábio Edrin</b> e derrote Vorath. Até lá, viva sua aventura como quiser.',end);
  if(C.t==='talk')return say('Mago Eldoran · '+C.n,C.intro,[['Continuar',()=>{s2Start(S.ch+1);s2Reveal();offerTracking('story2');sfx('lvl');const N=SAGA2[S.ch];say('Mago Eldoran · '+N.n,(N.intro?N.intro+'<br><br>':'')+s2Prog(N).map(([l,ok])=>(ok?'✅ ':'⬜ ')+l).join('<br>')+'<br><br><small>Esta parte da história é <b>opcional</b>. Siga quando quiser.</small>',[['Aceitar',closeAll],['📍 Rastrear',()=>{trackMission('story2');closeAll()}]])}],...end]);
  const pr=s2Prog(C);if(!pr.every(x=>x[1])){return say('Mago Eldoran · '+C.n,(C.intro?C.intro+'<br><br>':'')+pr.map(([l,ok])=>(ok?'✅ ':'⬜ ')+l).join('<br>'),[['📍 Rastrear',()=>{trackMission('story2');closeAll()}]].concat(end))}
- if(C.bosses&&C.bosses[0]==='simbionte_final')return say('Mago Eldoran','Você destruiu o simbionte! Corra até o portal e fale com Lyra.',end);
+ if(C.bosses&&C.bosses[0]==='simbionte_final')return say('Mago Eldoran',P.fl&&P.fl.maculadoLivre?'Maculado está livre. Corra até Lyra, no fundo do covil!':'Você destruiu o simbionte! Maculado ainda está no covil: ouça o que ele tem a dizer, depois liberte Lyra.',end);
  for(const t of C.tasks)if(t.t==='item')removeItem(t.id,t.q);
  const rxp=Math.round(need(P.lvl)*(C.rwL||1)),rg=P.lvl*400*(C.rwL||1),got=giveRw({xp:rxp,gold:rg,items:C.items||[]});s2Start(S.ch+1);sfx('ach');say('Mago Eldoran · '+C.n,`${C.done}${C.lore?`<br><br><b>${C.lore[0]}</b><br>${C.lore[1]}`:''}<br><br><b>Recompensa:</b> ${rxp.toLocaleString('pt-BR')} XP · ${rg.toLocaleString('pt-BR')} ouro${got.length?' · '+got.join(', '):''}`,[['Continuar',()=>eldoranTalk()]].concat(end))}
 NEWNPCS.push({
@@ -6131,7 +6134,7 @@ elfHouse('e_cofre','Cofre de Sylvaren',15,11,[45,24],[[1,3,'counter',6,1],[8,3,'
 // NPCs
 const EPAL=(c,h)=>({h,c,d:shade(c,-.32),s:'#f2d6bc',elf:1});
 NEWNPCS.push(
- {id:'lyria',n:'Anciã Lyria',map:'sylvaren',x:32,y:14,pal:EPAL('#e8e8f0','#f0f0f8'),talk:()=>lyriaTalk(),lines:['A Árvore-Mãe sussurra...','Bem-vinda, criança da floresta.']},
+ {id:'lyria',n:'Anciã Aerin',map:'sylvaren',x:32,y:14,pal:EPAL('#e8e8f0','#f0f0f8'),talk:()=>lyriaTalk(),lines:['A Árvore-Mãe sussurra...','Bem-vinda, criança da floresta.']},
  {id:'aelin',n:'Sacerdotisa Aelin',map:'e_templo',x:7,y:3,pal:EPAL('#b8c8f0','#e8e0a0'),talk:()=>aelinTalk(),lines:['Que a Lua te guie.']},
  {id:'sylwen',n:'Armeira Sylwen',map:'e_forja',x:7,y:3,pal:EPAL('#4a7a3a','#c87a3a'),talk:()=>{const d=NPCS.find(n=>n.id==='duran');shop('Armeira Sylwen','Lâminas leves, cajados de raiz e armaduras de folha prensada. Também compro o que você trouxer.',d&&d.shopL?d.shopL():DURANLIST())},lines:['Aço élfico, leve como pena!']},
  {id:'elanor',n:'Herbalista Elanor',map:'e_ervas',x:7,y:3,pal:EPAL('#6a9a5a','#e0b060'),talk:()=>shop('Herbalista Elanor','Poções destiladas do orvalho da Árvore-Mãe. E compro tudo o que você caçar no bosque.',['pocao_vida','pocao_vida_g','pocao_mana','pocao_mana_g','livro_magias','amuleto_vida','amuleto_arcano','anel_forca','anel_mana']),lines:['Ervas frescas!']},
@@ -6139,17 +6142,17 @@ NEWNPCS.push(
  {id:'naeris',n:'Barqueira Naeris',map:'sylvaren',x:52,y:16,pal:EPAL('#2a6a8a','#a0d0e0'),talk:()=>naerisTalk(),lines:['O rio leva a todos os lugares.']},
  {id:'aerin',n:'Sentinela Aerin',map:'sylvaren',x:30,y:32,pal:EPAL('#3a6a3a','#e8d890'),talk:()=>say('Sentinela Aerin','Depois do riacho fica o <b>Bosque de Sylvaren</b>. Ratos e cobras perto da ponte; lobos e morcegos no fundo. Volte para a cidade se a vida ficar baixa: aqui dentro nada te ataca.'),lines:['Nenhuma sombra passa por mim.','Cuidado no bosque!']},
  {id:'miri',n:'Pequena Miri',map:'sylvaren',x:35,y:21,chatty:1,pal:EPAL('#c07ab0','#f0e0a0'),talk:()=>say('Pequena Miri',pick(['Você já viu a Árvore-Mãe brilhar à noite? Os lampiões de cogumelo acendem sozinhos!','Os mestres de Peace recitam os nomes dos cativos da Guerra dos Onze. Eu já decorei os primeiros.','Dizem que a Sombra está secando as raízes lá no norte...'])),lines:['Hihi!','Pega-pega!']});
-function elfIntro(){say('Sylvaren',`Você é <b>${esc(P.name)}</b>, ${P.cls==='knight'?'jovem guerreiro elfo':'jovem xamã'} de <b>Sylvaren</b>, a cidade escondida sob a <b>Árvore-Mãe</b>.<br><br>Os elfos e os homens estão em guerra. Durante a <b>Guerra dos Onze</b>, antepassados dos homens escravizaram elfos. De <b>Peace</b>, a antiga capital, o Grande Rei <b>Petrick How</b> prepara a conquista das terras humanas.<br><br>Há semanas as folhas da Árvore estão escurecendo. A Anciã Lyria diz que uma <b>Sombra</b> vinda das terras dos humanos está envenenando as raízes do mundo.<br><br>Fale com a <b>Anciã Lyria</b>, logo à frente, ao pé da Árvore-Mãe.`,[['Ir até a Anciã',closeAll]]);log('Fale com a Anciã Lyria, ao pé da Árvore-Mãe.','q')}
+function elfIntro(){say('Sylvaren',`Você é <b>${esc(P.name)}</b>, ${P.cls==='knight'?'jovem guerreiro elfo':'jovem xamã'} de <b>Sylvaren</b>, a cidade escondida sob a <b>Árvore-Mãe</b>.<br><br>Os elfos e os homens estão em guerra. Durante a <b>Guerra dos Onze</b>, antepassados dos homens escravizaram elfos. De <b>Peace</b>, a antiga capital, o Grande Rei <b>Petrick How</b> prepara a conquista das terras humanas.<br><br>Há semanas as folhas da Árvore estão escurecendo. A Anciã Aerin diz que uma <b>Sombra</b> vinda das terras dos humanos está envenenando as raízes do mundo.<br><br>Fale com a <b>Anciã Aerin</b>, logo à frente, ao pé da Árvore-Mãe.`,[['Ir até a Anciã',closeAll]]);log('Fale com a Anciã Aerin, ao pé da Árvore-Mãe.','q')}
 function lyriaTalk(){P.fl=P.fl||{};if(!P.fl.ekit){P.fl.ekit=1;P.fl.kit=1;for(const id of['gibao_aprendiz','capuz_aprendiz','calca_aprendiz','botas_aprendiz'])if(IT[id])addItem(id);addItem('pocao_vida',5);if(P.cls==='mage')addItem('pocao_mana',3);P.gold+=40;sfx('coin');save(true);
-  say('Anciã Lyria',`Então você despertou, ${esc(P.name)}. A Árvore-Mãe te escolheu.<br><br>Tome estas <b>vestes de aprendiz</b>, poções e <b>40 de ouro</b>. Abra a <b>bolsa</b> e toque em cada peça para vestir.<br><br>Treine no <b>Bosque de Sylvaren</b>, depois do riacho ao sul. Quando chegar ao <b>nível 8</b>, a Barqueira Naeris pode te levar ao mundo dos humanos, onde a Sombra nasceu.`,[['Obrigado, Anciã',closeAll]]);return}
+  say('Anciã Aerin',`Então você despertou, ${esc(P.name)}. A Árvore-Mãe te escolheu.<br><br>Tome estas <b>vestes de aprendiz</b>, poções e <b>40 de ouro</b>. Abra a <b>bolsa</b> e toque em cada peça para vestir.<br><br>Treine no <b>Bosque de Sylvaren</b>, depois do riacho ao sul. Quando chegar ao <b>nível 8</b>, a Barqueira Naeris pode te levar ao mundo dos humanos, onde a Sombra nasceu.`,[['Obrigado, Anciã',closeAll]]);return}
  const t=P.lvl<8?'Ainda é cedo. Fique forte no <b>Bosque de Sylvaren</b>, ao sul. A Sacerdotisa Aelin, no Templo da Lua, cura seus ferimentos.':'Você está pronto. Procure a <b>Barqueira Naeris</b> no cais a leste. Os homens de Vussumi são nossos inimigos de guerra e não confiam em nós. Investigue a Sombra nas terras inimigas. Faça o que for necessário para voltar com respostas.';
- say('Anciã Lyria',t+'<br><br><small>Na cidade: 🌙 Templo da Lua (cura) · 🏹 Forja Élfica (equipamentos) · 🌿 Ervas de Elanor (poções) · 💎 Cofre (depósito)</small>',[['Até mais',closeAll]])}
+ say('Anciã Aerin',t+'<br><br><small>Na cidade: 🌙 Templo da Lua (cura) · 🏹 Forja Élfica (equipamentos) · 🌿 Ervas de Elanor (poções) · 💎 Cofre (depósito)</small>',[['Até mais',closeAll]])}
 function aelinTalk(){const st=stats();const ok=P.hp<st.maxHp||P.mp<st.maxMp;say('Sacerdotisa Aelin',ok?'Deixe a luz da Lua fechar suas feridas.':'Você está inteiro, filho da floresta. Se cair em Sylvaren, a Lua te trará de volta a este templo. Nas outras ilhas, você retorna ao templo local ou ao porto.',ok?[['🌙 Curar (grátis)',()=>{restRecovery();ring(P,1.4,'#b8d8ff');text(P,'CURADO','#b8d8ff',1200);sfx('skill');closeAll()}],['Até mais',closeAll]]:[['Até mais',closeAll]])}
 function naerisTalk(){if(P.fac==='elfo'&&P.lvl<8){say('Barqueira Naeris','O rio é perigoso para quem ainda não tem raízes fortes. Volte quando chegar ao <b>nível 8</b>.',[['Certo',closeAll]]);return}travel('Barqueira Naeris','sylvaren')}
 Object.assign(PORTS,{sylvaren:{map:'sylvaren',x:52,y:18,npc:'naeris',n:'Sylvaren (cidade élfica)'}});
 function travel(who,from){const s=PORTS.sylvaren;if(P.fac!=='elfo')delete PORTS.sylvaren;try{travel_e(who,from)}finally{PORTS.sylvaren=s}}
 function storyGoal(){if(P&&P.fac==='elfo'&&!(P.fl&&P.fl.eleft)){if(P.map!=='sylvaren'&&!/^e_/.test(P.map)&&P.map!=='ship'){P.fl=P.fl||{};P.fl.eleft=1}else{
- if(!(P.fl&&P.fl.ekit))return{name:'História: falar com a Anciã Lyria',...npcAt('lyria')};if(P.lvl<8)return{name:'História: chegue ao nível 8 no Bosque de Sylvaren',map:P.map,x:P.x,y:P.y,noArrow:1};return{name:'História: falar com a Barqueira Naeris',...npcAt('naeris')}}}return storyGoal_e()}
+ if(!(P.fl&&P.fl.ekit))return{name:'História: falar com a Anciã Aerin',...npcAt('lyria')};if(P.lvl<8)return{name:'História: chegue ao nível 8 no Bosque de Sylvaren',map:P.map,x:P.x,y:P.y,noArrow:1};return{name:'História: falar com a Barqueira Naeris',...npcAt('naeris')}}}return storyGoal_e()}
 function npcIco(n){if(n.id==='lyria'&&P&&P.fac==='elfo'&&!(P.fl&&P.fl.ekit))return'❗';return npcIco_e(n)}
 function newPlayer(name,cls){const r=newPlayer_f.apply(this,arguments);if(pickFac==='elfo'){P.fac='elfo';P.tut=false;P.map='sylvaren';P.x=SYLV.spawn[0];P.y=SYLV.spawn[1];P.nb=99;prepPlayer()}return r}
 
@@ -6746,7 +6749,7 @@ const CIT=[];let citInit=false,citT=0,citBfs=0,citPlanAt=0;
 const CITPAL=[{h:'#5a3a1a',c:'#8a5a3a',d:'#5a3a2a'},{h:'#c0a060',c:'#3a6a8a',d:'#2a4a6a'},{h:'#2a1a10',c:'#8a2a3a',d:'#5a1a2a'},{h:'#e0e0e0',c:'#5a7a3a',d:'#3a5a2a'},{h:'#a05a20',c:'#6a4a8a',d:'#4a2a6a'},{h:'#1a1a1a',c:'#a08040',d:'#806020'},{h:'#d8b070',c:'#b05a4a',d:'#803a2a'},{h:'#4a3020',c:'#4a7a6a',d:'#2a5a4a'},{h:'#8a8a8a',c:'#6a5a4a',d:'#4a3a2a'},{h:'#f0d080',c:'#c0a0c0',d:'#8a6a8a'}];
 const CITSPOT={porto:[[35,56],[40,54],[44,62],[30,54],[48,57]],baixo:[[30,82],[40,82],[35,94],[45,97],[30,102],[40,110]],praca:[[63,67],[77,68],[66,62],[74,76],[62,72],[78,66]],merc:[[93,65],[99,65],[105,65],[111,65],[95,80],[106,80]],arte:[[95,96],[106,96],[94,110],[103,110],[112,110]],guild:[[60,98],[79,98],[80,107],[60,110]],templo:[[103,35],[100,40],[108,38],[113,30]],arcano:[[31,33],[42,31],[36,38],[45,36]],cidadela:[[60,37],[80,37],[52,32],[70,38]]};
 const CITLN={porto:['Peixe fresco, direto do rio!','Esse rio já levou muito barco...','A taverna enche quando escurece.'],baixo:['As crianças não param quietas hoje.','Minha horta está linda este ano.','Ouvi dizer que vão reconstruir a vila queimada.'],praca:['Que dia bonito na praça!','Já viu a fonte nova?','Dizem que tem um herói andando por aí.'],merc:['Preço bom é preço justo!','A feira de sábado é a melhor.','Cuidado com a carteira na multidão.'],arte:['O martelo não para nunca aqui.','Couro bom vem do bosque.','Essa serra precisa de óleo...'],guild:['Mais um grupo saindo para caçar.','A arena está cheia de novatos.','Já se inscreveu numa guilda?'],templo:['Que a luz te guarde.','Os sinos tocam ao amanhecer.','Silêncio, por favor...'],arcano:['Shh, estou estudando.','A biblioteca tem livros mais velhos que o reino.','Vi uma luz roxa na torre ontem.'],cidadela:['A guarda está mais atenta desde o caso do rei.','O palácio é lindo, não é?','Dizem que a Regente é justa.']};
-function citLine(c){const L=[...CITLN[c.d]];if(P.story&&P.story.ch>=11)L.push('Obrigado por derrotar Vorath, herói!');if(P.fl&&P.fl.reiMorto)L.push('O rei roubava a gente... ainda bem que acabou.','A estátua na praça é sua? Que honra!');if(P.fl&&P.fl.ezequiel)L.push('Um elfo no palácio do rei? Que estranho...');if(P.fac==='elfo')L.push('Um elfo aqui em Vussumi?','Os guardas estão de olho em você, elfo.');return pick(L)}
+function citLine(c){const L=[...CITLN[c.d]];if(storyAfterVorath())L.push('Obrigado por derrotar Vorath, herói!');if(P.fl&&P.fl.reiMorto)L.push('O rei roubava a gente... ainda bem que acabou.','A estátua na praça é sua? Que honra!');if(P.fl&&P.fl.ezequiel)L.push('Um elfo no palácio do rei? Que estranho...');if(P.fac==='elfo')L.push('Um elfo aqui em Vussumi?','Os guardas estão de olho em você, elfo.');return pick(L)}
 function citSetup(){citInit=true;const keys=Object.keys(CITSPOT);let i=0;for(const d of keys)for(let k=0;k<(d==='merc'||d==='praca'?7:d==='templo'||d==='arcano'?3:5);k++){const S0=CITSPOT[d],h=S0[(k*3)%S0.length];CIT.push({d,img:human(CITPAL[i++%CITPAL.length]),home:h,x:h[0],y:h[1],rx:h[0],ry:h[1],face:1,dir:'down',next:nowT+R()*6000,path:null,hidden:false,tav:R()<.25,lineT:0})}}
 function citGoal(c){const h=gameHour();if(h>=22||h<6)return c.home;if(h>=19&&c.tav)return[33,63];const S0=CITSPOT[c.d];return R()<.25?pick(CITSPOT.praca):pick(S0)}
 function citTick(){if(!P||P.map!=='over'||!inCityNew(P.x,P.y))return;if(!citInit)citSetup();if(nowT<citT)return;citT=nowT+120;citBfs=0;const h=gameHour(),night=h>=22||h<6;
@@ -6760,7 +6763,7 @@ function citTick(){if(!P||P.map!=='over'||!inCityNew(P.x,P.y))return;if(!citInit
  if(R()<.02){const c=CIT.find(c=>!c.hidden&&cheb(c,P)<=3&&nowT>c.lineT);if(c){c.lineT=nowT+20000;text(c,citLine(c),'#f0e6c8',2600)}}}
 function drawCit(camX,camY){if(!P||P.map!=='over'||!citInit)return;for(const c of CIT){if(c.hidden)continue;const X=c.rx*S-camX,Y=c.ry*S-camY;if(X<-S*2||Y<-S*2||X>cv.width+S||Y>cv.height+S)continue;try{drawSprite(c.img,c,camX,camY)}catch(e){}}}
 /* ---------- reconstrução (Mestre de Obras Gualter) ---------- */
-const RECON=[{n:'Limpar a Vila Queimada',cost:20000,req:()=>P.story&&P.story.ch>=11,reqT:'depois de derrotar Vorath',d:'Tirar os escombros e preparar o terreno.'},
+const RECON=[{n:'Limpar a Vila Queimada',cost:20000,req:()=>storyAfterVorath(),reqT:'depois de derrotar Vorath',d:'Tirar os escombros e preparar o terreno.'},
  {n:'Reconstruir as casas',cost:80000,req:()=>P.fl&&P.fl.reiMorto,reqT:'depois de derrubar o Rei Corrupto',d:'Com o ouro do tesouro devolvido, as casas queimadas voltam a ser lares.'},
  {n:'Inaugurar o Bairro Novo',cost:200000,req:()=>P.lvl>=120,reqT:'a partir do nível 120',d:'Ruas floridas, a estátua do herói em ouro e uma festa na praça.'}];
 function gualterTalk(){const ph=vRecon();if(ph>=RECON.length){say('Mestre de Obras Gualter','O Bairro Novo está de pé, e o povo canta o seu nome! Obrigado por reerguer Vussumi.',[['De nada',closeAll]]);return}const o=RECON[ph],ok=o.req(),fmt=n=>n.toLocaleString('pt-BR');
@@ -6778,7 +6781,7 @@ let raidT=0,RAID=null;function raidTick(){if(!ONLINE_WORLD_EVENTS||!P||P.dead||P
 const isSat=()=>new Date().getDay()===6;
 /* ---------- quadros de avisos e missões de bairro ---------- */
 function newsTxt(){const L=['A Feira de Sábado traz o Mercador Viajante ao Bairro dos Mercadores.'];
- if(!(P.story&&P.story.ch>=11))L.unshift('Vorath ainda ameaça o reino. O Sábio Edrin procura ajuda na praça.');else L.unshift('VORATH CAIU! Vussumi comemora o seu herói.');
+ if(!(storyAfterVorath()))L.unshift('Vorath ainda ameaça o reino. O Sábio Edrin procura ajuda na praça.');else L.unshift('VORATH CAIU! Vussumi comemora o seu herói.');
  if(P.fl&&P.fl.reiMorto)L.unshift('ESCÂNDALO: o Rei Aldemar roubava o tesouro. A Regente Ilsa promete devolver o ouro ao povo.');if(P.fl&&P.fl.ezequiel)L.push('Testemunhas viram um elfo de cabelo prateado fugindo do palácio.');
  L.push(`Obras da Vila Queimada: ${vRecon()}/${RECON.length} concluídas. Fale com o Mestre de Obras Gualter.`);return'📰 <b>Notícias de Vussumi</b><br>• '+L.join('<br>• ')}
 const dkey=()=>new Date().toLocaleDateString('sv');
@@ -12278,5 +12281,75 @@ function ordersDlg(back=closeAll){
   const row=el(`<div class="quest" style="margin:8px 0"><h4>${ord.done?'✅':'📦'} ${ord.q}× ${esc(ord.n)}</h4><p style="font-size:12px">${ord.type==='recipe'?'Qualquer nível e qualidade.':ord.type==='forged'?'Equipamento forjado na bigorna (não vale o que está vestido).':''} Você tem: <b>${Math.min(have,ord.q)}/${ord.q}</b></p><button class="gold" style="width:100%" ${ord.done||have<ord.q?'disabled':''}>${ord.done?'Entregue':'Entregar'}</button></div>`).firstElementChild;
   row.querySelector('button').onclick=e=>confirmBuy(e.currentTarget,()=>{ordersDeliver(i);ordersDlg(back)});body.append(row);
  });
+}
+</script>
+
+<script>
+/* ===== História: progressão das ilhas (45 a 95), Maculado libertado e Ato III ===== */
+'use strict';
+for(let i=0;i<SAGA.length;i++)if(MON[SAGA_MON[i]])SAGA[i].mon=SAGA_MON[i]; // monstros definidos depois do início do arquivo
+function storyAfterVorath(){const i=STORY.findIndex(c=>c.mon==='arquidemonio');return !!(P&&P.story&&i>=0&&P.story.ch>i)}
+/* 3) Capítulos entre o Faraó (45) e Vorath (95), ligando as ilhas e explicando a marca vermelha. */
+const ISLAND_CHAPTERS=[
+ {n:'A Marca nas Raízes',mon:'xama',need:20,minLv:60,d:'Derrote 20 xamãs na Ilha Verdejante.',
+  intro:'A Pajé Tainá mandou um recado: na Ilha Verdejante, xamãs pintam no rosto a mesma <b>marca vermelha</b> dos ratos, dos goblins e do Guardião das Brumas. Pegue um barco no cais e descubra a quem eles servem. (a partir do nível 60)',
+  done:'Agora sabemos: a marca vermelha é a <b>marca de Vorath</b>. Quem a carrega ouve a voz dele e enlouquece aos poucos, como os ratos do esgoto e os goblins. Os xamãs repetiam uma frase antes de cair: "o fogo que dorme debaixo do mar vai quebrar as correntes".',
+  rw:{xp:20000,gold:2500,items:[['pocao_vida_g',6]]}},
+ {n:'Fogo Debaixo do Mar',mon:'golem_lava',need:15,minLv:70,d:'Derrote 15 golens de lava na Ilha Vulcânica.',
+  intro:'"O fogo que dorme debaixo do mar"... só pode ser a Ilha Vulcânica. Fale com a Marinheira Brasa no porto e investigue os golens de lava. (a partir do nível 70)',
+  done:'Os golens carregavam pedaços de corrente gravados com a marca vermelha. Alguém usa a lava da ilha para forjar correntes que enfraquecem o selo de Vorath. A Marinheira Brasa viu <b>navios negros</b> saindo da ilha rumo aos Naufrágios.',
+  rw:{xp:28000,gold:3000,items:[['pocao_vida_g',6]]}},
+ {n:'Os Navios Negros',mon:'pirata_fantasma',need:20,minLv:80,d:'Derrote 20 piratas-fantasma na Ilha dos Naufrágios.',
+  intro:'Os navios negros afundam perto da Ilha dos Naufrágios e voltam à tona tripulados por fantasmas. Descubra para onde levam as correntes. Cuidado: algo enorme se mexe no fundo daquelas águas. (a partir do nível 80)',
+  done:'Os piratas-fantasma levavam as correntes para a <b>Caverna Abandonada</b>, ao norte da Floresta Norte, onde fica a prisão de Vorath. E o que se mexe no fundo do mar tem nome: o <b>Kraken</b>. Ele também carrega a marca.',
+  rw:{xp:36000,gold:3500,items:[['pocao_vida_g',8]]}},
+ {n:'Os Cultistas do Selo',mon:'cultista',need:20,minLv:85,d:'Derrote 20 cultistas na Caverna Abandonada.',
+  intro:'Na Caverna Abandonada, cultistas com a marca vermelha usam as correntes para alimentar Vorath. Derrote-os antes que ele recupere todo o poder. (a partir do nível 85)',
+  done:'Sem os cultistas, Vorath perdeu quem o alimentava. Mas antes de cair, um deles riu: "o mestre do meu mestre não usa marca vermelha... usa roxa". Guarde isso. Agora fique forte: Vorath espera no portal da caverna. (nível 95)',
+  rw:{xp:45000,gold:4000,items:[['frag_lendario',2]]}}
+];
+{
+ const at=STORY.findIndex(c=>c.mon==='arquidemonio');
+ if(at>=0)STORY.splice(at,0,...ISLAND_CHAPTERS);
+ const nbBefore=nbTick;
+ nbTick=function(){const r=nbBefore.apply(this,arguments);
+  if(P&&P.storyV===2){if(P.story&&at>=0&&P.story.ch>=at)P.story.ch+=ISLAND_CHAPTERS.length;P.storyV=3}
+  return r};
+}
+/* 1) Maculado libertado, depois Lyra, depois Eldoran e o Oráculo (Ato III). */
+NEWNPCS.push({id:'maculado_livre',n:'Maculado, livre',map:'oculto',x:13,y:5,still:1,wander:false,pal:{h:'#c8c8d0',c:'#4a4a5a',d:'#2a2a36'},lines:['...'],talk:()=>maculadoTalk()});
+function maculadoShown(){const S=P&&P.saga2;if(!S||S.freed)return false;const C=SAGA2[S.ch];return !!(C&&C.bosses&&C.bosses[0]==='simbionte_final'&&s2Prog(C)[0][1])}
+{const updateBefore=update;let macT=0;update=function(){const r=updateBefore.apply(this,arguments);if(P&&nowT>=macT){macT=nowT+500;const n=NPCS.find(o=>o.id==='maculado_livre');if(n){const want=maculadoShown()?'covil_tarn':'oculto';if(n.map!==want)n.map=want}}return r}}
+function maculadoTalk(){
+ const S=s2(),C=SAGA2[S.ch],won=S.freed||(C&&C.bosses&&C.bosses[0]==='simbionte_final'&&s2Prog(C)[0][1]);
+ if(!won)return say('Sombra do cavaleiro','Uma presença fria observa você de dentro do simbionte. Ainda não é hora.',[['Fechar',closeAll]]);
+ P.fl=P.fl||{};const first=!P.fl.maculadoLivre;P.fl.maculadoLivre=1;save(true);
+ say('Maculado, livre','O simbionte virou cinza. Caído no chão, o cavaleiro que um dia salvou Vussumi abre os olhos, enfim livre.<br><br><i>"Obrigado... por me libertar. Escute, não temos muito tempo. Vorath, o simbionte... eu mesmo... fomos só ferramentas. Quem colocou aquela criatura no meu caminho foi <b>Kael</b>, o irmão que fugiu das Terras Divinas. Ele quer controlar Endertell inteira, homens e elfos. A marca roxa é dele."</i><br><br><i>"Mate Kael. Ele é o verdadeiro vilão. E diga a Eldoran e Edrin... que eu sinto muito."</i><br><br>A luz no corpo dele se apaga, em paz.'+(first?'<br><br><b>Lyra está presa no fundo do covil.</b> Vá até ela.':''),[['Ir até Lyra',closeAll]]);
+}
+const ACT3=[
+ {n:'O Verdadeiro Vilão',t:'talk',intro:'Kael... então era ele desde o começo. Lembra dos relatos? Kael, irmão de Jaogg, convenceu Anabela a envenenar o próprio irmão e fugiu das Terras Divinas. Na Forja Abissal, traiu o Senhor do Magma e levou a Espada Abissal. E agora sabemos que foi ele quem colocou o simbionte no caminho de Maculado.<br><br>Não conseguimos vencer um deus fugido com espadas comuns. Só uma pessoa conhecia por inteiro as histórias dos deuses: <b>Dave, o Oráculo</b>. Ele sumiu há muito tempo. Se Dave ainda vive, ele sabe onde Kael se esconde e como derrotá-lo.'},
+ {n:'Em Busca do Oráculo',tasks:[
+   {npc:'bruna3',l:'Pergunte à Caçadora Celeste sobre o registro do Santuário',line:'O registro do oráculo? Eu guardei a página. Na margem, o escriba anotou que Dave partiu "para onde as nuvens se partem, para ouvir o céu". Só pode ser a Ilha das Nuvens Partidas.'},
+   {npc:'taina',l:'Peça à Pajé Tainá que consulte os espíritos',line:'Os espíritos conhecem esse nome. Dave não morreu: ele dorme acordado, esperando alguém que carregue a luz de um herói e o sangue de quem sobreviveu ao mar. Esse alguém é você.'},
+   {npc:'elric',l:'Conte tudo ao Sábio Edrin',line:'Maculado... pediu desculpas? Então meu velho amigo voltou no fim. Vá. Desta vez não é só Vussumi: é Endertell inteira. Eu e Eldoran cuidamos de Lyra.'}],
+  done:'Nuvens Partidas... Então é lá que tudo começa de verdade. Prepare-se, '+'<b>herói</b>: a sua jornada contra Kael começa agora.<br><br><i>Continua em uma próxima atualização.</i>'}
+];
+function a3(){P.fl=P.fl||{};return P.fl.act3||(P.fl.act3={ch:0,talked:{}})}
+function a3Ok(t){return !!a3().talked[t.npc]}
+function act3Talk(end){
+ const A=a3(),C=ACT3[A.ch];
+ if(!C)return say('Mago Eldoran','A Ilha das Nuvens Partidas espera por você. Encontre Dave, o Oráculo. Lyra está segura conosco.',end);
+ if(C.t==='talk')return say('Mago Eldoran · Ato III · '+C.n,'Lyra me contou tudo, e eu ouvi as palavras de Maculado.<br><br>'+C.intro,[['Continuar',()=>{A.ch++;A.talked={};save(true);sfx('lvl');act3Talk(end)}],...end]);
+ const pr=C.tasks.map(t=>(a3Ok(t)?'✅ ':'⬜ ')+t.l).join('<br>');
+ if(!C.tasks.every(a3Ok))return say('Mago Eldoran · Ato III · '+C.n,pr,end);
+ A.ch++;save(true);sfx('ach');const xp=Math.round(need(Math.max(P.lvl,1))),gold=50000;P.gold+=gold;gainXp(xp);
+ say('Mago Eldoran · Ato III · '+C.n,C.done+'<br><br><b>Recompensa:</b> '+xp.toLocaleString('pt-BR')+' XP · '+gold.toLocaleString('pt-BR')+' ouro',end);
+}
+{
+ const talkBefore=talk;
+ talk=function(n){
+  if(P&&P.saga2&&P.saga2.freed&&n){const A=a3(),C=ACT3[A.ch];const t=C&&C.tasks&&C.tasks.find(t=>t.npc===n.id&&!A.talked[t.npc]);
+   if(t){A.talked[t.npc]=1;save(true);sfx('lvl');return say(n.n+' · Ato III',t.line+'<br><br><small>✅ '+t.l+'</small>',[['Continuar',closeAll],['Falar normalmente',()=>{closeAll();talkBefore(n)}]])}}
+  return talkBefore.apply(this,arguments)};
 }
 </script>

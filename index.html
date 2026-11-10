@@ -3029,26 +3029,29 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const PROFESSIONS={
  ferreiro:{n:'Ferreiro',icon:'⚒️',desc:'Forje armas exclusivas usando o sistema de qualidade existente, desmonte equipamentos e trabalhe com minérios e fragmentos.',map:'over',x:95,y:94,place:'Bigorna do Ferreiro Duran, Vussumi'},
  alquimista:{n:'Alquimista',icon:'🧪',desc:'Produza poções para usar ou vender, aprenda técnicas de alquimia e colete ingredientes exclusivos.',map:'over',x:96,y:97,place:'Laboratório da Alquimista Mira, Vussumi'},
- explosion:{n:'Explosion',icon:'💥',desc:'Especialize-se em dispositivos fantásticos de área e itens arremessáveis, com habilidades próprias.',map:'over',x:95,y:97,place:'Área de oficinas de Vussumi (estação exclusiva planejada)'},
+ explosion:{n:'Explosion',icon:'💥',soon:1,desc:'Especialize-se em dispositivos fantásticos de área e itens arremessáveis, com habilidades próprias.',map:'over',x:95,y:97,place:'Área de oficinas de Vussumi (estação exclusiva planejada)'},
  cowboy:{n:'Cowboy',icon:'💣',desc:'Fabrique bombas de dano, fogo, gelo e veneno. Receitas mais fortes exigem níveis e materiais maiores.',map:'over',x:61,y:109,place:'Estábulo do Cavalariço Beto, Vussumi'}
 };
+const PROF_SKILL={ferreiro:'ferr',alquimista:'alq',cowboy:'bombas',explosion:'explosion'};
+function profSync(){if(!P||!P.profession||!PROF_SKILL[P.profession])return;const p=prof(PROF_SKILL[P.profession]);P.profLv=p.lv;P.profXp=p.xp}
+function profXpText(){profSync();const lv=P.profLv||1;return lv>=50?'nível máximo':`XP ${P.profXp||0}/${profNeed(lv)}`}
 function profGuide(){const q=PROFESSIONS[P.profession];if(!q)return;P.guide=null;P.track='profession';save(true);closeAll();toast(null,'🎯 Oficina rastreada em Missões: '+q.place)}
 /* v34: seleção e troca de profissão inteiramente dentro da aba. */
 let profPending=null,profResetStep=0;
 function profConfirm(k){
- if(P.lvl<10||P.profession||!PROFESSIONS[k])return;
+ if(P.lvl<10||P.profession||!PROFESSIONS[k]||PROFESSIONS[k].soon)return;
  profPending=k;profResetStep=0;renderPanel();
 }
 function profChoose(k){
- if(P.lvl<10||P.profession||profPending!==k||!PROFESSIONS[k])return;
- P.profession=k;P.profXp=0;P.profLv=1;
+ if(P.lvl<10||P.profession||profPending!==k||!PROFESSIONS[k]||PROFESSIONS[k].soon)return;
+ P.profession=k;P.profXp=0;P.profLv=1;profSync();
  profPending=null;profResetStep=0;
  save(true);toast(null,'Profissão escolhida: '+PROFESSIONS[k].n+'! Local disponível na aba Profissões.');renderPanel();
 }
 function profReset(){
  if(!P.profession||profResetStep!==2)return;
  const old=P.profession;
- const skill={ferreiro:'ferr',alquimista:'alq',cowboy:'bombas',explosion:'explosion'}[old];
+ const skill=PROF_SKILL[old];
  if(P.prof&&skill)delete P.prof[skill];
  P.profession=null;P.profXp=0;P.profLv=1;
  if(P.track==='profession')P.track=null;
@@ -3062,10 +3065,11 @@ function profReset(){
 }
 function profNotice(b,html){const n=document.createElement("div");n.className="quest";n.style.cssText="border:1px solid var(--gold,#b98b45);padding:12px;border-radius:10px;margin:12px 0";n.innerHTML=html;b.append(n);return n}
 function pProf(b){
+ profSync();
  if(P.lvl<10){b.append(el(`<div class="sect">🔒 Profissões</div><p>Você poderá escolher uma profissão ao alcançar o <b>nível 10</b>. Nível atual: <b>${P.lvl}</b>.</p><p>Você poderá escolher quando quiser após desbloquear.</p>`));return}
  if(P.profession&&PROFESSIONS[P.profession]){
   const q=PROFESSIONS[P.profession];
-  b.append(el(`<div class="sect">${q.icon} ${q.n}</div><p>${q.desc}</p><p><b>Profissão nível ${P.profLv||1}</b> · XP profissional ${P.profXp||0}</p><p><b>Local de trabalho:</b> ${q.place} · X: ${q.x}, Y: ${q.y}</p><p style="color:var(--muted)">Receitas exclusivas, habilidades profissionais e mercado compartilhado serão implementados em etapas futuras.</p><button class="gold" id="profGo">🎯 Rastrear minha oficina em Missões</button>`));
+  b.append(el(`<div class="sect">${q.icon} ${q.n}</div><p>${q.desc}</p><p><b>Profissão nível ${P.profLv||1}</b> · ${profXpText()}</p><p><b>Local de trabalho:</b> ${q.place} · X: ${q.x}, Y: ${q.y}</p><p style="color:var(--muted)">Receitas exclusivas, habilidades profissionais e mercado compartilhado serão implementados em etapas futuras.</p><button class="gold" id="profGo">🎯 Rastrear minha oficina em Missões</button>`));
   b.querySelector('#profGo').onclick=profGuide;
   const reset=el('<div class="quest"><h4>🔄 Reiniciar profissão</h4><p>Você poderá escolher outra profissão, mas perderá <b>todo o nível, XP e progresso de habilidades profissionais</b>. Seu nível de combate, atributos e equipamentos não serão alterados.</p><button id="profResetStart">Reiniciar profissão</button></div>').firstElementChild;b.append(reset);
   reset.querySelector('#profResetStart').onclick=()=>{profResetStep=1;renderPanel()};
@@ -3085,7 +3089,7 @@ function pProf(b){
  b.append(el('<div class="sect">Escolha sua profissão</div><p>Disponível desde o nível 10. Você pode escolher quando quiser. Apenas <b>uma profissão ativa por personagem</b>. Reiniciar a profissão no futuro apagará seu progresso profissional.</p>'));
  for(const[k,q]of Object.entries(PROFESSIONS)){
   const selected=profPending===k;
-  const r=el(`<div class="quest"><h4>${q.icon} ${q.n}</h4><p>${q.desc}</p><p style="color:var(--muted)">📍 ${q.place}</p><div class="btnRow"><button class="gold" data-prof-action="${selected?'confirm':'choose'}">${selected?'Confirmar '+q.n:'Escolher '+q.n}</button>${selected?'<button data-prof-action="cancel">Cancelar</button>':''}</div>${selected?'<p style="color:var(--muted);font-size:12px">Confirme para começar nesta profissão. Se reiniciá-la depois, perderá nível e XP profissionais.</p>':''}</div>`);
+  const r=el(`<div class="quest"><h4>${q.icon} ${q.n}</h4><p>${q.desc}</p><p style="color:var(--muted)">📍 ${q.place}</p><div class="btnRow">${q.soon?'<button disabled>🔒 Em desenvolvimento</button>':`<button class="gold" data-prof-action="${selected?'confirm':'choose'}">${selected?'Confirmar '+q.n:'Escolher '+q.n}</button>`}${selected?'<button data-prof-action="cancel">Cancelar</button>':''}</div>${selected?'<p style="color:var(--muted);font-size:12px">Confirme para começar nesta profissão. Se reiniciá-la depois, perderá nível e XP profissionais.</p>':''}</div>`);
   r.querySelector('[data-prof-action="choose"]')?.addEventListener('click',()=>profConfirm(k));
   r.querySelector('[data-prof-action="confirm"]')?.addEventListener('click',()=>profChoose(k));
   r.querySelector('[data-prof-action="cancel"]')?.addEventListener('click',()=>{profPending=null;renderPanel()});
@@ -3596,7 +3600,7 @@ function craftDlg(who,list,pk){say(who,pk==='alq'?'Misture materiais de monstros
    if(!addItem(out,n)){
     P.bag=bag;P.inv=inv;bagKey='';toast(null,'Abra espaço na bolsa ou na mochila. Os ingredientes foram preservados.');return;
    }
-   profXp(pk,15);sfx('loot');toast(itemIcon(out),`${n>1?'2× ':''}${IT[out].n} pronto!`);save(true);craftDlg(who,list,pk);
+   (pk!=='alq'||P.profession==='alquimista')&&profXp(pk,15);sfx('loot');toast(itemIcon(out),`${n>1?'2× ':''}${IT[out].n} pronto!`);save(true);craftDlg(who,list,pk);
   };body.append(r)}}
 const buffV=k=>{const b=(P.buf2||{})[k];return b&&b.until>Date.now()?b.v:0};
 function applyBuff(u,name){P.buf2=P.buf2||{};P.buf2[u.buff]={v:u.v,until:Date.now()+u.min*60000};if(u.atk)P.buf2.atk={v:u.atk,until:Date.now()+u.min*60000};text(P,name,'#ffd070',1400);sfx('skill');log(`${name}: bônus de ${{xp:'XP',atk:'ataque',def:'defesa',drop:'sorte'}[u.buff]} por ${u.min} minutos.`,'q')}
@@ -5955,7 +5959,7 @@ function pQuest(b){const tmp=document.createElement('div');pQuest_t(tmp);const g
  groups.miss.push(el('<p style="font-size:12px;color:var(--muted)">Pegue e entregue missões no <b>📜 Quadro de Missões</b> do Salão das Missões (10, 50 ou 100 monstros).</p>'));
  if(P.profession&&PROFESSIONS[P.profession]){
   const w=WORKSHOPS[P.profession],q=PROFESSIONS[P.profession],active=P.track==='profession';
-  const box=el(`<div class="quest" style="border:1px solid #b98b45;border-radius:10px;padding:10px"><h4>${w.icon} Missão de profissão: ${q.n}</h4><p>Encontre sua oficina <b>${w.name}</b> em Vussumi e interaja com ${w.station}. Esta missão é permanente e pode ser rastreada quantas vezes quiser.</p><p>📍 Entrada: X ${w.entry[0]}, Y ${w.entry[1]} · Profissão nível ${P.profLv||1}</p><button id="professionTrack" class="${active?'gold':''}">${active?'✕ Parar de rastrear':'➜ Rastrear oficina'}</button></div>`);
+  const box=el(`<div class="quest" style="border:1px solid #b98b45;border-radius:10px;padding:10px"><h4>${w.icon} Missão de profissão: ${q.n}</h4><p>Encontre sua oficina <b>${w.name}</b> em Vussumi e interaja com ${w.station}. Esta missão é permanente e pode ser rastreada quantas vezes quiser.</p><p>📍 Entrada: X ${w.entry[0]}, Y ${w.entry[1]} · Profissão nível ${(profSync(),P.profLv||1)}</p><button id="professionTrack" class="${active?'gold':''}">${active?'✕ Parar de rastrear':'➜ Rastrear oficina'}</button></div>`);
   box.querySelector('#professionTrack').onclick=()=>{P.track=active?null:'profession';P.guide=null;save(true);renderPanel();toast(null,active?'Rastreamento da profissão desativado':'🎯 Siga a seta amarela até sua oficina')};
   groups.miss.unshift(box);
  }
@@ -6288,7 +6292,7 @@ function facApply(){const elf=P&&P.fac==='elfo',M=elf?(P.cls==='knight'?ELFSK:XA
  for(const k in SPECO)SPEC[k][1]=SPECO[k];if(elf&&P.cls==='knight'){SPEC.giro[1]='Flecha Vampira';SPEC.golpe[1]='Tiro na Mosca';SPEC.terremoto[1]='Céu de Flechas'}
  if(isArch()){const cv=L=>{for(const e of L||[])if(IT[e.id]&&IT[e.id].slot==='weapon')e.id=arConv(e.id)};cv(P.bag);cv(P.inv);cv(P.depot);if(P.eq.weapon)P.eq.weapon=arConv(P.eq.weapon);if(!P.fl.arrows){P.fl.arrows=1;addItem('flecha',100)}}
  pImgKey='';try{renderHot()}catch(e){}}
-function begin(sv){begin_x(sv);try{vMigrate();vApplyRecon()}catch(e){console.error(e)}facApply();elSync();try{renderHot()}catch(e){}}
+function begin(sv){begin_x(sv);try{vMigrate();vApplyRecon()}catch(e){console.error(e)}try{if(professionMigrateItems())save(true);profSync()}catch(e){console.error(e)}facApply();elSync();try{renderHot()}catch(e){}}
 function archSplash(){const t=P.target&&!P.target.dead&&P.target.map===P.map&&cheb(P.target,P)<=5?P.target:autoTarget(5);return t?MONS.filter(o=>!o.dead&&o.map===P.map&&cheb(o,t)<=1):[]}
 
 /* ========== HISTÓRIA: O Rei Corrupto (entre o Ato I e o Ato II) · Ezequiel ========== */
@@ -7826,7 +7830,7 @@ function workstationMenu(key){
  const w=WORKSHOPS[key],q=PROFESSIONS[key];if(!w||!P)return;
  if(P.lvl<10){say(w.station,'As profissões ficam disponíveis a partir do nível 10.',[['Fechar',closeAll]]);return}
  if(P.profession!==key){say(w.station,'Esta estação pertence à profissão '+q.n+'. Você pode visitar a oficina, mas precisa escolher essa profissão na aba Profissões para trabalhar aqui.',[['Fechar',closeAll]]);return}
- const status=`<b>${w.icon} ${q.n}</b><br>Profissão nível ${P.profLv||1} · XP ${P.profXp||0}<br><small>Oficina: ${w.name}</small>`;
+ const status=`<b>${w.icon} ${q.n}</b><br>Profissão nível ${(profSync(),P.profLv||1)} · ${profXpText()}<br><small>Oficina: ${w.name}</small>`;
  if(key==='ferreiro'){
   say(w.station,status+'<br><br><b>Escolha o que deseja fazer:</b><br>⚒️ <b>Forjar:</b> consome minérios iguais, com custo crescente conforme a receita. Ataque ou defesa e categoria final são sorteados; resultados mais fortes são mais raros. Escolha a faixa de nível do equipamento; ela libera conforme o nível do personagem e precisa de um minério compatível.<br><br>💎 <b>Encantar:</b> usa gemas do inventário para melhorar um equipamento que você está vestindo. Cada peça aceita até 3 gemas.<br><br>🧰 <b>Desmontar:</b> no futuro, permitirá recuperar materiais de equipamentos.<br><br>✨ <b>Armas exclusivas:</b> receitas especiais de Ferreiro, ainda em desenvolvimento.',[
    ['⚒️ Forjar armas e armaduras — ver custos e chances',()=>forgeDlg(()=>workstationMenu(key))],
@@ -8029,12 +8033,31 @@ const PROF_RECIPES={
  ]
 };
 PROFN.bombas='Fabricação de Bombas';
+/* Converte itens fabricados antigos (um item diferente por fabricação) para itens empilháveis
+   e apaga do save as definições que não são mais usadas. */
+function professionMigrateItems(){
+ if(!P||!P.cust)return 0;let moved=0;const map={};
+ for(const [old,def] of Object.entries(P.cust)){
+  const pc=def&&def.profCraft;if(!pc||old.startsWith('pc_'))continue;
+  const recipe=(PROF_RECIPES[pc.key]||[]).find(r=>r.kind===pc.kind);if(!recipe||!def.lv)continue;
+  const rank=Math.max(0,Math.min(EQUIP_CATEGORIES.length-1,pc.rank|0));
+  map[old]=professionItem(pc.key,recipe,def.lv,rank,professionStrength(professionModel(pc.key,def.lv),rank)).id;
+ }
+ if(!Object.keys(map).length)return 0;
+ const walk=o=>{if(!o||typeof o!=='object')return;for(const k of Object.keys(o)){if(o===P&&k==='cust')continue;const v=o[k];if(typeof v==='string'&&map[v]){o[k]=map[v];moved++}else if(v&&typeof v==='object')walk(v)}};
+ walk(P);
+ for(const L of [P.bag,P.inv,P.depot,P.petBag])if(Array.isArray(L)){const seen={};for(let i=L.length-1;i>=0;i--){const e=L[i];if(!e||!IT[e.id]||IT[e.id].slot)continue;if(seen[e.id]){seen[e.id].q+=e.q;L.splice(i,1)}else seen[e.id]=e}}
+ const rest=JSON.stringify(Object.assign({},P,{cust:null}));
+ for(const old of Object.keys(map))if(!rest.includes('"'+old+'"')){delete P.cust[old];delete IT[old]}
+ bagKey='';return moved;
+}
 function professionMaterials(key,recipe,lv){
  const cost=6+2*Math.ceil(Math.max(0,lv-10)/40),ore=lv<=30?'minerio_ferro':lv<=70?'minerio_prata':lv<=120?'minerio_ouro':'minerio_mithril';
  return key==='cowboy'?[[ore,cost],[recipe.mats[0],Math.ceil(cost/2)]]:[[recipe.mats[0],Math.ceil(cost*.6)],[recipe.mats[1],Math.ceil(cost*.4)]];
 }
+const PROF_RANK_T=[0,20,40,65,100,140,180,230,280,350,500];
 function professionModel(key,lv){
- const skill=prof(key==='cowboy'?'bombas':'alq').lv,lo=Math.max(1,Math.floor(lv*.75)),hi=Math.ceil(lv*(2.3+Math.min(49,skill-1)*.005)),thresholds=[0,20,40,65,100,140,180,230,280,350,500],groups=new Map();
+ const skill=prof(key==='cowboy'?'bombas':'alq').lv,lo=Math.max(1,Math.floor(lv*.75)),hi=Math.ceil(lv*(2.3+Math.min(49,skill-1)*.005)),thresholds=PROF_RANK_T,groups=new Map();
  for(let v=lo;v<=hi;v++){let rank=0;for(let i=1;i<thresholds.length;i++)if(v>=thresholds[i])rank=i;
   if(!groups.has(rank))groups.set(rank,{rank,min:v,max:v,weight:0,outcomes:[]});const group=groups.get(rank),weight=Math.exp(-3*(v-lo)/Math.max(1,hi-lo));
   group.max=v;group.weight+=weight;group.outcomes.push({value:v,mods:{strength:v},weight});
@@ -8065,12 +8088,23 @@ function professionCraftBlock(key,recipe,lv){
  if((P.bag||[]).length+(P.inv||[]).length>=BAGMAX+INVMAX)return 'Abra espaço na bolsa ou na mochila.';
  return '';
 }
+/* Itens fabricados empilham: a mesma receita, nível e qualidade viram sempre o mesmo item.
+   A força usada é o meio da faixa da qualidade sorteada. */
+function professionStrength(model,rank){
+ const T=PROF_RANK_T,lo=Math.max(model.min,T[rank]||0),hi=Math.min(model.max,rank+1<T.length?T[rank+1]-1:model.max);
+ return Math.max(model.min,Math.round((lo+Math.max(lo,hi))/2));
+}
+function professionItem(key,recipe,lv,rank,strength){
+ const id='pc_'+key+'_'+recipe.key+'_'+lv+'_'+rank+'_'+strength;
+ if(IT[id])return{id,created:false};
+ const cat=EQUIP_CATEGORIES[rank],effect=professionEffect(key,recipe,lv,strength),base=key==='cowboy'?'minerio_ferro':'pocao_vida';
+ const def=Object.assign({},IT[base],{n:recipe.name+' N'+lv+' ('+cat[1]+')',lv,use:effect.use,bomb:effect.bomb,loot:false,slot:null,ic:key==='cowboy'?'loot':'potion',c:cat[2],price:Math.round(lv*strength),profCraft:{key,kind:recipe.kind,rank,strength},craftMaterials:professionMaterials(key,recipe,lv),craftDesc:effect.text},{custom:1,base});
+ delete def.legendary;IT[id]=def;P.cust=P.cust||{};P.cust[id]=def;return{id,created:true};
+}
 function professionCraft(key,recipe,lv){
  const reason=professionCraftBlock(key,recipe,lv);if(reason){toast(null,reason);return false}
- const rolled=forgeRoll(professionModel(key,lv)),strength=rolled.mods.strength,cat=EQUIP_CATEGORIES[rolled.rank],effect=professionEffect(key,recipe,lv,strength);
- const base=key==='cowboy'?'minerio_ferro':'pocao_vida';
- const id=makeCustom(base,{n:recipe.name+' N'+lv+' ('+cat[1]+')',lv,use:effect.use,bomb:effect.bomb,loot:false,slot:null,ic:key==='cowboy'?'loot':'potion',c:cat[2],price:Math.round(lv*strength),profCraft:{key,kind:recipe.kind,rank:rolled.rank,strength},craftMaterials:professionMaterials(key,recipe,lv),craftDesc:effect.text});
- if(!addItem(id)){delete IT[id];delete P.cust[id];return false}
+ const model=professionModel(key,lv),rolled=forgeRoll(model),made=professionItem(key,recipe,lv,rolled.rank,professionStrength(model,rolled.rank)),id=made.id;
+ if(!addItem(id)){if(made.created){delete IT[id];delete P.cust[id]}return false}
  for(const [mat,q]of professionMaterials(key,recipe,lv))removeItem(mat,q);
  const pk=key==='cowboy'?'bombas':'alq';profXp(pk,12+Math.round(lv/3));P.profLv=prof(pk).lv;P.profXp=prof(pk).xp;
  save(true);toast(itemIcon(id),'Produzido: '+IT[id].n);return id;

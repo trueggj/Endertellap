@@ -4613,7 +4613,7 @@ MAPS.ilha230=genIsland(64,50,23001,TL.MARBLE,TL.GRASS,[TL.FOUNT,TL.CWALL,TL.FLOW
 setT(MAPS.ilha100,32,8,TL.HFLOOR);setT(MAPS.ilha230,32,8,TL.MARBLE);
 Object.assign(PORTS,{ilha100:{map:'ilha100',x:32,y:41,npc:'porto100',n:'Fortaleza dos Condenados (nível 94 a 108)'},ilha230:{map:'ilha230',x:32,y:41,npc:'porto230',n:'Ilha das Nuvens Partidas (nível 224 a 240)'}});
 Object.assign(MAPN,{ilha100:'Fortaleza dos Condenados',ilha230:'Ilha das Nuvens Partidas'});
-Object.assign(ZLV,{ilha100:'nível 94 a 108',ilha230:'nível 224 a 240'});
+Object.assign(ZLV,{ilha100:'nível 94 a 108',ilha230:'PvP elfos × humanos · nível 200+'});
 BOTMAPS.push('ilha100','ilha230');
 NEWNPCS.push({id:'porto100',n:'Barqueiro Brasa',map:'ilha100',x:34,y:43,pal:{h:'#401010',c:'#2a4a8a',d:'#e8e0d0'},talk:()=>travel('Barqueiro Brasa','ilha100')},
  {id:'porto230',n:'Barqueira Aurora',map:'ilha230',x:34,y:43,pal:{h:'#f0f0f0',c:'#2a4a8a',d:'#e8e0d0'},talk:()=>travel('Barqueira Aurora','ilha230')});
@@ -4894,7 +4894,7 @@ function travel_e(who,from){const opts=[];const ks=Object.keys(PORTS).filter(k=>
  for(const k of ks){
   const d=PORTS[k],fee=from===V75_KOL&&k==='goodyear'?0:100;
   opts.push([`${d.n} · ${fee?fee+' ouro':'retorno gratuito'}`,()=>{
-   if(d.minLevel&&P.lvl<d.minLevel){say(d.n,`Você poderá visitar o cais e as ruas abertas ao chegar ao nível ${d.minLevel}. A patrulha mantém o bairro das fendas isolado.`,[['Voltar às rotas',()=>travel(who,from)],['Fechar',closeAll]]);return}
+   if(d.minLevel&&P.lvl<d.minLevel){say(d.n,`Você poderá visitar o cais e as ruas abertas ao chegar ao nível ${d.minLevel}. ${d.minMsg||'A patrulha mantém o bairro das fendas isolado.'}`,[['Voltar às rotas',()=>travel(who,from)],['Fechar',closeAll]]);return}
    if(P.gold<fee){toast(null,'Ouro insuficiente para a viagem');return}
    P.gold-=fee;closeAll();teleport({to:d.map,tx:d.x,ty:d.y});toast(null,`Você chegou: ${d.n}`);save(true);
   }]);
@@ -12358,4 +12358,114 @@ function act3Talk(end){
    if(t){A.talked[t.npc]=1;save(true);sfx('lvl');return say(n.n+' · Ato III',t.line+'<br><br><small>✅ '+t.l+'</small>',[['Continuar',closeAll],['Falar normalmente',()=>{closeAll();talkBefore(n)}]])}}
   return talkBefore.apply(this,arguments)};
 }
+</script>
+
+<script>
+/* ===== Ilha das Nuvens Partidas: zona PvP entre elfos e humanos (nível 200+), com Dave, o Oráculo ===== */
+'use strict';
+const NUVEM='ilha230',NUVEM_LV=200;
+const NUVEM_DOCK={humano:{safe:[29,40,35,44],x:32,y:41,n:'Cais da Coroa'},elfo:{safe:[12,10,19,13],x:16,y:12,n:'Cais de Peace'}};
+const NUVEM_SANCT=[29,20,35,24];
+function nuvemFac(a){return a&&a.fac==='elfo'?'elfo':'humano'}
+function nuvemFoe(f){return f==='elfo'?'humano':'elfo'}
+const FACN={elfo:'Elfos',humano:'Humanos'};
+/* Regra do PvP para o online: só elfo contra humano, só na ilha, fora dos cais e do santuário. */
+function nuvemCanPvP(a,b){return !!(a&&b&&a!==b&&a.map===NUVEM&&b.map===NUVEM&&!a.dead&&!b.dead&&(a.lvl||1)>=NUVEM_LV&&(b.lvl||1)>=NUVEM_LV&&nuvemFac(a)!==nuvemFac(b)&&!inSafe(MAPS[NUVEM],a.x,a.y)&&!inSafe(MAPS[NUVEM],b.x,b.y))}
+{
+ const m=MAPS[NUVEM];
+ if(m){
+  m.safe.push(NUVEM_DOCK.elfo.safe,NUVEM_SANCT);
+  PORTS[NUVEM].n='Ilha das Nuvens Partidas · PvP elfos × humanos (nível 200+)';PORTS[NUVEM].minLevel=NUVEM_LV;
+  PORTS[NUVEM].minMsg='A ilha é disputada por elfos e humanos. Os barqueiros só levam guerreiros a partir do nível '+NUVEM_LV+'.';
+  /* Campeões: até o online, representam os guerreiros da outra raça. */
+  const big=pal=>{const c=document.createElement('canvas');c.width=c.height=32;const g=c.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(human(pal),0,0,32,32);return c};
+  const CH=[
+   {k:'campeao_humano_cav',n:'Campeão Humano',fac:'humano',pal:{h:'#4a2a14',c:'#8a96a8',d:'#5a6478'},rng:0},
+   {k:'campeao_humano_mago',n:'Arcanista Humano',fac:'humano',pal:{h:'#2a1a10',c:'#7a2a3a',d:'#4a1a24'},rng:4},
+   {k:'campeao_elfo_cav',n:'Guardião Élfico',fac:'elfo',pal:EPAL('#3f7a4a','#c99a2e'),rng:0},
+   {k:'campeao_elfo_mago',n:'Xamã Élfico',fac:'elfo',pal:EPAL('#4a4a98','#9aa6c8'),rng:4}
+  ];
+  const rnd=(()=>{let x=230230;return()=>{x^=x<<13;x>>>=0;x^=x>>17;x^=x<<5;x>>>=0;return x/4294967296}})();
+  const free=[];for(let y=4;y<m.h-3;y++)for(let x=4;x<m.w-4;x++)if(!SOLID.has(getT(m,x,y))&&!inSafe(m,x,y)&&Math.abs(x-NUVEM_DOCK.humano.x)+Math.abs(y-NUVEM_DOCK.humano.y)>8&&Math.abs(x-NUVEM_DOCK.elfo.x)+Math.abs(y-NUVEM_DOCK.elfo.y)>8)free.push([x,y]);
+  for(const c of CH){
+   MSPR[c.k]=big(c.pal);mkMon(c.k,c.n,c.k,220,235,{hp:c.rng?1.8:2.6,atk:c.rng?1.35:1.2,xp:1.5,loot:[['pena_grifo',.25]],eq:'weapon'});
+   MON[c.k].champ=c.fac;if(c.rng)MON[c.k].rng=c.rng;REG[c.k]='Ilha das Nuvens Partidas · campeão '+(c.fac==='elfo'?'élfico':'humano');
+   for(let i=0;i<6&&free.length;i++){const [x,y]=free.splice(Math.floor(rnd()*free.length),1)[0];m.spawns.push([c.k,x,y])}
+  }
+ }
+}
+function nuvemState(){
+ P.fl=P.fl||{};const w=weekNo();let S=P.fl.nuvem;
+ if(!S)S=P.fl.nuvem={w,mine:0,foe:0,honra:0,total:0,kills:0,deaths:0};
+ if(S.w!==w){
+  if(S.w===w-1&&(S.mine||S.foe)){const won=S.mine>S.foe;S.buff=won?w:0;
+   setTimeout(()=>toast(null,won?'☁️ Seu povo dominou as Nuvens Partidas na semana passada: +10% de XP na ilha esta semana.':'☁️ O outro povo dominou as Nuvens Partidas na semana passada.'),1500)}
+  S.w=w;S.mine=0;S.foe=0;
+ }
+ return S;
+}
+function nuvemScore(){const S=nuvemState(),me=nuvemFac(P);return `<b>Placar da semana</b> · ${FACN[me]} ${S.mine} × ${S.foe} ${FACN[nuvemFoe(me)]}<br><small>Honra: ${S.honra} · Campeões derrotados: ${S.kills} · Derrotas: ${S.deaths}${S.buff===weekNo()?' · ⭐ +10% de XP na ilha (domínio da semana passada)':''}</small>`}
+/* Campeões da própria raça não aparecem para o jogador: ele só enfrenta o povo inimigo. */
+function nuvemSync(){
+ if(!P)return;const me=nuvemFac(P);
+ for(const mo of MONBY[NUVEM]||[]){const f=MON[mo.type]&&MON[mo.type].champ;if(!f)continue;
+  if(f===me){if(!mo._ally){mo._ally=1;mo.dead=true;mo.respawnAt=Infinity}}
+  else if(mo._ally){mo._ally=0;mo.dead=false;mo.hp=mo.mhp;mo.respawnAt=0}}
+}
+{
+ const sagaBefore=sagaKill;
+ sagaKill=function(mo){const r=sagaBefore.apply(this,arguments);
+  try{const f=MON[mo.type]&&MON[mo.type].champ;if(f&&f!==nuvemFac(P)&&P.map===NUVEM){const S=nuvemState();S.mine+=5;S.honra+=5;S.total+=5;S.kills++;
+   const V=pvpGet();V.pts+=3;V.win++;text(P,'+5 Honra','#ffe08a',1200);log(`Você derrotou ${MON[mo.type].n}: +5 de Honra para os ${FACN[nuvemFac(P)]}.`,'q');save(true)}}catch(e){console.error(e)}
+  return r};
+ const dieBefore=die;
+ die=function(by){
+  try{if(P&&P.map===NUVEM&&Object.values(MON).some(d=>d.champ&&d.n===by)){const S=nuvemState();S.foe+=5;S.deaths++;const V=pvpGet();V.lose++;log(`Você caiu nas Nuvens Partidas: +5 para os ${FACN[nuvemFoe(nuvemFac(P))]}.`,'bad')}}catch(e){console.error(e)}
+  return dieBefore.apply(this,arguments)};
+ const telBefore=teleport;
+ teleport=function(pt){
+  if(pt&&pt.to===NUVEM&&P&&PORTS[NUVEM]&&pt.tx===PORTS[NUVEM].x&&pt.ty===PORTS[NUVEM].y&&nuvemFac(P)==='elfo')pt=Object.assign({},pt,{tx:NUVEM_DOCK.elfo.x,ty:NUVEM_DOCK.elfo.y});
+  const was=P&&P.map,r=telBefore.call(this,pt);
+  if(P&&P.map===NUVEM&&was!==NUVEM){nuvemSync();nuvemState();const me=nuvemFac(P);
+   setTimeout(()=>say('☁️ Ilha das Nuvens Partidas','<b>Zona PvP: elfos × humanos.</b> Fora do '+NUVEM_DOCK[me].n+' e do Santuário do Oráculo, guerreiros '+(me==='elfo'?'humanos':'élficos')+' vão atacar você. Cada vitória dá Honra e pontos para o seu povo; o povo com mais pontos na semana ganha +10% de XP na ilha na semana seguinte.<br><br>No centro da ilha, no Santuário, vive <b>Dave, o Oráculo</b>. Ali ninguém luta.<br><br>'+nuvemScore(),[['Entendi',closeAll]]),400)}
+  return r};
+ const xpBefore=gainXp;
+ gainXp=function(n){if(P&&P.map===NUVEM&&P.fl&&P.fl.nuvem&&P.fl.nuvem.buff===weekNo())n=Math.round(n*1.1);return xpBefore.call(this,n)};
+ let syncT=0;const updateBefore=update;
+ update=function(){const r=updateBefore.apply(this,arguments);if(P&&P.map===NUVEM&&nowT>=syncT){syncT=nowT+1000;nuvemSync()}return r};
+}
+/* Lojas de Honra (uma em cada cais; cada povo usa a sua). */
+const HONOR_SHOP=[['frag_lendario',1,40],['essencia_celeste',1,12],['pena_grifo',2,10],['pocao_vida_g',10,4],['pocao_mana_g',10,4]];
+function honorShop(fac){
+ if(nuvemFac(P)!==fac)return say(fac==='elfo'?'Intendente de Peace':'Intendente da Coroa',fac==='elfo'?'Não negociamos com humanos. Volte para o seu cais.':'A Coroa não negocia com elfos. Volte para o seu cais.',[['Fechar',closeAll]]);
+ const S=nuvemState(),who=fac==='elfo'?'Intendente de Peace':'Intendente da Coroa';
+ say(who,'A Honra conquistada nas Nuvens Partidas vale mais que ouro aqui.<br><br>'+nuvemScore(),[['Fechar',closeAll]]);
+ const body=$('#dlgBody');
+ for(const [id,q,cost] of HONOR_SHOP){if(!IT[id])continue;
+  const r=shopItem(id,`<button class="gold" ${S.honra<cost?'disabled':''}>${q>1?q+'× · ':''}${cost} de Honra</button>`);
+  r.querySelector('button').onclick=e=>confirmBuy(e.currentTarget,()=>{if(S.honra<cost)return;if(!addItem(id,q)){toast(null,'Bolsa cheia.');return}S.honra-=cost;save(true);sfx('coin');honorShop(fac)});body.append(r)}
+}
+/* Dave, o Oráculo: neutro. Fala com qualquer um que chegue ao santuário. */
+function daveLore(t){
+ const L={
+  racas:'Onze povos viveram nesta terra: humanos, elfos, anões, anciões celestiais, árvores, simbiontes, felinos, orcs, elfos sombrios, humanos sombrios e os aquáticos. Eu falei com todos. Hoje só restam dois, e eles se matam na minha porta. As árvores ainda sonham, mas raramente acordam.',
+  deuses:'Jaogg criou e protegeu Endertell. Kael, seu irmão, queria governá-la. Anabela foi a mão que Kael usou para envenenar Jaogg, e pagou com a forma de uma aranha. Kael fugiu antes do castigo. Os deuses não morrem como vocês: eles esperam.',
+  guerra:'Não tomo lado nesta guerra porque ela não é de vocês. Na Guerra dos Onze, a marca roxa fez irmãos lutarem contra irmãos. Hoje elfos culpam homens e homens culpam elfos. Quem ganha com isso não está nesta ilha.',
+  marca:'A marca vermelha é de Vorath: ela enlouquece. A roxa é de Kael: ela convence. A vermelha você vê nos olhos. A roxa você só percebe quando já está lutando por ele.'
+ };return L[t];
+}
+function daveTalk(){
+ const me=nuvemFac(P),A=P.fl&&P.fl.act3,ready=me==='humano'&&A&&A.ch>=ACT3.length;
+ const opts=[['Sobre as onze raças',()=>say('Dave, o Oráculo',daveLore('racas'),[['Voltar',daveTalk]])],['Sobre os deuses',()=>say('Dave, o Oráculo',daveLore('deuses'),[['Voltar',daveTalk]])],['Sobre a guerra',()=>say('Dave, o Oráculo',daveLore('guerra'),[['Voltar',daveTalk]])],['Sobre as marcas',()=>say('Dave, o Oráculo',daveLore('marca'),[['Voltar',daveTalk]])],['Placar da ilha',()=>say('Dave, o Oráculo','Eles contam pontos. Eu conto mortos.<br><br>'+nuvemScore(),[['Voltar',daveTalk]])],['Até mais',closeAll]];
+ let intro='Um velho de olhos claros está sentado entre as nuvens, como se esperasse por você há séculos.<br><br><i>"Não sou homem nem elfo, e não lutarei por nenhum dos dois. Quem chega até mim, eu escuto. O que você quer saber?"</i>';
+ if(ready&&!A.dave){A.dave=1;save(true);sfx('lvl');intro='Um velho de olhos claros está sentado entre as nuvens.<br><br><i>"Então Maculado falou antes de partir. Kael. Eu sabia que esse nome voltaria a ser dito em voz alta."</i><br><br><i>"Kael está mais perto do que você imagina, e não está sozinho: em cada povo que restou, alguém já carrega a marca roxa. Antes de enfrentá-lo, você vai precisar de algo que nenhum homem consegue sozinho: confiar em um elfo."</i><br><br><b>Ato III continua em uma próxima atualização.</b>'}
+ else if(me==='elfo')intro+='<br><br><i>"Sua Árvore-Mãe escurece, eu sei. Não foram os homens. Quando estiver pronto para ouvir isso, volte."</i>';
+ say('Dave, o Oráculo',intro,opts);
+}
+NEWNPCS.push(
+ {id:'dave_oraculo',n:'Dave, o Oráculo',map:NUVEM,x:32,y:21,wander:false,pal:{h:'#f0f0f0',c:'#d8d0b8',d:'#a89878',s:'#e8c8a8'},lines:['Eu escuto quem chega.','Nem homem, nem elfo.'],talk:()=>daveTalk()},
+ {id:'porto230_elfo',n:'Barqueira Élfica',map:NUVEM,x:17,y:11,wander:false,pal:EPAL('#3a6a8a','#e8e0a8'),lines:['Para casa?'],talk:()=>travel('Barqueira Élfica',NUVEM)},
+ {id:'honra_elfo',n:'Intendente de Peace',map:NUVEM,x:14,y:11,wander:false,pal:EPAL('#7a5aa8','#f0f0f8'),lines:['Honra, guerreiro.'],talk:()=>honorShop('elfo')},
+ {id:'honra_humano',n:'Intendente da Coroa',map:NUVEM,x:30,y:43,wander:false,pal:{h:'#3a2a1a',c:'#8a7a3a',d:'#5a4a2a'},lines:['Pela Coroa!'],talk:()=>honorShop('humano')}
+);
 </script>

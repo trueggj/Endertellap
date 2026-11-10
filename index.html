@@ -6134,7 +6134,7 @@ elfHouse('e_cofre','Cofre de Sylvaren',15,11,[45,24],[[1,3,'counter',6,1],[8,3,'
 // NPCs
 const EPAL=(c,h)=>({h,c,d:shade(c,-.32),s:'#f2d6bc',elf:1});
 NEWNPCS.push(
- {id:'lyria',n:'Anciã Aerin',map:'sylvaren',x:32,y:14,pal:EPAL('#e8e8f0','#f0f0f8'),talk:()=>lyriaTalk(),lines:['A Árvore-Mãe sussurra...','Bem-vinda, criança da floresta.']},
+ {id:'lyria',n:'Anciã Ilmara',map:'sylvaren',x:32,y:14,pal:EPAL('#e8e8f0','#f0f0f8'),talk:()=>lyriaTalk(),lines:['A Árvore-Mãe sussurra...','Bem-vinda, criança da floresta.']},
  {id:'aelin',n:'Sacerdotisa Aelin',map:'e_templo',x:7,y:3,pal:EPAL('#b8c8f0','#e8e0a0'),talk:()=>aelinTalk(),lines:['Que a Lua te guie.']},
  {id:'sylwen',n:'Armeira Sylwen',map:'e_forja',x:7,y:3,pal:EPAL('#4a7a3a','#c87a3a'),talk:()=>{const d=NPCS.find(n=>n.id==='duran');shop('Armeira Sylwen','Lâminas leves, cajados de raiz e armaduras de folha prensada. Também compro o que você trouxer.',d&&d.shopL?d.shopL():DURANLIST())},lines:['Aço élfico, leve como pena!']},
  {id:'elanor',n:'Herbalista Elanor',map:'e_ervas',x:7,y:3,pal:EPAL('#6a9a5a','#e0b060'),talk:()=>shop('Herbalista Elanor','Poções destiladas do orvalho da Árvore-Mãe. E compro tudo o que você caçar no bosque.',['pocao_vida','pocao_vida_g','pocao_mana','pocao_mana_g','livro_magias','amuleto_vida','amuleto_arcano','anel_forca','anel_mana']),lines:['Ervas frescas!']},
@@ -6142,17 +6142,17 @@ NEWNPCS.push(
  {id:'naeris',n:'Barqueira Naeris',map:'sylvaren',x:52,y:16,pal:EPAL('#2a6a8a','#a0d0e0'),talk:()=>naerisTalk(),lines:['O rio leva a todos os lugares.']},
  {id:'aerin',n:'Sentinela Aerin',map:'sylvaren',x:30,y:32,pal:EPAL('#3a6a3a','#e8d890'),talk:()=>say('Sentinela Aerin','Depois do riacho fica o <b>Bosque de Sylvaren</b>. Ratos e cobras perto da ponte; lobos e morcegos no fundo. Volte para a cidade se a vida ficar baixa: aqui dentro nada te ataca.'),lines:['Nenhuma sombra passa por mim.','Cuidado no bosque!']},
  {id:'miri',n:'Pequena Miri',map:'sylvaren',x:35,y:21,chatty:1,pal:EPAL('#c07ab0','#f0e0a0'),talk:()=>say('Pequena Miri',pick(['Você já viu a Árvore-Mãe brilhar à noite? Os lampiões de cogumelo acendem sozinhos!','Os mestres de Peace recitam os nomes dos cativos da Guerra dos Onze. Eu já decorei os primeiros.','Dizem que a Sombra está secando as raízes lá no norte...'])),lines:['Hihi!','Pega-pega!']});
-function elfIntro(){say('Sylvaren',`Você é <b>${esc(P.name)}</b>, ${P.cls==='knight'?'jovem guerreiro elfo':'jovem xamã'} de <b>Sylvaren</b>, a cidade escondida sob a <b>Árvore-Mãe</b>.<br><br>Houve um tempo em que <b>onze raças</b> viviam em Endertell. Na <b>Guerra dos Onze</b>, elas se destruíram até restarem apenas elfos e homens, e algumas raras árvores vivas. Nessa guerra, antepassados dos homens escravizaram elfos, e os dois povos nunca mais tiveram paz. De <b>Peace</b>, a antiga capital, o Grande Rei <b>Petrick How</b> prepara a conquista das terras humanas.<br><br>Há semanas as folhas da Árvore estão escurecendo. A Anciã Aerin diz que uma <b>Sombra</b> vinda das terras dos humanos está envenenando as raízes do mundo.<br><br>Fale com a <b>Anciã Aerin</b>, logo à frente, ao pé da Árvore-Mãe.`,[['Ir até a Anciã',closeAll]]);log('Fale com a Anciã Aerin, ao pé da Árvore-Mãe.','q')}
+function elfIntro(){say('Sylvaren',`Você é <b>${esc(P.name)}</b>, ${P.cls==='knight'?'jovem guerreiro elfo':'jovem xamã'} de <b>Sylvaren</b>, a cidade escondida sob a <b>Árvore-Mãe</b>.<br><br>Houve um tempo em que <b>onze raças</b> viviam em Endertell. Na <b>Guerra dos Onze</b>, elas se destruíram até restarem apenas elfos e homens, e algumas raras árvores vivas. Nessa guerra, antepassados dos homens escravizaram elfos, e os dois povos nunca mais tiveram paz. De <b>Peace</b>, a antiga capital, o Grande Rei <b>Petrick How</b> prepara a conquista das terras humanas.<br><br>Há semanas as folhas da Árvore estão escurecendo. A Anciã Ilmara diz que uma <b>Sombra</b> vinda das terras dos humanos está envenenando as raízes do mundo.<br><br>Fale com a <b>Anciã Ilmara</b>, logo à frente, ao pé da Árvore-Mãe.`,[['Ir até a Anciã',closeAll]]);log('Fale com a Anciã Ilmara, ao pé da Árvore-Mãe.','q')}
 function lyriaTalk(){P.fl=P.fl||{};if(!P.fl.ekit){P.fl.ekit=1;P.fl.kit=1;for(const id of['gibao_aprendiz','capuz_aprendiz','calca_aprendiz','botas_aprendiz'])if(IT[id])addItem(id);addItem('pocao_vida',5);if(P.cls==='mage')addItem('pocao_mana',3);P.gold+=40;sfx('coin');save(true);
-  say('Anciã Aerin',`Então você despertou, ${esc(P.name)}. A Árvore-Mãe te escolheu.<br><br>Tome estas <b>vestes de aprendiz</b>, poções e <b>40 de ouro</b>. Abra a <b>bolsa</b> e toque em cada peça para vestir.<br><br>Treine no <b>Bosque de Sylvaren</b>, depois do riacho ao sul. Quando chegar ao <b>nível 8</b>, a Barqueira Naeris pode te levar ao mundo dos humanos, onde a Sombra nasceu.`,[['Obrigado, Anciã',closeAll]]);return}
+  say('Anciã Ilmara',`Então você despertou, ${esc(P.name)}. A Árvore-Mãe te escolheu.<br><br>Tome estas <b>vestes de aprendiz</b>, poções e <b>40 de ouro</b>. Abra a <b>bolsa</b> e toque em cada peça para vestir.<br><br>Treine no <b>Bosque de Sylvaren</b>, depois do riacho ao sul. Depois, fale comigo de novo: a Árvore-Mãe tem algo a pedir a você.`,[['Obrigado, Anciã',closeAll]]);return}
  const t=P.lvl<8?'Ainda é cedo. Fique forte no <b>Bosque de Sylvaren</b>, ao sul. A Sacerdotisa Aelin, no Templo da Lua, cura seus ferimentos.':'Você está pronto. Procure a <b>Barqueira Naeris</b> no cais a leste. Os homens de Vussumi são nossos inimigos de guerra e não confiam em nós. Investigue a Sombra nas terras inimigas. Faça o que for necessário para voltar com respostas.';
- say('Anciã Aerin',t+'<br><br><small>Na cidade: 🌙 Templo da Lua (cura) · 🏹 Forja Élfica (equipamentos) · 🌿 Ervas de Elanor (poções) · 💎 Cofre (depósito)</small>',[['Até mais',closeAll]])}
+ say('Anciã Ilmara',t+'<br><br><small>Na cidade: 🌙 Templo da Lua (cura) · 🏹 Forja Élfica (equipamentos) · 🌿 Ervas de Elanor (poções) · 💎 Cofre (depósito)</small>',[['Até mais',closeAll]])}
 function aelinTalk(){const st=stats();const ok=P.hp<st.maxHp||P.mp<st.maxMp;say('Sacerdotisa Aelin',ok?'Deixe a luz da Lua fechar suas feridas.':'Você está inteiro, filho da floresta. Se cair em Sylvaren, a Lua te trará de volta a este templo. Nas outras ilhas, você retorna ao templo local ou ao porto.',ok?[['🌙 Curar (grátis)',()=>{restRecovery();ring(P,1.4,'#b8d8ff');text(P,'CURADO','#b8d8ff',1200);sfx('skill');closeAll()}],['Até mais',closeAll]]:[['Até mais',closeAll]])}
 function naerisTalk(){if(P.fac==='elfo'&&P.lvl<8){say('Barqueira Naeris','O rio é perigoso para quem ainda não tem raízes fortes. Volte quando chegar ao <b>nível 8</b>.',[['Certo',closeAll]]);return}travel('Barqueira Naeris','sylvaren')}
 Object.assign(PORTS,{sylvaren:{map:'sylvaren',x:52,y:18,npc:'naeris',n:'Sylvaren (cidade élfica)'}});
 function travel(who,from){const s=PORTS.sylvaren;if(P.fac!=='elfo')delete PORTS.sylvaren;try{travel_e(who,from)}finally{PORTS.sylvaren=s}}
 function storyGoal(){if(P&&P.fac==='elfo'&&!(P.fl&&P.fl.eleft)){if(P.map!=='sylvaren'&&!/^e_/.test(P.map)&&P.map!=='ship'){P.fl=P.fl||{};P.fl.eleft=1}else{
- if(!(P.fl&&P.fl.ekit))return{name:'História: falar com a Anciã Aerin',...npcAt('lyria')};if(P.lvl<8)return{name:'História: chegue ao nível 8 no Bosque de Sylvaren',map:P.map,x:P.x,y:P.y,noArrow:1};return{name:'História: falar com a Barqueira Naeris',...npcAt('naeris')}}}return storyGoal_e()}
+ if(!(P.fl&&P.fl.ekit))return{name:'História: falar com a Anciã Ilmara',...npcAt('lyria')};if(P.lvl<8)return{name:'História: chegue ao nível 8 no Bosque de Sylvaren',map:P.map,x:P.x,y:P.y,noArrow:1};return{name:'História: falar com a Barqueira Naeris',...npcAt('naeris')}}}return storyGoal_e()}
 function npcIco(n){if(n.id==='lyria'&&P&&P.fac==='elfo'&&!(P.fl&&P.fl.ekit))return'❗';return npcIco_e(n)}
 function newPlayer(name,cls){const r=newPlayer_f.apply(this,arguments);if(pickFac==='elfo'){P.fac='elfo';P.tut=false;P.map='sylvaren';P.x=SYLV.spawn[0];P.y=SYLV.spawn[1];P.nb=99;prepPlayer()}return r}
 
@@ -12468,4 +12468,237 @@ NEWNPCS.push(
  {id:'honra_elfo',n:'Intendente de Peace',map:NUVEM,x:14,y:11,wander:false,pal:EPAL('#7a5aa8','#f0f0f8'),lines:['Honra, guerreiro.'],talk:()=>honorShop('elfo')},
  {id:'honra_humano',n:'Intendente da Coroa',map:NUVEM,x:30,y:43,wander:false,pal:{h:'#3a2a1a',c:'#8a7a3a',d:'#5a4a2a'},lines:['Pela Coroa!'],talk:()=>honorShop('humano')}
 );
+</script>
+<script>
+/* ===== Lado élfico · Ato I: três áreas novas (Floresta de Cristal, Fronteira Queimada, Bosque das Árvores Vivas) ===== */
+'use strict';
+const ELF_T={};
+function elfTile(name,paint,solid,mini){
+ const id=Math.max(...Object.values(TL))+1;if(id>255)throw new Error('Tile limit');TL['ELF_'+name]=id;ELF_T[name]=id;TILES[id]=[];
+ for(let v=0;v<4;v++){const c=mk();paint(c.getContext('2d'),rng(7700+id*13+v),v);TILES[id].push(c)}
+ if(solid)SOLID.add(id);MINI[id]=mini;return id;
+}
+const px=(g,x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(x,y,w,h)};
+/* --- Floresta de Cristal --- */
+const cgrass=(g,r,v)=>{px(g,0,0,16,16,v%2?'#3b6c78':'#3f7480');for(let i=0;i<14;i++)px(g,r()*16|0,r()*16|0,1,2,r()<.5?'#5aa2ae':'#2e5a64');if(r()<.7)px(g,r()*15|0,r()*15|0,1,1,'#dff8ff');if(r()<.3)px(g,r()*15|0,r()*15|0,1,1,'#b8a8ff')};
+elfTile('CGRASS',cgrass,false,'#3f7480');
+elfTile('CTREE',(g,r,v)=>{cgrass(g,r,v);px(g,7,9,2,7,'#cfe0e8');px(g,7,9,1,7,'#a8c0cc');
+ g.fillStyle='#6fc8e0';g.beginPath();g.moveTo(8,0);g.lineTo(14,10);g.lineTo(2,10);g.fill();g.fillStyle='#a8ecff';g.beginPath();g.moveTo(8,1);g.lineTo(11,8);g.lineTo(5,8);g.fill();
+ px(g,7,3,1,3,'#ffffff');if(v%2)px(g,10,6,1,1,'#ffffff')},true,'#8fd0e0');
+elfTile('CRYST',(g,r,v)=>{cgrass(g,r,v);const sh=(x,h,c1,c2)=>{g.fillStyle=c1;g.beginPath();g.moveTo(x,15);g.lineTo(x+2,15-h);g.lineTo(x+4,15);g.fill();px(g,x+1,15-h+3,1,h-4,c2)};
+ sh(2,9,'#8a6ae0','#c8b8ff');sh(6,13,'#5ac8f0','#d8f8ff');sh(10,8,'#a87af0','#e0d0ff')},true,'#9a8ae0');
+elfTile('CPATH',(g,r,v)=>{px(g,0,0,16,16,'#7f8f96');for(let y=0;y<16;y+=5)for(let x=(y/5%2)*3;x<16;x+=6){px(g,x,y,5,4,v%2?'#9aa8ae':'#a6b4ba');px(g,x,y+3,5,1,'#6a787e')}for(let i=0;i<4;i++)px(g,r()*15|0,r()*15|0,2,1,'#5a9a7a')},false,'#9aa8b0');
+elfTile('CMUSH',(g,r,v)=>{cgrass(g,r,v);px(g,7,8,2,7,'#ece2d2');disc(g,8,7,5,'#2fb8a0');disc(g,8,6,4,'#5ae8c8');px(g,5,5,2,1,'#c8fff0');px(g,10,7,1,1,'#c8fff0');px(g,4,3,1,1,'#a8fff0');px(g,12,2,1,1,'#a8fff0')},true,'#5ae0c0');
+/* --- Fronteira Queimada --- */
+const ash=(g,r,v)=>{px(g,0,0,16,16,v%2?'#47413c':'#4d4641');for(let i=0;i<16;i++)px(g,r()*16|0,r()*16|0,1,1,r()<.5?'#5e5650':'#38322e');if(r()<.25)px(g,r()*15|0,r()*15|0,1,1,'#ff8a3a')};
+elfTile('ASH',ash,false,'#4a4440');
+elfTile('BTREE',(g,r,v)=>{ash(g,r,v);px(g,7,3,2,13,'#1c1816');px(g,4,5,4,1,'#1c1816');px(g,9,7,4,1,'#1c1816');px(g,4,3,1,2,'#1c1816');px(g,12,5,1,2,'#1c1816');px(g,8,9,1,3,'#3a2a20');if(v%2){px(g,8,11,1,1,'#ff7a30');px(g,5,5,1,1,'#ff9a40')}},true,'#2a2420');
+elfTile('EMBER',(g,r,v)=>{ash(g,r,v);for(let i=0;i<7;i++){const x=r()*15|0,y=r()*15|0;px(g,x,y,2,1,'#c03a10');px(g,x,y,1,1,'#ffb050')}},false,'#7a3a20');
+elfTile('RUIN',(g,r,v)=>{px(g,0,0,16,16,'#3e3024');for(let i=0;i<5;i++)px(g,r()*16|0,0,1,16,r()<.5?'#2a2018':'#4e3c2c');px(g,0,0,16,2,'#1c1612');for(let x=0;x<16;x+=3)px(g,x,1+(r()*3|0),2,2,'#1c1612');px(g,0,8,16,1,'#8a7040');if(v%2)px(g,3,10,2,2,'#ff7a30')},true,'#4a3a2a');
+/* --- Bosque das Árvores Vivas --- */
+const ag=(g,r,v)=>{px(g,0,0,16,16,v%2?'#2f5c33':'#346238');for(let i=0;i<22;i++)px(g,r()*16|0,r()*16|0,1,2,['#46863f','#264c2a','#3c7238','#58964a'][r()*4|0]);if(r()<.5)px(g,r()*15|0,r()*15|0,1,1,'#e8ff90');if(v===2){px(g,4,10,1,1,'#f0e070');px(g,11,4,1,1,'#e0a0d0')}};
+elfTile('AGRASS',ag,false,'#2f5a32');
+elfTile('GTRUNK',(g,r,v)=>{px(g,0,0,16,16,'#5a3a22');for(let x=1;x<16;x+=3)px(g,x,0,1,16,'#3e2614');for(let i=0;i<5;i++)px(g,r()*15|0,r()*15|0,2,3,'#4a7a3a');if(v===3)px(g,6,5,4,3,'#2a1a0e')},true,'#5a3a22');
+elfTile('GROOT',(g,r,v)=>{ag(g,r,v);px(g,0,9,16,4,'#5a3a22');px(g,3,6,4,4,'#5a3a22');px(g,10,11,5,3,'#4a2e1a');px(g,1,10,14,1,'#7af0d0');px(g,4,7,1,3,'#7af0d0');if(v%2)px(g,11,12,3,1,'#a8fff0')},true,'#4a6a4a');
+elfTile('MOON',(g,r,v)=>{px(g,0,0,16,16,'#1c3556');for(let y=2;y<16;y+=4)px(g,(y*3+v*2)%10,y,6,1,'#3e6a9a');px(g,r()*14|0,r()*14|0,1,1,'#ffffff');if(v%2)px(g,8,4,2,1,'#e8f0ff')},true,'#2a4a6a');
+elfTile('AMUSH',(g,r,v)=>{ag(g,r,v);px(g,4,9,1,5,'#e8e0d0');px(g,10,7,2,7,'#e8e0d0');disc(g,4,8,2,'#3fd0a8');disc(g,11,6,4,'#36b898');disc(g,11,5,3,'#6ae8c8');px(g,9,4,1,1,'#d8fff4');px(g,3,7,1,1,'#d8fff4');if(v%2)px(g,13,2,1,1,'#b8fff0')},true,'#5ad0b0');
+elfTile('LEAFPATH',(g,r,v)=>{px(g,0,0,16,16,'#6a5a3a');for(let i=0;i<10;i++)px(g,r()*15|0,r()*15|0,2,1,['#a8803a','#7a9a3a','#c89a40','#5a4a2e'][r()*4|0])},false,'#6a5a3a');
+/* --- Decorações grandes, desenhadas por código e animadas --- */
+DK2.e_monolito=(R,W,H,t)=>{const a=.55+.35*Math.sin(t*1.6);R(4,70,56,10,'#5a6a72');R(8,66,48,6,'#7a8a92');
+ const sh=(x,w,h,c1,c2)=>{R(x,80-12-h,w,h,c1);R(x+2,80-12-h+3,2,h-6,c2)};sh(8,10,40,'#6a52c8','#c8b8ff');sh(22,14,62,'#3aa8e0','#e0faff');sh(40,10,46,'#8a62e0','#e0d0ff');
+ R(27,10,4,4,`rgba(255,255,255,${a.toFixed(2)})`);R(12,30,2,2,`rgba(220,240,255,${a.toFixed(2)})`);R(44,26,2,2,`rgba(220,240,255,${(1-a).toFixed(2)})`)};
+DK2.e_arvore_viva=(R,W,H,t)=>{const a=.6+.4*Math.sin(t*1.2);R(30,60,36,46,'#5a3a22');for(let x=34;x<64;x+=6)R(x,60,2,46,'#3e2614');R(14,98,20,8,'#4a2e1a');R(62,98,22,8,'#4a2e1a');
+ R(4,8,88,40,'#2f6a34');R(12,0,70,24,'#3f8a42');R(0,26,26,22,'#3f8a42');R(70,26,26,22,'#3f8a42');R(24,6,20,8,'#5aaa4e');R(56,10,18,8,'#5aaa4e');
+ R(38,70,6,4,`rgba(150,255,200,${a.toFixed(2)})`);R(52,70,6,4,`rgba(150,255,200,${a.toFixed(2)})`);R(42,82,12,3,'#2a1a0e');
+ for(let i=0;i<8;i++){const b=.4+.4*Math.sin(t*2+i);R(8+(i*29)%80,6+(i*17)%38,2,2,`rgba(232,255,144,${b.toFixed(2)})`)}};
+DK2.e_ruina=(R,W,H,t)=>{R(4,20,6,44,'#2a2018');R(70,24,6,40,'#2a2018');R(38,30,5,34,'#2a2018');R(2,16,50,5,'#1c1612');R(46,22,30,4,'#1c1612');R(10,56,60,8,'#3e3024');
+ R(14,58,8,4,'#ff7a30');for(let i=0;i<4;i++){const y=((t*12+i*16)%48);R(16+i*14,40-y,3,3,`rgba(120,110,100,${(.6-y/90).toFixed(2)})`)}};
+DK2.e_altar_lua=(R,W,H,t)=>{const a=.5+.4*Math.sin(t*2.2);R(4,30,40,14,'#8a8aa0');R(8,26,32,6,'#a8a8c0');R(14,6,20,20,'#d8e0ff');R(17,9,14,14,'#f0f4ff');R(14,6,20,20,`rgba(150,80,200,${(a*.45).toFixed(2)})`);R(22,0,4,4,`rgba(200,140,255,${a.toFixed(2)})`)};
+/* --- Construção dos mapas --- */
+function elfPath(m,pts,tile,wd=1){for(let i=0;i+1<pts.length;i++){let [x0,y0]=pts[i];const [x1,y1]=pts[i+1];while(x0!==x1||y0!==y1){for(let dy=-wd;dy<wd;dy++)for(let dx=-wd;dx<wd;dx++)if(x0+dx>0&&y0+dy>0&&x0+dx<m.w-1&&y0+dy<m.h-1&&getT(m,x0+dx,y0+dy)!==TL.WATER&&getT(m,x0+dx,y0+dy)!==TL.BRIDGE)setT(m,x0+dx,y0+dy,tile);if(Math.abs(x1-x0)>Math.abs(y1-y0))x0+=Math.sign(x1-x0);else y0+=Math.sign(y1-y0)}}}
+function elfRiver(m,x0,y0,len,dir,amp,r,wd=2){for(let i=0;i<len;i++){const o=Math.round(Math.sin(i/7)*amp+Math.sin(i/3.1)*1);for(let k=0;k<wd;k++){const x=dir==='v'?x0+o+k:x0+i,y=dir==='v'?y0+i:y0+o+k;if(x>0&&y>0&&x<m.w-1&&y<m.h-1)setT(m,x,y,TL.WATER)}}}
+function elfBridgeCross(m){for(let y=1;y<m.h-1;y++)for(let x=1;x<m.w-1;x++)if(getT(m,x,y)===TL.WATER){const n=[getT(m,x-1,y),getT(m,x+1,y),getT(m,x,y-1),getT(m,x,y+1)];if(m._path&&m._path.has(x+','+y))setT(m,x,y,TL.BRIDGE)}}
+function elfSpawns(m,pool,count,r){for(let t=0,n=0;t<6000&&n<count;t++){const x=3+(r()*(m.w-6)|0),y=3+(r()*(m.h-6)|0),p=pool[(r()*pool.length)|0];if(p.area&&!(x>=p.area[0]&&y>=p.area[1]&&x<=p.area[2]&&y<=p.area[3]))continue;if(SOLID.has(getT(m,x,y))||getT(m,x,y)===TL.WATER||inSafe(m,x,y))continue;m.spawns.push([p.k,x,y]);n++}}
+const ELF_MAPS={cristal:'e_cristal',fronteira:'e_fronteira',bosque:'e_bosque',santuario:'e_santuario_lua'};
+/* Monstros */
+function elfMon(k,n,base,col,lo,hi,o,el){MSPR[k]=tintSpr(MSPR[base]||MSPR.wolf,col,.5);mkMon(k,n,k,lo,hi,o);if(el)MON[k].el=el;SPAWNED.add(k)}
+function elfPerson(pal){const c=document.createElement('canvas');c.width=c.height=32;const g=c.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(human(pal),0,0,32,32);return c}
+elfMon('e_lobo_cristal','Lobo de Cristal','crystW','#7fd8f0',10,16,{loot:[['pele_lobo',.4]]},'gelo');
+elfMon('e_lobo_marcado','Lobo de Olhos Vermelhos','mistWolf','#c02a2a',12,18,{hp:1.2,loot:[['pele_lobo',.5]]},'fogo');
+elfMon('e_espirito_cristal','Espírito de Cristal','crystS','#b8a8ff',14,20,{loot:[['cristal_gelo',.12]]},'gelo');
+elfMon('e_aranha_cristal','Aranha de Quartzo','rootSpider','#6ad0f0',18,24,{loot:[['seda',.4]]},'gelo');
+elfMon('e_golem_quartzo','Golem de Quartzo','iceGolem','#a87af0',22,28,{hp:1.4,loot:[['cristal_gelo',.2]]},'terra');
+elfMon('e_quartzo_rei','Coração de Quartzo','iceGolem','#e04aa0',30,30,{hp:20,atk:1.4,def:1.6,xp:20,x:{boss:1,big:1,resp:240},eq:'armor',loot:[['cristal_gelo',1],['frag_lendario',.3]]},'terra');
+elfMon('e_lobo_cinzas','Lobo de Cinzas','shadowolf','#8a7a6a',38,46,{loot:[['pele_lobo',.4]]},'fogo');
+elfMon('e_espirito_brasa','Espírito de Brasa','imp','#ff8a3a',46,54,{loot:[['escama_fogo',.08]]},'fogo');
+MSPR.e_humano_sombrio=elfPerson({h:'#1a1018',c:'#4a2a5a',d:'#2a1a34'});mkMon('e_humano_sombrio','Saqueador Sombrio','e_humano_sombrio',32,40,{hp:1.3,atk:1.1,loot:[['moeda_maldita',.05]],eq:'weapon'});MON.e_humano_sombrio.el='sombra';SPAWNED.add('e_humano_sombrio');
+MSPR.e_besteiro_sombrio=elfPerson({h:'#2a1a10',c:'#3a2a4a',d:'#241a30'});mkMon('e_besteiro_sombrio','Besteiro Sombrio','e_besteiro_sombrio',36,44,{atk:1.2,loot:[['moeda_maldita',.05]],eq:'weapon'});MON.e_besteiro_sombrio.rng=4;MON.e_besteiro_sombrio.el='sombra';SPAWNED.add('e_besteiro_sombrio');
+MSPR.e_morak=elfPerson({h:'#0e0a0e',c:'#5a1a6a',d:'#3a0e46'});mkMon('e_morak','Capitão Sombrio Morak','e_morak',55,55,{hp:20,atk:1.5,def:1.6,xp:25,x:{boss:1,big:1,resp:300},eq:'weapon',loot:[['moeda_maldita',1],['frag_lendario',.5]]});MON.e_morak.el='sombra';SPAWNED.add('e_morak');
+elfMon('e_driade','Dríade Murcha','shaman','#7a9a5a',62,70,{loot:[['mel',.3]]},'terra');
+elfMon('e_ent_corrompido','Ent Corrompido','ent','#6a3a7a',68,78,{hp:1.5,loot:[['casca_ent',.3]]},'terra');
+elfMon('e_vespa_lunar','Vespa Lunar','waspS','#d8e0ff',74,82,{loot:[['mel',.3]]},'raio');
+MSPR.e_elfo_sombrio=elfPerson(EPAL('#3a1a4a','#d8d8e8'));mkMon('e_elfo_sombrio','Elfo Sombrio','e_elfo_sombrio',84,92,{hp:1.6,atk:1.3,loot:[['essencia_celeste',.04]],eq:'weapon'});MON.e_elfo_sombrio.el='sombra';SPAWNED.add('e_elfo_sombrio');
+MSPR.e_vaelor=elfPerson(EPAL('#5a1a7a','#e8e0f0'));mkMon('e_vaelor','Lorde Vaelor','e_vaelor',95,95,{hp:32,atk:1.6,def:1.8,xp:30,x:{boss:1,big:1,resp:600},eq:'weapon',loot:[['frag_lendario',3],['essencia_celeste',1]]});MON.e_vaelor.el='sombra';MON.e_vaelor.rng=3;SPAWNED.add('e_vaelor');
+/* Floresta de Cristal (10 a 30) */
+{const W=80,H=64,m=M(W,H,ELF_T.CGRASS,ELF_T.CTREE),r=rng(9101);
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++){const q=r(),e=Math.min(x,y,W-1-x,H-1-y);let v=q<.09?ELF_T.CTREE:q<.11?ELF_T.CRYST:q<.118?ELF_T.CMUSH:ELF_T.CGRASS;if(e<2||(e<4&&r()<.6))v=ELF_T.CTREE;setT(m,x,y,v)}
+ elfRiver(m,4,30,72,'h',4,r,2);
+ const main=[[40,1],[40,12],[40,40],[44,44],[40,52],[40,62]];m._path=new Set();
+ const mark=pts=>{for(let i=0;i+1<pts.length;i++){let [x0,y0]=pts[i];const [x1,y1]=pts[i+1];while(x0!==x1||y0!==y1){for(let d=-1;d<1;d++){m._path.add((x0+d)+','+y0);m._path.add(x0+','+(y0+d))}if(Math.abs(x1-x0)>Math.abs(y1-y0))x0+=Math.sign(x1-x0);else y0+=Math.sign(y1-y0)}}};
+ for(let y=12;y<=22;y++)for(let x=4;x<=16;x++)if(Math.hypot((x-10)/6,(y-17)/5)<1)setT(m,x,y,TL.WATER);
+ const paths=[main,[[40,17],[24,18],[18,18]],[[44,44],[60,46],[66,48]]];for(const p of paths){mark(p);elfPath(m,p,ELF_T.CPATH)}elfBridgeCross(m);
+ for(let y=11;y<=23;y++)for(let x=33;x<=48;x++)if(Math.hypot((x-41)/7,(y-17)/5.5)<1)setT(m,x,y,ELF_T.CPATH);
+ for(let y=42;y<=54;y++)for(let x=58;x<=74;x++)if(Math.hypot((x-66)/7,(y-48)/5.5)<1)setT(m,x,y,ELF_T.CPATH);
+ fill(m,36,2,44,7,ELF_T.CPATH);for(const [x,y] of [[36,2],[44,2],[36,7],[44,7]])setT(m,x,y,TL.ELAMP);
+ setT(m,40,0,TL.STAIRS);setT(m,40,1,TL.STAIRS);m.portals.push({x:40,y:1,to:'sylvaren',tx:32,ty:51});
+ setT(m,40,63,TL.STAIRS);setT(m,40,62,TL.STAIRS);m.portals.push({x:40,y:62,to:ELF_MAPS.fronteira,tx:50,ty:3});
+ m.safe.push([35,1,45,8]);
+ elfSpawns(m,[{k:'e_lobo_cristal',area:[2,2,78,26]},{k:'e_lobo_marcado',area:[2,2,78,30]},{k:'e_espirito_cristal',area:[2,20,78,44]},{k:'e_aranha_cristal',area:[2,34,78,62]},{k:'e_golem_quartzo',area:[44,36,78,62]}],62,r);
+ m.spawns.push(['e_quartzo_rei',66,48]);
+ m.grown=1;MAPS[ELF_MAPS.cristal]=m;MAPN[ELF_MAPS.cristal]='Floresta de Cristal';ZLV[ELF_MAPS.cristal]='nível 10 a 30';
+ deco(ELF_MAPS.cristal,43,12,'e_monolito',4,5);
+}
+/* Fronteira Queimada (30 a 60) */
+{const W=100,H=70,m=M(W,H,ELF_T.ASH,ELF_T.BTREE),r=rng(9202);
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++){const q=r(),e=Math.min(x,y,W-1-x,H-1-y);let v=q<.07?ELF_T.BTREE:q<.11?ELF_T.EMBER:ELF_T.ASH;if(x<30&&q>.9)v=ELF_T.BTREE;if(e<2||(e<4&&r()<.6))v=ELF_T.BTREE;setT(m,x,y,v)}
+ elfRiver(m,62,2,66,'v',3,r,2);
+ m._path=new Set();const mark=pts=>{for(let i=0;i+1<pts.length;i++){let [x0,y0]=pts[i];const [x1,y1]=pts[i+1];while(x0!==x1||y0!==y1){for(let d=-1;d<1;d++){m._path.add((x0+d)+','+y0);m._path.add(x0+','+(y0+d))}if(Math.abs(x1-x0)>Math.abs(y1-y0))x0+=Math.sign(x1-x0);else y0+=Math.sign(y1-y0)}}};
+ const paths=[[[50,1],[50,12],[40,22],[30,34],[22,46]],[[40,22],[56,30],[70,34],[98,35]],[[30,34],[44,50],[60,58],[76,60]]];for(const p of paths){mark(p);elfPath(m,p,TL.DIRT)}elfBridgeCross(m);
+ fill(m,45,2,55,8,ELF_T.CPATH);for(const [x,y] of [[45,2],[55,2],[45,8],[55,8]])setT(m,x,y,TL.ELAMP);
+ for(const [a,b,c,d] of [[16,40,20,43],[24,48,28,51],[12,50,16,53]]){fill(m,a,b,c,d,ELF_T.RUIN);setT(m,a+2,d,ELF_T.ASH);setT(m,a+1,d,ELF_T.ASH)}
+ for(let y=52;y<=64;y++)for(let x=66;x<=86;x++)if(Math.hypot((x-76)/9,(y-58)/6)<1)setT(m,x,y,TL.DIRT);
+ setT(m,50,0,TL.STAIRS);setT(m,50,1,TL.STAIRS);m.portals.push({x:50,y:1,to:ELF_MAPS.cristal,tx:40,ty:60});
+ setT(m,99,35,TL.STAIRS);setT(m,98,35,TL.STAIRS);m.portals.push({x:98,y:35,to:ELF_MAPS.bosque,tx:3,ty:40});
+ m.safe.push([44,1,56,9]);
+ elfSpawns(m,[{k:'e_humano_sombrio',area:[2,10,60,68]},{k:'e_besteiro_sombrio',area:[10,20,60,68]},{k:'e_lobo_cinzas',area:[60,2,98,50]},{k:'e_espirito_brasa',area:[64,30,98,68]}],70,r);
+ m.spawns.push(['e_morak',76,58]);
+ m.grown=1;MAPS[ELF_MAPS.fronteira]=m;MAPN[ELF_MAPS.fronteira]='Fronteira Queimada';ZLV[ELF_MAPS.fronteira]='nível 30 a 60';
+ deco(ELF_MAPS.fronteira,14,34,'e_ruina',5,4);deco(ELF_MAPS.fronteira,30,52,'e_ruina',5,4);
+}
+/* Bosque das Árvores Vivas (60 a 95) e Santuário da Lua */
+{const W=100,H=80,m=M(W,H,ELF_T.AGRASS,ELF_T.GTRUNK),r=rng(9303);
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++){const q=r(),e=Math.min(x,y,W-1-x,H-1-y);let v=q<.06?TL.TREE:q<.085?ELF_T.GTRUNK:q<.1?ELF_T.GROOT:q<.13?TL.FLOWER:ELF_T.AGRASS;if(e<2||(e<4&&r()<.6))v=ELF_T.GTRUNK;setT(m,x,y,v)}
+ for(const [cx,cy,rx,ry] of [[30,60,7,5],[78,64,6,4]])for(let y=cy-ry;y<=cy+ry;y++)for(let x=cx-rx;x<=cx+rx;x++)if(Math.hypot((x-cx)/rx,(y-cy)/ry)<1)setT(m,x,y,ELF_T.MOON);
+ m._path=new Set();const paths=[[[1,40],[20,40],[36,32],[50,30],[64,22],[70,16]],[[36,32],[40,50],[56,62],[70,58]],[[50,30],[76,40],[90,50]]];for(const p of paths)elfPath(m,p,ELF_T.LEAFPATH);
+ fill(m,2,36,9,44,ELF_T.LEAFPATH);for(const [x,y] of [[2,36],[9,36],[2,44],[9,44]])setT(m,x,y,TL.ELAMP);
+ for(let y=38;y<=50;y++)for(let x=40;x<=58;x++){const d=Math.hypot((x-49)/9,(y-44)/6);if(d<1&&getT(m,x,y)!==ELF_T.MOON)setT(m,x,y,d>.82&&(x+y)%3===0?ELF_T.AMUSH:d>.7&&(x*y)%5===0?TL.FLOWER:ELF_T.AGRASS)}
+ for(let i=0;i<70;i++){const x=3+(r()*(W-6)|0),y=3+(r()*(H-6)|0);if(getT(m,x,y)===ELF_T.AGRASS&&!m._path.has(x+','+y))setT(m,x,y,i%3?TL.FLOWER:ELF_T.AMUSH)}
+ for(let y=10;y<=22;y++)for(let x=62;x<=78;x++)if(Math.hypot((x-70)/8,(y-16)/6)<1)setT(m,x,y,ELF_T.LEAFPATH);
+ setT(m,0,40,TL.STAIRS);setT(m,1,40,TL.STAIRS);m.portals.push({x:1,y:40,to:ELF_MAPS.fronteira,tx:96,ty:35});
+ setT(m,70,12,TL.PORTAL);m.portals.push({x:70,y:12,to:ELF_MAPS.santuario,tx:13,ty:18});
+ m.safe.push([1,35,10,45]);
+ elfSpawns(m,[{k:'e_driade',area:[10,20,50,79]},{k:'e_ent_corrompido',area:[30,40,98,79]},{k:'e_vespa_lunar',area:[40,2,98,40]},{k:'e_elfo_sombrio',area:[56,2,98,30]}],72,r);
+ m.grown=1;MAPS[ELF_MAPS.bosque]=m;MAPN[ELF_MAPS.bosque]='Bosque das Árvores Vivas';ZLV[ELF_MAPS.bosque]='nível 60 a 95';
+ deco(ELF_MAPS.bosque,46,36,'e_arvore_viva',6,7);
+ const a=M(27,21,ELF_T.AGRASS,ELF_T.GTRUNK);box(a,0,0,26,20,ELF_T.GTRUNK,TL.ESTONE);
+ for(let y=1;y<20;y++)for(let x=1;x<26;x++)if(Math.hypot((x-13)/11,(y-10)/8.5)>1)setT(a,x,y,ELF_T.AGRASS);
+ for(let y=1;y<20;y++)for(let x=1;x<26;x++){const d=Math.hypot((x-13)/11,(y-10)/8.5);if(d>1&&d<1.18)setT(a,x,y,ELF_T.GROOT)}
+ for(const [cx,cy] of [[3,3],[23,3],[3,17],[23,17]])for(let y=cy-1;y<=cy+1;y++)for(let x=cx-1;x<=cx+1;x++)setT(a,x,y,ELF_T.MOON);
+ for(const [x,y] of [[6,10],[20,10],[9,5],[17,5],[9,15],[17,15]])setT(a,x,y,TL.ELAMP);for(let i=0;i<30;i++){const x=1+(i*7)%25,y=1+(i*11)%19;if(getT(a,x,y)===ELF_T.AGRASS)setT(a,x,y,i%2?TL.FLOWER:ELF_T.AMUSH)}
+ setT(a,13,20,TL.EXIT);a.portals.push({x:13,y:20,to:ELF_MAPS.bosque,tx:70,ty:14});a.spawns.push(['e_vaelor',13,6]);a.grown=1;
+ MAPS[ELF_MAPS.santuario]=a;MAPN[ELF_MAPS.santuario]='Santuário da Lua';ZLV[ELF_MAPS.santuario]='chefe · nível 95';
+ deco(ELF_MAPS.santuario,12,1,'e_altar_lua',3,3);
+}
+/* Sylvaren: trilha para o sul até a Floresta de Cristal */
+{const s=MAPS.sylvaren;for(let y=39;y<=55;y++){setT(s,32,y,TL.DIRT);if(y>50)setT(s,31,y,TL.DIRT)}setT(s,32,54,TL.STAIRS);setT(s,32,55,TL.STAIRS);s.portals.push({x:32,y:54,to:ELF_MAPS.cristal,tx:40,ty:4})}
+{const music=musZoneNow;musZoneNow=function(){if(P){if(P.map===ELF_MAPS.cristal)return 'ice';if(P.map===ELF_MAPS.fronteira)return 'hell';if(P.map===ELF_MAPS.bosque)return 'jungle';if(P.map===ELF_MAPS.santuario)return 'void'}return music()}}
+/* Equilíbrio com os monstros das terras humanas da mesma faixa: menos vida, mais ataque. */
+for(const [k,h,a] of [['e_lobo_cristal',.6,1],['e_lobo_marcado',.58,1],['e_espirito_cristal',.6,1.1],['e_aranha_cristal',.7,1.4],['e_golem_quartzo',.7,1.3],['e_humano_sombrio',.77,1.5],['e_besteiro_sombrio',.8,1.5],['e_lobo_cinzas',.8,1.6],['e_espirito_brasa',.8,1.7],['e_driade',.8,2],['e_ent_corrompido',.73,2.2],['e_vespa_lunar',.8,2.4],['e_elfo_sombrio',.68,2.2]]){MON[k].hp=Math.round(MON[k].hp*h);MON[k].atk=Math.round(MON[k].atk*a)}
+for(const [k,txt] of [['e_lobo_marcado','Floresta de Cristal · marcado por Vorath'],['e_quartzo_rei','Toca de Quartzo, Floresta de Cristal'],['e_morak','Acampamento Sombrio, Fronteira Queimada'],['e_vaelor','Santuário da Lua, Bosque das Árvores Vivas'],['e_elfo_sombrio','Bosque das Árvores Vivas']])REG[k]=txt;
+</script>
+<script>
+/* ===== Lado élfico · Ato I: As Raízes Escurecem (história) ===== */
+'use strict';
+const ELF_ACT=[
+ {n:'O Despertar',back:'lyria',minLv:1,tasks:[{t:'level',lv:10,l:'Chegue ao nível 10 no Bosque de Sylvaren'}],
+  intro:'As folhas da Árvore-Mãe escurecem a cada noite. Fique forte no Bosque de Sylvaren, ao sul do riacho. Quando chegar ao <b>nível 10</b>, volte a falar comigo.',
+  done:'Você está pronto. Siga a trilha que atravessa o bosque até o fim, ao sul: ela leva à <b>Floresta de Cristal</b>. A Batedora Elowen vigia a entrada. Ela viu algo nos animais que precisa mostrar a você.',rw:1},
+ {n:'Olhos Vermelhos',back:'elowen',minLv:10,tasks:[{t:'kill',mon:['e_lobo_marcado'],q:12,l:'Derrote 12 Lobos de Olhos Vermelhos'}],
+  intro:'Que bom que a Anciã mandou alguém. Os lobos da floresta enlouqueceram: os olhos ficaram <b>vermelhos</b>, e eles atacam até os próprios filhotes. Derrote 12 deles e veja com seus próprios olhos.',
+  done:'Doze... e todos com a mesma marca vermelha no peito, como uma queimadura. Isso não é doença da floresta. À noite, algo no fundo da <b>Toca de Quartzo</b>, a sudeste, pulsa na mesma cor.',rw:1},
+ {n:'O Coração de Quartzo',back:'elowen',minLv:25,tasks:[{t:'boss',mon:'e_quartzo_rei',l:'Derrote o Coração de Quartzo na Toca de Quartzo'}],
+  intro:'O brilho vem de um golem antigo, o <b>Coração de Quartzo</b>. Os cristais sempre foram calmos. Alguém marcou o coração da floresta. Derrote-o. (nível 25 ou mais)',
+  done:'Você trouxe um pedaço do coração. Veja: a marca vermelha está <b>gravada por dentro do cristal</b>, como se alguém a tivesse colocado lá. Os mestres vão dizer que é magia dos homens. Leve isto a <b>Peace</b>: o Grande Rei precisa ver. A passagem fica ao lado do cais de Sylvaren.',rw:2},
+ {n:'A Audiência em Peace',back:'peace_petrick',minLv:25,tasks:[{t:'talk',npc:'peace_walter',l:'Mostre o cristal ao Mestre Walter, no Arquivo da Coroa',
+   line:'Walter segura o cristal contra a luz por um longo tempo.<br><br><i>"Eu vi esta cor antes. Eu vi as onze raças, criança. Esta marca vermelha não é dos homens: é de um demônio que os próprios homens temem. Mas houve outra marca, na guerra. <b>Roxa</b>. Ela não enlouquecia: ela convencia. Antes de cada povo cair, alguns dos seus apareciam com ela e viravam a espada contra os irmãos."</i><br><br><i>"Diga ao rei que eu não acredito que os homens começaram isto. Ele não vai gostar."</i>'}],
+  intro:'Então este é o cristal. Uma marca vermelha no coração da nossa floresta.<br><br>Meus conselheiros dizem que é magia dos homens, e que isto prova que devemos atacar primeiro. Antes de decidir, quero ouvir o <b>Mestre Walter</b>. Ele não envelhece, como todos nós, mas é mais velho que todos: ele viu a Guerra dos Onze. Vá ao Arquivo da Coroa e volte com a resposta dele.',
+  done:'"Não foram os homens"... Walter sempre foi teimoso. Mas a fronteira não espera: vilas élficas estão queimando a oeste, e quem as queima são <b>humanos</b>. Vá à <b>Fronteira Queimada</b>, ao sul da Floresta de Cristal, e ajude o Comandante Thalor. Lá você vai descobrir quem tem razão.',rw:2},
+ {n:'A Fronteira Queimada',back:'thalor',minLv:32,tasks:[{t:'kill',mon:['e_humano_sombrio','e_besteiro_sombrio'],q:25,l:'Derrote 25 Saqueadores e Besteiros Sombrios'}],
+  intro:'Você é quem o rei mandou? Olhe em volta: eram três vilas. Os homens vêm de noite, queimam tudo e levam quem não consegue correr. Meus soldados dizem: <i>"os homens são assim"</i>. Derrote 25 deles e talvez eles pensem duas vezes.',
+  done:'Repare no pulso deles. Todos têm uma <b>marca roxa</b>, e não vermelha. E nenhum deles fala de Vussumi ou do rei dos homens: eles falam de um <b>"mestre"</b>. O líder, o <b>Capitão Sombrio Morak</b>, acampa no sul, depois do rio.',rw:2},
+ {n:'O Capitão Sombrio',back:'thalor',minLv:48,tasks:[{t:'boss',mon:'e_morak',l:'Derrote o Capitão Sombrio Morak no acampamento do sul'}],
+  intro:'Morak comanda os saqueadores. Se ele cair, os ataques param por um tempo. Cuidado: os homens dele são duros, e ele mais ainda. (nível 48 ou mais)',
+  done:'Antes de cair, Morak riu: <i>"Vocês acham que só os homens têm os seus? Pergunte no seu palácio quem vende esta guerra."</i><br><br>Não sei o que isso quer dizer. Mas um elfo chegou ao acampamento procurando você. Disse que se chama <b>Ezequiel</b>, e que o rei confia nele.',rw:2},
+ {n:'A Escolta de Ezequiel',back:'ezequiel',minLv:55,tasks:[{t:'kill',mon:['e_humano_sombrio','e_besteiro_sombrio'],q:15,l:'Segure a passagem: derrote 15 Saqueadores ou Besteiros Sombrios'}],
+  intro:'Um elfo alto, de capa cinza, com a <b>mão esquerda sempre dentro de uma luva</b>, mesmo no calor das brasas.<br><br><i>"Petrick me mandou fazer algo que nenhum conselheiro faria: encontrar o rei dos homens, Aldemar, em segredo. Levo a prova de que esta guerra é manipulada: um prisioneiro com a marca roxa. A passagem até o castelo dele começa aqui, na fronteira. Segure a saída enquanto eu entro. Derrote 15 desses sombrios e não deixe ninguém me seguir."</i>',
+  done:'Um redemoinho de folhas prateadas gira no meio do acampamento, e Ezequiel aparece dentro dele.<br><br><i>"Aldemar ouviu tudo e riu. Disse que a guerra enche os cofres dele, e que só pararia por ouro. Antes que eu respondesse, um <b>herói humano</b> invadiu a câmara para derrubar o próprio rei. Eu não podia ser visto ali. Fui embora sem levantar a mão."</i><br><br><i>"Os homens também são enganados pelos seus reis. E nós, pelos nossos conselheiros. A corrupção chegou às <b>raízes</b>: o Bosque das Árvores Vivas, a leste daqui, está morrendo."</i><br><br>Quando você fala no Mestre Walter, ele desvia o olhar: <i>"Walter ainda vive? Então é melhor que ele não saiba que estou aqui."</i>',rw:2},
+ {n:'As Árvores que Ainda Vivem',back:'carvalho',minLv:62,tasks:[{t:'kill',mon:['e_ent_corrompido','e_driade'],q:20,l:'Derrote 20 Ents Corrompidos ou Dríades Murchas'}],
+  intro:'A árvore gigante abre dois olhos verdes e luminosos. A voz dela é lenta como a seiva.<br><br><i>"Poucas de nós ainda acordam, pequena folha. A marca roxa entrou nas raízes e meus irmãos estão virando monstros. Liberte 20 deles."</i><br><br>Ela fica em silêncio por um momento, e então acrescenta: <i>"Sinto o cheiro da marca roxa em quem anda com você. Não em você. Em alguém que você conhece."</i>',
+  done:'<i>"Obrigado, pequena folha. Agora consigo ouvir de onde vem a podridão: das raízes plantadas no <b>Jardim do Conselho</b>, em Peace. Quem cuida daquele jardim é o <b>Lorde Vaelor</b>. Ele fugiu quando sentiu você chegar. Está no <b>Santuário da Lua</b>, no norte deste bosque, tentando terminar o que começou."</i>',rw:3},
+ {n:'O Traidor da Corte',back:'peace_walter',minLv:88,tasks:[{t:'boss',mon:'e_vaelor',l:'Derrote o Lorde Vaelor no Santuário da Lua'}],
+  intro:'Vaelor... conselheiro do rei há três séculos. Era ele quem mais pedia guerra contra os homens. Vá ao <b>Santuário da Lua</b>, pelo portal no norte do Bosque das Árvores Vivas, e acabe com isso. Depois volte aqui. (nível 88 ou mais)',
+  done:'Você conta a Walter as últimas palavras de Vaelor: <i>"Vocês acham que eu sou o único? Pergunte ao seu amigo Ezequiel de que cor era a marca dele."</i><br><br>Walter fica em silêncio por muito tempo.<br><br><i>"Ezequiel. Eu conheço esse nome da guerra. Não me peça para contar o que vi: é ele quem deve contar. Mas uma coisa eu sei: a marca roxa não é dos homens nem dos elfos. É de alguém que quer que os dois últimos povos terminem o que os outros nove começaram."</i><br><br><b>Fim do Ato I élfico.</b> O Ato II continua em uma próxima atualização.',rw:4}
+];
+function elfS(){P.fl=P.fl||{};return P.fl.elf||(P.fl.elf={ch:0,started:0,base:{},talked:{}})}
+function elfChapter(){return P&&P.fac==='elfo'?ELF_ACT[elfS().ch]:null}
+function elfStart(){const E=elfS(),C=ELF_ACT[E.ch];E.started=1;E.base={};E.talked={};for(const t of C.tasks){const ms=t.t==='kill'?t.mon:t.t==='boss'?[t.mon]:[];for(const m of ms)E.base[m]=P.kills[m]||0}save(true)}
+function elfTaskN(t){const E=elfS();if(t.t==='level')return Math.min(P.lvl,t.lv);if(t.t==='talk')return E.talked[t.npc]?1:0;const ms=t.t==='kill'?t.mon:[t.mon];return ms.reduce((s,m)=>s+Math.max(0,(P.kills[m]||0)-(E.base[m]||0)),0)}
+function elfTaskOk(t){if(t.t==='level')return P.lvl>=t.lv;if(t.t==='talk')return !!elfS().talked[t.npc];return elfTaskN(t)>=(t.t==='kill'?t.q:1)}
+function elfProg(C){return C.tasks.map(t=>(elfTaskOk(t)?'✅ ':'⬜ ')+t.l+(t.t==='kill'?` (${Math.min(elfTaskN(t),t.q)}/${t.q})`:t.t==='level'?` (${P.lvl}/${t.lv})`:'')).join('<br>')}
+function elfNpcName(id){const n=NPCS.find(o=>o.id===id);return n?n.n:id}
+function elfStoryTalk(n){
+ const E=elfS(),C=ELF_ACT[E.ch];if(!C||n.id!==C.back)return false;
+ const head=n.n+' · Ato I · '+C.n;
+ if(P.lvl<C.minLv){say(n.n,'Ainda é cedo para o que vem a seguir. Volte quando chegar ao <b>nível '+C.minLv+'</b>.',[['Certo',closeAll]]);return true}
+ if(!E.started){elfStart();sfx('lvl');say(head,C.intro+'<br><br>'+elfProg(C),[['Aceitar',closeAll]]);return true}
+ if(!C.tasks.every(elfTaskOk)){say(head,elfProg(C),[['Até mais',closeAll]]);return true}
+ const xp=Math.round(need(P.lvl)*C.rw),gold=P.lvl*120*C.rw;P.gold+=gold;gainXp(xp);E.ch++;E.started=0;E.base={};E.talked={};sfx('ach');save(true);
+ const N=ELF_ACT[E.ch],next=N?(N.back===n.id?[['Continuar',()=>elfStoryTalk(n)]]:[]):[];
+ say(head,C.done+'<br><br><b>Recompensa:</b> '+xp.toLocaleString('pt-BR')+' XP · '+gold.toLocaleString('pt-BR')+' ouro'+(N&&N.back!==n.id?'<br><br><small>Próximo: fale com <b>'+esc(elfNpcName(N.back))+'</b>.</small>':''),next.concat([['Até mais',closeAll]]));
+ return true;
+}
+function elfTaskTalk(n){
+ const E=elfS(),C=ELF_ACT[E.ch];if(!C||!E.started)return false;const t=C.tasks.find(t=>t.t==='talk'&&t.npc===n.id&&!E.talked[t.npc]);if(!t)return false;
+ E.talked[t.npc]=1;save(true);sfx('lvl');say(n.n+' · Ato I',t.line+'<br><br><small>✅ '+t.l+'</small>',[['Continuar',closeAll]]);return true;
+}
+{
+ const talkBefore=talk;
+ talk=function(n){
+  if(P&&P.fac==='elfo'&&n&&!(n.id==='lyria'&&!(P.fl&&P.fl.ekit))){if(elfTaskTalk(n)||elfStoryTalk(n))return}
+  return talkBefore.apply(this,arguments)};
+ const goalBefore=storyGoal;
+ storyGoal=function(){
+  if(P&&P.fac==='elfo'&&P.fl&&P.fl.ekit){const E=elfS(),C=ELF_ACT[E.ch];
+   if(C){const back={name:'Ato I élfico: falar com '+elfNpcName(C.back),...npcAt(C.back)};
+    if(!E.started||C.tasks.every(elfTaskOk)||P.lvl<C.minLv)return back;
+    const t=C.tasks.find(t=>!elfTaskOk(t));
+    if(t.t==='talk')return{name:'Ato I élfico: '+t.l,...npcAt(t.npc)};
+    if(t.t==='level')return{name:'Ato I élfico: '+t.l,map:P.map,x:P.x,y:P.y,noArrow:1};
+    const mon=t.t==='kill'?t.mon[0]:t.mon;for(const k in MAPS){const s=(MAPS[k].spawns||[]).find(x=>x[0]===mon);if(s)return{name:'Ato I élfico: '+t.l,map:k,x:s[1],y:s[2]}}}}
+  return goalBefore.apply(this,arguments)};
+ let hideT=0;const updateBefore=update;
+ update=function(){const r=updateBefore.apply(this,arguments);if(P&&nowT>=hideT){hideT=nowT+700;const v=NPCS.find(o=>o.id==='vaelor_conselho');if(v){const E=P.fl&&P.fl.elf,gone=E&&(E.ch>8||E.ch===8||E.ch===7&&E.started);const want=gone?'oculto':'e_peace_palacio';if(v.map!==want)v.map=want}}return r};
+}
+/* Personagens */
+function walterTalk(){
+ const E=P.fl&&P.fl.elf,opts=[['A Guerra dos Onze',()=>say('Mestre Walter','Onze raças. Eu vi todas: anões nas forjas, anciões celestiais, felinos, orcs, os aquáticos do mar, as árvores que andavam, os simbiontes, que já nasceram maus. E nós, e os homens. Hoje sobramos nós e eles, e algumas árvores que ainda acordam. Ninguém ganhou aquela guerra.',[['Voltar',walterTalk]])],
+  ['As marcas',()=>say('Mestre Walter','A vermelha enlouquece: é de um demônio. A roxa convence: quem a carrega acha que está fazendo o certo. É por isso que ela é tão perigosa.',[['Voltar',walterTalk]])]];
+ if(E&&E.ch>=7)opts.push(['Sobre Ezequiel',()=>say('Mestre Walter','<i>"Esse nome eu não ouvia desde a guerra."</i><br><br>Ele fecha o livro que estava lendo e não diz mais nada.',[['Voltar',walterTalk]])]);
+ say('Mestre Walter','Um elfo de cabelos brancos como as páginas que lê. Os olhos dele parecem mais velhos que o próprio arquivo.<br><br><i>"Pergunte. A memória é a única coisa que não envelhece aqui."</i>',opts.concat([['Até mais',closeAll]]));
+}
+v75Person('peace_walter','Mestre Walter','e_peace_arquivo',14,15,peacePal('#f0f0f4','#5a5a7a'),['A memória não envelhece.','Eu vi as onze raças.'],()=>walterTalk(),true);
+NEWNPCS.push(
+ {id:'elowen',n:'Batedora Elowen',map:'e_cristal',x:42,y:4,wander:false,pal:EPAL('#3a7a8a','#d8c070'),lines:['Os cristais cantam à noite.','Cuidado com os lobos de olhos vermelhos.'],talk:()=>say('Batedora Elowen','A Floresta de Cristal brilha mais à noite. Siga o caminho de pedra: ao sul fica a <b>Fronteira Queimada</b>, e a sudeste, a <b>Toca de Quartzo</b>.',[['Até mais',closeAll]])},
+ {id:'thalor',n:'Comandante Thalor',map:'e_fronteira',x:48,y:4,wander:false,pal:EPAL('#6a4a3a','#c8c8d0'),lines:['Pela coroa de Peace.','Nenhuma vila a mais.'],talk:()=>say('Comandante Thalor','O acampamento resiste. A leste, depois do rio, fica o <b>Bosque das Árvores Vivas</b>. Ao sul, o acampamento dos saqueadores.',[['Até mais',closeAll]])},
+ {id:'ezequiel',n:'Ezequiel',map:'e_fronteira',x:52,y:4,wander:false,pal:EPAL('#5a5a6a','#c8d0d8'),lines:['...','O vento traz folhas de longe.'],talk:()=>say('Ezequiel','Ele ajusta a luva da mão esquerda antes de responder.<br><br><i>"Nem toda guerra é decidida no campo. Algumas são decididas em jardins."</i>',[['Até mais',closeAll]])},
+ {id:'carvalho',n:'Carvalho Ancestral',map:'e_bosque',x:49,y:43,still:1,wander:false,img0:(()=>{const c=document.createElement('canvas');c.width=c.height=16;return c})(),lines:['...'],talk:()=>say('Carvalho Ancestral','A árvore gigante dorme. Às vezes, um galho se move sem vento.',[['Até mais',closeAll]])},
+ {id:'vaelor_conselho',n:'Lorde Vaelor',map:'e_peace_palacio',x:8,y:11,wander:false,pal:peacePal('#e8e0f0','#5a1a7a'),lines:['A guerra é necessária.','Os homens só entendem a força.'],talk:()=>say('Lorde Vaelor','Um conselheiro de manto roxo-escuro, com as mãos sempre escondidas nas mangas.<br><br><i>"Os homens escravizaram nosso povo. Cada dia de paz é um dia a mais para eles se armarem. O rei sabe disso. Você também deveria."</i>',[['Até mais',closeAll]])},
+ {id:'placa_cristal',n:'Placa: Floresta de Cristal',map:'sylvaren',x:33,y:52,sign:1,wander:false,talk:()=>say('Placa','<b>↓ Floresta de Cristal</b><br>nível 10 a 30<br><small>Depois dela: Fronteira Queimada (30 a 60) e Bosque das Árvores Vivas (60 a 95).</small>',[['Fechar',closeAll]])},
+ {id:'placa_santuario',n:'Placa: Santuário da Lua',map:'e_bosque',x:72,y:13,sign:1,wander:false,talk:()=>say('Placa','<b>Santuário da Lua</b><br>Somente com a permissão das árvores.',[['Fechar',closeAll]])}
+);
+/* A Anciã aponta para a história élfica enquanto o Ato I estiver em andamento. */
+{
+ const lyBefore=lyriaTalk;
+ lyriaTalk=function(){if(P&&P.fac==='elfo'&&P.fl&&P.fl.ekit){const C=elfChapter();if(C&&C.back!=='lyria'){say('Anciã Ilmara','A Árvore-Mãe acompanha seus passos. Sua jornada continua com <b>'+esc(elfNpcName(C.back))+'</b>.',[['Até mais',closeAll]]);return}}return lyBefore.apply(this,arguments)};
+}
 </script>

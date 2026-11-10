@@ -8258,11 +8258,29 @@ function economyRecord(city,id,q,total,buyer,seller,now=Date.now()){
  }
  return true;
 }
+/* Limite de compra de poções na loja: 300 por jogador, recupera 25 por hora.
+   Só conta o que é comprado do NPC; poções de drops, missões e trocas não entram. */
+const POT_CAP=300,POT_PER_HOUR=25,POT_REGEN_MS=3600000/POT_PER_HOUR;
+function potCapped(id){return /^pocao_(vida|mana)/.test(id||'')}
+function potQuota(now=Date.now()){
+ const e=economyState();let q=e.potQ;
+ if(!q||!Number.isFinite(q.n)||!Number.isFinite(q.t))q=e.potQ={n:POT_CAP,t:now};
+ if(q.t>now)q.t=now;
+ if(q.n>=POT_CAP){q.n=POT_CAP;q.t=now}
+ else{const g=Math.floor((now-q.t)/POT_REGEN_MS);if(g>0){q.n=Math.min(POT_CAP,q.n+g);q.t=q.n>=POT_CAP?now:q.t+g*POT_REGEN_MS}}
+ return q;
+}
+function potQuotaText(){
+ const q=potQuota();if(q.n>=POT_CAP)return `Limite de poções: <b>${q.n}/${POT_CAP}</b> · recupera ${POT_PER_HOUR} por hora`;
+ const min=Math.max(1,Math.ceil((POT_REGEN_MS-(Date.now()-q.t))/60000));
+ return `Limite de poções: <b>${q.n}/${POT_CAP}</b> · +1 em ${min} min (${POT_PER_HOUR} por hora)`;
+}
 function economyNpcBuy(id,q=1,quote,quotedTotal){return economyTxn(()=>{
- if(!IT[id]||!economyValue(id)||!economyAmount(q))return false;const city=economyCity(),unit=economyAsk(id),total=unit*q,duty=c71Duty(city,total);
+ if(!IT[id]||!economyValue(id)||!economyAmount(q))return false;
+ if(potCapped(id)&&q>potQuota().n){const n=potQuota().n;toast(null,n?`Você só pode comprar mais ${n} poções agora. O limite recupera ${POT_PER_HOUR} por hora.`:`Limite de poções atingido. Ele recupera ${POT_PER_HOUR} por hora.`);return false}const city=economyCity(),unit=economyAsk(id),total=unit*q,duty=c71Duty(city,total);
  if(!economyMoney(duty.total)||(quote!==undefined&&quote!==unit)||(quotedTotal!==undefined&&quotedTotal!==duty.total)){toast(null,'O preço mudou. Confira novamente.');return false}
  if(P.gold<duty.total){toast(null,'Ouro insuficiente.');return false}if(!addItem(id,q))return false;
- P.gold-=duty.total;economyTown(city).cash+=total;c71PayDuty(duty,city,'Compra na loja');try{bought(id,unit)}catch(e){}sfx('coin');return true;
+ P.gold-=duty.total;economyTown(city).cash+=total;if(potCapped(id))potQuota().n-=q;c71PayDuty(duty,city,'Compra na loja');try{bought(id,unit)}catch(e){}sfx('coin');return true;
 })}
 function economyNpcSell(id,q=1){return economyTxn(()=>{
  if(!economyAmount(q)||countItem(id)<q)return false;const total=economyBid(id)*q,town=economyTown();
@@ -8421,8 +8439,8 @@ function spellShopCard(id,actions){
  return shopCard(s.n,shopSymbol('📖'),s.desc,actions,{note});
 }
 function qtyBuyRow(id,unit,city,rerender){
- const totals=Object.fromEntries(QTY.map(n=>[n,c71Total(city,unit*n)]));
- const row=shopItem(id,QTY.map(n=>`<button data-n="${n}" ${P.gold<totals[n]?'disabled':''}>×${n}<span class="price">${totals[n].toLocaleString('pt-BR')} ouro</span></button>`).join(''),{quantity:true,note:`<small class="shopItemUnit">Preço base: ${unit.toLocaleString('pt-BR')} ouro por unidade</small>`});
+ const totals=Object.fromEntries(QTY.map(n=>[n,c71Total(city,unit*n)])),capped=potCapped(id),left=capped?potQuota().n:Infinity;
+ const row=shopItem(id,QTY.map(n=>`<button data-n="${n}" ${P.gold<totals[n]||n>left?'disabled':''}>×${n}<span class="price">${totals[n].toLocaleString('pt-BR')} ouro</span></button>`).join(''),{quantity:true,note:`<small class="shopItemUnit">Preço base: ${unit.toLocaleString('pt-BR')} ouro por unidade${capped?'<br>'+potQuotaText():''}</small>`});
  row.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>{const n=Number(b.dataset.n);economyNpcBuy(id,n,unit,totals[n]);rerender()});return row;
 }
 function shop_b(name,greet,list,extra){list=shopPots(list);let mode='buy';const city=economyCity();say(name,greet+'<br><small>Comércio de '+ECONOMY_CITIES[city]+'. Imposto municipal: '+(c71Owner(city)?.rate||0)+'%. Os botões mostram o total.</small>',(extra||[]).concat([['🏪 Grande Mercado',()=>auctionDlg()],['Até mais',closeAll]]));const body=$('#dlgBody');

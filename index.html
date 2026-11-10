@@ -11757,9 +11757,14 @@ function clearKrakenFight(mo){
  removeBossAdds(mo.map,state.snails);
  delete mo.krakenFight;
 }
+/* Proteção por nível na luta do Kraken: 5% menos dano a cada 100 níveis acima do Kraken, até 60%. */
+function krakenLevelGuard(mo,actor){
+ const diff=(actor?.lvl||1)-(mo?.lv||MON.kraken.lv[0]);
+ return 1-Math.min(.6,Math.max(0,Math.floor(diff/100))*.05);
+}
 function snailStrike(mo,actor){
  mo.nextAtk=nowT+MON[mo.type].cd;
- bossArenaDamage(mo,actor,.10,'Caramujo Corrompido',null);
+ bossArenaDamage(mo,actor,.10*krakenLevelGuard(mo,actor),'Caramujo Corrompido',null);
 }
 function krakenWave(mo,state){
  removeBossAdds(mo.map,state.snails.filter(o=>o.dead));
@@ -11789,7 +11794,7 @@ function krakenEncounterTick(mo){
  if(state.endGrip){
   if(nowT>=state.gripTick&&state.gripTick<=state.endGrip){
    state.gripTick+=1000;
-   for(const actor of state.gripped)bossArenaDamage(mo,actor,.03,'Agarrão do Kraken',null);
+   for(const actor of state.gripped)bossArenaDamage(mo,actor,.03*krakenLevelGuard(mo,actor),'Agarrão do Kraken',null);
   }
   if(nowT>=state.endGrip){
    for(const actor of state.gripped)if(actor.krakenGrip?.boss===mo)delete actor.krakenGrip;

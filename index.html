@@ -4424,7 +4424,7 @@ const BM={
   if(mo.adds&&mo.adds.some(o=>!o.dead)&&nowT>=(mo.healT||0)){mo.healT=nowT+1000;const h=Math.round(mo.mhp*.003);mo.hp=Math.min(mo.mhp,mo.hp+h);text(mo,'+'+h,'#7cc45a',700);if(R()<.15)log('O Faraó se cura enquanto as múmias vivem! Mate-as.','bad')}},
  rainha_aranha(mo){if(every(mo,12000)&&cheb(mo,P)<=7&&!combatSafe(P)){text(P,'PRESO NA TEIA!','#ffffff',1400);P.rootT=nowT+2000;ring(P,1.2,'#ffffff');queenReinforcements(mo)}},
  senhor_magma:magmaEncounterTick,
- kraken:krakenEncounterTick,
+ kraken:mo=>krakenEncounterTick(mo),
  rei_cinzas(mo){if(every(mo,8000)){text(mo,'chuva de cinzas!','#c0c0c0',1200);for(let i=0;i<3;i++)hazard({map:mo.map,tiles:area(P.x+(i?((R()*5|0)-2):0),P.y+(i?((R()*5|0)-2):0),1),warn:1800,pct:.2,col:'160,160,160',name:'Chuva de Cinzas'})}},
  senhor_vazio(mo){if(every(mo,15000)){VOIDD={map:mo.map,end:nowT+4000};mo.shieldT=nowT+1500;const s=findSpot(MAPS[mo.map],P.x+((R()*9|0)-4),P.y+((R()*9|0)-4));mo.x=s[0];mo.y=s[1];mo.rx=s[0];mo.ry=s[1];mo.mv=null;log('A escuridão do Vazio engole tudo!','bad');text(P,'ESCURIDÃO','#a060ff',1400)}},
  tita_celeste(mo){const V=mo.tv||0;if(every(mo,Math.max(5000,9000-V*400))){text(mo,'PISÃO!','#ffe070',1200);hazard({map:mo.map,tiles:area(mo.x,mo.y,2+Math.min(2,V/3|0)),warn:1500,pct:Math.min(.35,.2+V*.015),root:1500,col:'255,230,110',name:'Pisão do Titã'})}

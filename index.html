@@ -12740,3 +12740,65 @@ NEWNPCS.push(
   return spawnBefore.apply(this,arguments)};
 }
 </script>
+
+<script>
+/* ===== Peace: Salão dos Ofícios (oficinas élficas das quatro profissões) ===== */
+'use strict';
+const ELF_HALL='e_oficinas';let ELF_HALL_DOOR=null;
+{
+ // prédio élfico no gramado ao sul da avenida de Peace
+ const pm=MAPS[PEACE],free=(x,y)=>!SOLID.has(getT(pm,x,y))&&!DSOL.has(PEACE+','+x+','+y)&&!pm.portals.some(p=>p.x===x&&p.y===y)&&getT(pm,x,y)!==TL.WATER;
+ let spot=null;
+ search:for(let y0=63;y0<=66;y0++)for(let x0=29;x0<=56;x0++){for(let y=y0-1;y<=y0+4;y++)for(let x=x0-1;x<=x0+8;x++)if(!free(x,y))continue search;spot=[x0,y0];break search}
+ if(!spot)spot=[48,63];
+ const [bx,by]=spot,door=[bx+3,by+3];
+ fill(pm,bx,by,bx+7,by+3,TL.EWALL);setT(pm,door[0],door[1],TL.EDOOR);setT(pm,bx,by+3,TL.ELAMP);setT(pm,bx+7,by+3,TL.ELAMP);
+ setT(pm,door[0],door[1]+1,TL.ESTONE);
+ const m=M(25,15,TL.EFLOOR,TL.EWALL);box(m,0,0,24,14,TL.EWALL,TL.EFLOOR);setT(m,12,14,TL.EXIT);
+ m.portals.push({x:12,y:14,to:PEACE,tx:door[0],ty:door[1]+1});m.safe.push([0,0,24,14]);
+ MAPS[ELF_HALL]=m;MAPN[ELF_HALL]='Salão dos Ofícios de Peace';HOUSES.add(ELF_HALL);
+ pm.portals.push({x:door[0],y:door[1],to:ELF_HALL,tx:12,ty:13,door:1});
+ DOORS.push({map:PEACE,x:door[0],y:door[1],name:'Salão dos Ofícios',ico:'⚒️',to:ELF_HALL,tx:12,ty:13,open:0});
+ ELF_HALL_DOOR={map:PEACE,x:door[0],y:door[1]+1};
+ // quatro cantos de trabalho, cada um com seus móveis
+ for(const p of [[1,1,'forge',2,2],[4,1,'anvil',1,1],[1,9,'barrel',1,1],[7,1,'cauldron',2,2],[10,1,'potshelf',2,1],[7,9,'flasks',1,1],[13,1,'counter',4,1],[13,9,'crate',2,2],[19,1,'trough',3,1],[22,9,'barrel',1,1],[19,9,'crate',1,1]])deco(ELF_HALL,...p);
+ for(const [x,y] of [[6,6],[18,6]])setT(m,x,y,TL.ELAMP);
+ for(let y=5;y<=13;y++)for(let x=11;x<=13;x++)setT(m,x,y,TL.ESTONE);for(let x=2;x<=22;x++)setT(m,x,6,x===6||x===18?TL.ELAMP:TL.ESTONE);
+ for(const x of [5,11,17,23])deco(ELF_HALL,x,0,'banner',1,1,false);
+}
+const ELF_MASTERS={ferreiro:{id:'of_ferreiro',n:'Mestra Ithiel · Bigorna',x:3,y:4,pal:EPAL('#5a4a3a','#d89a4a')},alquimista:{id:'of_alquimista',n:'Mestre Faelan · Alquimia',x:9,y:4,pal:EPAL('#3a7a5a','#e8e0a8')},explosion:{id:'of_explosion',n:'Inventora Sarith · Explosion',x:15,y:4,pal:EPAL('#7a5a2a','#e86a3a')},cowboy:{id:'of_cowboy',n:'Domador Aeron · Cowboy',x:21,y:4,pal:EPAL('#6a4a2a','#c8b070')}};
+for(const [key,o] of Object.entries(ELF_MASTERS))NEWNPCS.push({id:o.id,n:o.n,map:ELF_HALL,x:o.x,y:o.y,wander:false,pal:o.pal,lines:['Ofícios de Peace.'],talk:()=>{if(!P.profession)return say(o.n,'Escolha uma profissão na aba <b>Profissões</b> (a partir do nível 10) e volte aqui. Cada mestre deste salão atende uma profissão.',[['Até mais',closeAll]]);setTimeout(()=>workstationMenu(key),0)}});
+// dentro do salão, a estação se apresenta com o nome do salão
+{const wsBefore=workstationMenu;workstationMenu=function(key){const w=WORKSHOPS[key];if(!(P&&P.map===ELF_HALL&&w))return wsBefore.apply(this,arguments);const o={name:w.name,station:w.station};w.name='Salão dos Ofícios de Peace';w.station=ELF_MASTERS[key].n;try{return wsBefore.apply(this,arguments)}finally{setTimeout(()=>{w.name=o.name;w.station=o.station},0)}}}
+// o salão vale como oficina de qualquer profissão
+{const nearBefore=amz63ProfessionNear;amz63ProfessionNear=function(key){if(P&&P.map===ELF_HALL)return true;return nearBefore.apply(this,arguments)}}
+/* Textos e rastreamento da profissão apontam para Peace quando o personagem é elfo */
+for(const [k,q] of Object.entries(PROFESSIONS)){const human={place:q.place,map:q.map,x:q.x,y:q.y};
+ for(const f of ['place','map','x','y'])Object.defineProperty(q,f,{configurable:true,enumerable:true,get(){if(P&&P.fac==='elfo'&&ELF_HALL_DOOR)return f==='place'?'Salão dos Ofícios, em Peace':ELF_HALL_DOOR[f];return human[f]},set(v){human[f]=v}})}
+{
+ const goalBefore=questGoal;
+ questGoal=function(){if(P&&P.fac==='elfo'&&P.track==='oficina_elfo'&&P.profession&&ELF_HALL_DOOR){if(P.map===ELF_HALL)return null;return{name:'⚒ Oficina: Salão dos Ofícios (Peace)',...ELF_HALL_DOOR}}return goalBefore.apply(this,arguments)};
+ const updateBefore=update;
+ update=function(){if(P&&P.fac==='elfo'&&P.track==='profession')P.track='oficina_elfo';return updateBefore.apply(this,arguments)};
+}
+/* ===== Missões humanas escondidas para elfos ===== */
+{
+ const qBefore=pQuest;
+ pQuest=function(b){const r=qBefore.apply(this,arguments);
+  try{if(P&&P.fac==='elfo'&&typeof QTAB!=='undefined'){
+   if(QTAB==='miss'){
+    const offered=Object.keys(QUESTS).filter(q=>!(P.quests[q]&&!P.quests[q].done));
+    for(const q of [...b.querySelectorAll('.quest')]){const h=q.querySelector('h4');if(h&&offered.some(id=>h.textContent.includes(QUESTS[id].n)))q.remove()}
+    for(const p of [...b.querySelectorAll('p')])if(/Quadro de Missões|Nenhuma missão de caça/.test(p.textContent))p.remove();
+    for(const s of [...b.querySelectorAll('.sect')]){let n=s.nextElementSibling;if(!n||n.classList.contains('sect'))s.remove()}
+    const prof=[...b.querySelectorAll('.quest')].find(q=>/Missão de profissão/.test(q.textContent));
+    if(prof){for(const x of [...prof.querySelectorAll('p')])if(/Entrada: X/.test(x.textContent))x.remove();const p=prof.querySelector('p');if(p)p.innerHTML='Sua oficina élfica fica no <b>Salão dos Ofícios</b>, em Peace, na avenida ao sul. Fale com o mestre da sua profissão. Esta missão é permanente e pode ser rastreada quando quiser.';
+     const bt=prof.querySelector('#professionTrack');if(bt){const on=P.track==='oficina_elfo';bt.textContent=on?'✕ Parar de rastrear':'🎯 Rastrear oficina';bt.className=on?'gold':'';bt.onclick=()=>{P.track=on?null:'oficina_elfo';P.guide=null;save(true);renderPanel()}}}
+    if(!b.querySelector('.quest'))b.append(el('<p style="color:var(--muted)">Nenhuma missão élfica aqui por enquanto. A história élfica fica na aba <b>📜 História</b>.</p>'));
+   }
+   if(QTAB==='dia')for(const p of [...b.querySelectorAll('p')])if(/Caçadora Bruna/.test(p.textContent))p.innerHTML='As caçadas diárias são organizadas pelos humanos, no Salão das Missões de Vussumi.';
+   if(QTAB==='ent'){const bar=b.querySelector('.chips');const keep=bar?[bar]:[];b.innerHTML='';for(const k of keep)b.append(k);b.append(el('<p style="color:var(--muted)">As entregas diárias são da Intendente Clara, em Vussumi, nas terras dos humanos.</p>'))}
+  }}catch(e){console.error(e)}
+  return r};
+}
+</script>

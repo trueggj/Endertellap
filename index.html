@@ -7837,7 +7837,8 @@ function workstationMenu(key){
    ['⚒️ Forjar armas e armaduras — ver custos e chances',()=>forgeDlg(()=>workstationMenu(key))],
    ['💎 Aplicar gemas em equipamento — até 3',()=>enchantDlg(()=>workstationMenu(key))],
    ['🧰 Desmontar equipamentos',()=>dismantleDlg(()=>workstationMenu(key))],
-   ['✨ Armas exclusivas da profissão (em desenvolvimento)',()=>workstationComing(key,'Armas exclusivas')],
+   ['✨ Armas exclusivas do Ferreiro',()=>smithExclusiveDlg(()=>workstationMenu(key))],
+   ['📋 Encomendas do dia',()=>ordersDlg(()=>workstationMenu(key))],
    ['Sair',closeAll]]);
  }else if(key==='alquimista'){
   say(w.station,status+'<br><br>Prepare poções e elixires com materiais obtidos na aventura.',[
@@ -8022,7 +8023,7 @@ const PROF_RECIPES={
   {key:'cura',name:'Poção de Vida',kind:'hp',mats:['gosma','mel']},
   {key:'mana',name:'Poção de Mana',kind:'mp',mats:['seda','asa_morcego']},
   {key:'furia',name:'Elixir de Ataque',kind:'atk',mats:['presa_orc','ferrao']},
-  {key:'pele',name:'Elixir de Defesa',kind:'def',mats:['couro','pele_lobo']},
+  {key:'pele',name:'Elixir de Defesa',kind:'def',mats:['pele_lobo','osso']},
   {key:'sabedoria',name:'Elixir de Experiência',kind:'xp',mats:['orelha_goblin','chifre']},
   {key:'sorte',name:'Elixir da Sorte',kind:'drop',mats:['mel','seda']},
   {key:'antichamas',name:'Elixir Antichamas',kind:'res_fogo',mats:['ferrao','escama_fogo'],exclusive:1,minLv:50},
@@ -8037,7 +8038,7 @@ const PROF_RECIPES={
   {key:'venenosa',name:'Bomba Venenosa',kind:'poison',mats:['gosma']},
   {key:'mina',name:'Mina Terrestre',kind:'mina',mats:['osso'],device:1},
   {key:'torre',name:'Torre de Faíscas',kind:'torre',mats:['asa_morcego'],device:1},
-  {key:'barreira',name:'Barreira de Ferro',kind:'barreira',mats:['couro'],device:1},
+  {key:'barreira',name:'Barreira de Ferro',kind:'barreira',mats:['pele_lobo'],device:1},
   {key:'detonador',name:'Detonador Remoto',kind:'detonador',mats:['presa_orc'],detonator:1}
  ]
 };
@@ -8061,8 +8062,15 @@ function professionMigrateItems(){
  for(const old of Object.keys(map))if(!rest.includes('"'+old+'"')){delete P.cust[old];delete IT[old]}
  bagKey='';return moved;
 }
+const REGION_MATS={
+ alquimista:[[50,'bandagem'],[80,'escama_verde'],[120,'perola_negra'],[200,'essencia_celeste']],
+ explosion:[[50,'pele_areia'],[80,'nucleo_magma'],[120,'moeda_maldita'],[200,'pena_grifo']]
+};
 function professionMaterials(key,recipe,lv){
  const cost=Math.max(2,Math.ceil((6+2*Math.ceil(Math.max(0,lv-10)/40))*(1-(P&&P.profession===key?professionPerkBonus(key).save:0)))),ore=lv<=30?'minerio_ferro':lv<=70?'minerio_prata':lv<=120?'minerio_ouro':'minerio_mithril';
+ // Faixas altas pedem também um material da região daquele nível (receitas exclusivas já usam os seus).
+ const reg=!recipe.exclusive&&(REGION_MATS[key]||[]).filter(([min])=>lv>=min).pop();
+ if(reg&&IT[reg[1]])return key==='explosion'?[[ore,cost],[recipe.mats[0],Math.ceil(cost/4)],[reg[1],Math.ceil(cost/4)]]:[[recipe.mats[0],Math.ceil(cost*.4)],[recipe.mats[1],Math.ceil(cost*.2)],[reg[1],Math.ceil(cost*.3)]];
  return key==='explosion'?[[ore,cost],[recipe.mats[0],Math.ceil(cost/2)]]:[[recipe.mats[0],Math.ceil(cost*.6)],[recipe.mats[1],Math.ceil(cost*.4)]];
 }
 const PROF_RANK_T=[0,20,40,65,100,140,180,230,280,350,500];
@@ -8149,7 +8157,7 @@ function productionLevelMenu(key,groupId){
 }
 function professionCraftMenu(key,selected,groupId){
  const w=WORKSHOPS[key],groups=PRODUCTION_GROUPS[key];if(!w||!groups)return;
- if(!groupId){say(w.station,'O que deseja fabricar?',groups.map(g=>[g.icon+' '+g.name,()=>productionLevelMenu(key,g.id)]).concat([['← Voltar à estação',()=>key==='alquimista'?workstationMenu(key):closeAll()]]));return}
+ if(!groupId){say(w.station,'O que deseja fabricar?',groups.map(g=>[g.icon+' '+g.name,()=>productionLevelMenu(key,g.id)]).concat([['📋 Encomendas do dia',()=>ordersDlg(()=>professionCraftMenu(key))],['← Voltar à estação',()=>key==='alquimista'?workstationMenu(key):closeAll()]]));return}
  const group=groups.find(g=>g.id===groupId);if(!group)return;
  const lv=FORGE_LEVELS.includes(selected)?selected:10;
  if(P.lvl<lv){productionLevelMenu(key,groupId);return}
@@ -11943,7 +11951,7 @@ const TAME_DART='dardo_tranquilizante',TAME_SLEEP_MS=15000,TAME_WEAK=.30;
 for(const t of TAME){
  const mob='tame_'+t.k,mount='tame_'+t.k,base=t.spr?MSPR[t.spr]:MSPR[MON.onca&&MON.onca.spr];
  MSPR[mob]=tintSpr(base||MSPR.wolf,t.col,.55);
- mkMon(mob,t.n,mob,t.lo,t.hi,{hp:1.4,atk:1.1,xp:1.2,loot:[['couro',.5]]});
+ mkMon(mob,t.n,mob,t.lo,t.hi,{hp:1.4,atk:1.1,xp:1.2,loot:[['pele_lobo',.5]]});
  MON[mob].tame={mount,prof:t.prof};REG[mob]=(MAPN[t.map]||t.map)+' · animal domável';SPAWNED.add(mob);
  MOUNTS[mount]={n:t.n,price:t.price,lv:t.lv,spd:t.spd,tame:1,img:()=>MSPR[mob]};
  IT['sela_'+mount]={n:'Sela: '+t.n,use:{},mount,tame:1,price:t.price,ic:'loot',c:t.col,lv:t.lv};
@@ -12013,7 +12021,7 @@ function tameGuideHtml(){
 }
 function cowboyMenu(){
  const w=WORKSHOPS.cowboy;profSync();
- say(w.station,`<b>🐎 Cowboy</b><br>Profissão nível ${P.profLv||1} · ${profXpText()}${professionPerkHtml('cowboy')}<br><b>Como domar:</b> compre <b>Dardos Tranquilizantes</b> com o Zelador. Atire em um animal domável até ele ficar <b>💤 sonolento</b> (abaixo de 30% da vida) e toque nele para laçar. Chance atual: até <b>${Math.round(Math.min(.9,.3+prof('montaria').lv*.01)*100)}%</b>. Se falhar, ele acorda.<br><br>A sela vai para a bolsa: use para montar ou venda no Grande Mercado.`,[['🏪 Grande Mercado',()=>auctionDlg()],['Sair',closeAll]]);
+ say(w.station,`<b>🐎 Cowboy</b><br>Profissão nível ${P.profLv||1} · ${profXpText()}${professionPerkHtml('cowboy')}<br><b>Como domar:</b> compre <b>Dardos Tranquilizantes</b> com o Zelador. Atire em um animal domável até ele ficar <b>💤 sonolento</b> (abaixo de 30% da vida) e toque nele para laçar. Chance atual: até <b>${Math.round(Math.min(.9,.3+prof('montaria').lv*.01)*100)}%</b>. Se falhar, ele acorda.<br><br>A sela vai para a bolsa: use para montar ou venda no Grande Mercado.`,[['📋 Encomendas do dia',()=>ordersDlg(cowboyMenu)],['🏪 Grande Mercado',()=>auctionDlg()],['Sair',closeAll]]);
  $('#dlgBody').append(el('<div>'+tameGuideHtml()+'</div>').firstElementChild);
 }
 /* Refúgio do Zelador: casa própria em Vussumi, ao lado do estábulo. */
@@ -12164,5 +12172,111 @@ function deviceTick(){
     if(d.kind==='barreira'){ctx.fillStyle='rgba(120,130,140,.85)';ctx.fillRect(px+S*.1,py+S*.1,S*.8,S*.8);ctx.strokeStyle='#2a2d33';ctx.lineWidth=2;ctx.strokeRect(px+S*.1,py+S*.1,S*.8,S*.8)}
     else{ctx.globalAlpha=d.kind==='mina'&&left<5&&((nowT/200|0)%2)?.4:1;ctx.fillText(d.kind==='mina'?'💣':'🗼',px+S/2,py+S/2);ctx.globalAlpha=1}}
   }ctx.restore()};
+}
+</script>
+
+<script>
+/* --- Ferreiro: armas exclusivas feitas com materiais de chefes --- */
+'use strict';
+const SMITH_EXCLUSIVE=[
+ {k:'escamada',n:'Lâmina Escamada',lv:30,prof:5,mats:[['escama',3],['minerio_prata',12]],pas:'crit',fx:'fogo',boss:'Dragão Filhote'},
+ {k:'farao',n:'Fio do Faraó',lv:50,prof:10,mats:[['mascara_ouro',2],['minerio_ouro',14]],pas:'gold',fx:'vel',boss:'Faraó Amaldiçoado'},
+ {k:'glacial',n:'Presa Glacial',lv:80,prof:20,mats:[['cristal_gelo',4],['minerio_ouro',18]],pas:'dodge',fx:'vel',boss:'Dragão de Gelo Ancestral'},
+ {k:'abissal',n:'Tridente Abissal',lv:80,prof:25,mats:[['perola_negra',5],['minerio_ouro',18]],pas:'lifesteal',fx:'vamp',boss:'Kraken'},
+ {k:'celeste',n:'Lâmina Celeste',lv:200,prof:40,mats:[['essencia_celeste',3],['frag_lendario',2],['minerio_mithril',24]],pas:'crit',fx:'vel',boss:'Titã Celeste'}
+];
+function smithExclusiveBase(r){const ok=b=>{const it=IT[b];return it&&it.slot==='weapon'&&(it.lv||1)<=r.lv&&!it.custom&&!it.unique&&!it.reserved&&!it.legendary&&!it.frag&&!it.bow&&(!it.cls||it.cls===P.cls)&&forgeModel(b)};const list=Object.keys(IT).filter(ok).sort((a,b)=>(IT[b].lv||1)-(IT[a].lv||1)||(IT[b].atk||0)-(IT[a].atk||0));let base=list[0];if(base&&typeof isArch==='function'&&isArch()&&typeof bowOf==='function')base=bowOf(base)||base;return base}
+function smithExclusiveBlock(r){
+ if(P.profession!=='ferreiro')return 'Só o Ferreiro forja armas exclusivas.';
+ if(prof('ferr').lv<r.prof)return 'Requer Ferraria nível '+r.prof+'.';
+ if(P.lvl<r.lv)return 'Requer personagem nível '+r.lv+'.';
+ if(!smithExclusiveBase(r))return 'Ainda não há arma base desta faixa para sua classe.';
+ for(const [id,q] of r.mats)if(!IT[id]||countItem(id)<q)return 'Faltam materiais.';
+ if((P.bag||[]).length+(P.inv||[]).length>=BAGMAX+INVMAX)return 'Abra espaço na bolsa ou na mochila.';
+ return '';
+}
+function smithExclusiveForge(r){
+ const block=smithExclusiveBlock(r);if(block){toast(null,block);return false}
+ const base=smithExclusiveBase(r),b=IT[base],model=forgeModel(base),rolled=forgeRoll(model),g=GPAS[r.pas];
+ const pv=r1(g[2]*(1+r.lv/150)*1.4),ore=r.mats[r.mats.length-1][0];
+ const mods={...rolled.mods,n:r.n,lv:r.lv,price:Math.round((b.price||100)*3),fx:r.fx,pas:[r.pas,pv,'Exclusiva'],passiveRoll:[r.pas,1.05],smithExclusive:r.k,
+  forgeRoll:{stat:model.stat,min:model.min,max:model.max,value:rolled.mods[model.stat],rank:rolled.rank,cost:r.mats[r.mats.length-1][1],ore},
+  craftDesc:''};
+ const id=makeCustom(base,mods),fin=IT[id].pas||mods.pas;
+ IT[id].craftDesc='Arma exclusiva do Ferreiro, forjada com materiais do '+r.boss+'. '+FXN[r.fx][1]+' · '+GPAS[fin[0]][0]+' +'+fin[1]+'% '+GPAS[fin[0]][1]+'.';P.cust[id]=IT[id];
+ if(!addItem(id)){delete P.cust[id];return false}
+ for(const [m,q] of r.mats)removeItem(m,q);
+ profXp('ferr',60+Math.round(r.lv/2));profSync();sfx('ach');
+ toast(itemIcon(id),'Forjado: '+r.n+' · '+rarInfo(id)[0]);log('Arma exclusiva forjada: '+r.n+' · '+g[0]+' +'+pv+'%','lv');save(true);return id;
+}
+function smithExclusiveDlg(back=closeAll){
+ say('Bigorna · Armas exclusivas','Armas que só o Ferreiro sabe forjar, com materiais de chefes. Cada uma tem um efeito e uma passiva garantidos, e o ataque é sorteado como na forja normal. Podem ser vendidas no Grande Mercado.',[['Voltar à bigorna',back]]);
+ const body=$('#dlgBody'),lv=prof('ferr').lv;
+ for(const r of SMITH_EXCLUSIVE){const block=smithExclusiveBlock(r),g=GPAS[r.pas],pv=r1(g[2]*(1+r.lv/150)*1.4);
+  const mats=r.mats.map(([id,q])=>`${esc(IT[id]?IT[id].n:id)}: ${countItem(id)}/${q}`).join('<br>');
+  const row=el(`<div class="quest" style="padding:10px;margin:8px 0;border-radius:8px"><h4>${lv>=r.prof&&P.lvl>=r.lv?'⚔️':'🔒'} ${esc(r.n)} <small>· nível ${r.lv}</small></h4><p style="font-size:12px">${FXN[r.fx][1]} · ${g[0]} +${pv}% ${g[1]}<br>Material de chefe: ${esc(r.boss)} · Ferraria ${r.prof}</p><p style="font-size:12px"><b>Materiais:</b><br>${mats}</p><button class="gold" style="width:100%" ${block?'disabled':''}>${block?esc(block):'⚒️ Forjar '+esc(r.n)}</button></div>`).firstElementChild;
+  row.querySelector('button').onclick=e=>confirmBuy(e.currentTarget,()=>{if(smithExclusiveForge(r))smithExclusiveDlg(back)});body.append(row);
+ }
+}
+</script>
+
+<script>
+/* --- Encomendas diárias de profissão ---
+   3 pedidos por dia para a profissão atual. Pagam ouro (perto do valor dos itens) e bastante XP de profissão. */
+'use strict';
+function ordersDay(){const d=new Date();return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate()}
+function ordersRng(seed){let x=seed>>>0||1;return()=>{x^=x<<13;x>>>=0;x^=x>>17;x^=x<<5;x>>>=0;return x/4294967296}}
+function ordersMake(key){
+ const r=ordersRng(ordersDay()*31+key.length*7919+(P.name||'').length*131),pickR=a=>a[Math.floor(r()*a.length)],out=[];
+ const takeR=a=>a.splice(Math.floor(r()*a.length),1)[0];
+ if(key==='alquimista'||key==='explosion'){
+  const recs=(PROF_RECIPES[key]||[]).filter(x=>!x.minLv||P.lvl>=x.minLv);
+  for(let i=0;i<3&&recs.length;i++){const rec=takeR(recs);out.push({type:'recipe',key,kind:rec.kind,n:rec.name,q:3+Math.floor(r()*4)})}
+ }else if(key==='ferreiro'){
+  out.push({type:'forged',group:'weapon',n:'Arma forjada',q:1+Math.floor(r()*2)});
+  out.push({type:'forged',group:'armor',n:'Peça de armadura forjada',q:1+Math.floor(r()*2)});
+  const ore=oreForLevel(Math.min(P.lvl,200));out.push({type:'item',id:ore,n:IT[ore].n,q:15+Math.floor(r()*16)});
+ }else if(key==='cowboy'){
+  const ok=TAME.filter(t=>prof('montaria').lv>=t.prof&&P.lvl>=t.lv);const list=ok.length?ok:[TAME[0]];
+  if(list.length===1)out.push({type:'item',id:'sela_tame_'+list[0].k,n:'Sela: '+list[0].n,q:2});
+  else for(let i=0;i<2;i++){const t=takeR(list);out.push({type:'item',id:'sela_tame_'+t.k,n:'Sela: '+t.n,q:1})}
+ }
+ return out;
+}
+function ordersState(){
+ P.fl=P.fl||{};const key=P.profession,day=ordersDay();let o=P.fl.orders;
+ if(!o||o.day!==day||o.key!==key)o=P.fl.orders={day,key,list:key?ordersMake(key):[]};
+ return o;
+}
+function ordersMatches(ord){
+ const out=[];for(const x of allItems()){const id=x.e.id,it=IT[id];if(!it)continue;
+  if(ord.type==='item'&&id===ord.id)out.push(x);
+  else if(ord.type==='recipe'&&it.profCraft&&it.profCraft.key===ord.key&&it.profCraft.kind===ord.kind)out.push(x);
+  else if(ord.type==='forged'&&it.forgeRoll&&it.slot&&(ord.group==='weapon'?it.slot==='weapon':it.slot!=='weapon')&&!Object.values(P.eq||{}).includes(id))out.push(x);}
+ return out;
+}
+function ordersHave(ord){return ordersMatches(ord).reduce((s,x)=>s+x.e.q,0)}
+function ordersDeliver(i){
+ const st=ordersState(),ord=st.list[i];if(!ord||ord.done)return false;
+ if(ordersHave(ord)<ord.q){toast(null,'Você ainda não tem tudo o que foi pedido.');return false}
+ let left=ord.q,value=0,lvSum=0;
+ const items=ordersMatches(ord).sort((a,b)=>economyValue(a.e.id)-economyValue(b.e.id));
+ for(const x of items){if(!left)break;const id=x.e.id,take=Math.min(left,x.e.q);if(!removeItem(id,take))continue;value+=economyValue(id)*take;lvSum+=(IT[id].lv||1)*take;left-=take;if(IT[id].custom&&typeof customUnused==='function'&&customUnused(id))delete P.cust[id]}
+ const rate=ord.type==='item'&&/^minerio/.test(ord.id)?1.2:ord.type==='item'?.6:.8,gold=Math.max(10,Math.round(value*rate)),xp=Math.round(30*ord.q+lvSum/2);
+ ord.done=1;P.gold+=gold;const pk=PROF_SKILL[P.profession];if(pk)profXp(pk,xp);profSync();sfx('coin');
+ toast(null,`📋 Encomenda entregue: +${gold.toLocaleString('pt-BR')} ouro · +${xp} XP de profissão`);
+ if(st.list.every(o=>o.done)){const bonus=Math.round(gold*.5);P.gold+=bonus;log(`Todas as encomendas do dia entregues! Bônus de ${bonus.toLocaleString('pt-BR')} ouro.`,'lv')}
+ save(true);return true;
+}
+function ordersDlg(back=closeAll){
+ if(!P.profession){toast(null,'Escolha uma profissão primeiro.');return}
+ const st=ordersState();
+ say('📋 Encomendas do dia','Pedidos de moradores para a sua profissão. Renovam todo dia. Cada entrega paga ouro e bastante XP de profissão; entregar as três dá um bônus de 50% do ouro da última.',[['Voltar',back]]);
+ const body=$('#dlgBody');
+ if(!st.list.length){body.append(el('<p>Nenhuma encomenda hoje.</p>'));return}
+ st.list.forEach((ord,i)=>{const have=ordersHave(ord);
+  const row=el(`<div class="quest" style="margin:8px 0"><h4>${ord.done?'✅':'📦'} ${ord.q}× ${esc(ord.n)}</h4><p style="font-size:12px">${ord.type==='recipe'?'Qualquer nível e qualidade.':ord.type==='forged'?'Equipamento forjado na bigorna (não vale o que está vestido).':''} Você tem: <b>${Math.min(have,ord.q)}/${ord.q}</b></p><button class="gold" style="width:100%" ${ord.done||have<ord.q?'disabled':''}>${ord.done?'Entregue':'Entregar'}</button></div>`).firstElementChild;
+  row.querySelector('button').onclick=e=>confirmBuy(e.currentTarget,()=>{ordersDeliver(i);ordersDlg(back)});body.append(row);
+ });
 }
 </script>

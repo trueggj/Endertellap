@@ -13874,6 +13874,25 @@ function elfGuideTalk(){say('Guia Lirael','<i>"Perdido, viajante? Eu conheço ca
 </script>
 
 <script>
+/* ===== Chefes das ilhas que não tinham: Fortaleza dos Condenados e Abismo Eterno ===== */
+'use strict';
+e3Mon('malgor','Diretor Malgor, o Carcereiro-Mor','jailer','#a02a2a',108,108,32,1.6,'fogo',{def:1.8,xp:30,x:{boss:1,big:1,resp:600},eq:'weapon',loot:[['frag_lendario',1]]});
+e3Mon('olho_abismo','Nyxar, o Olho do Abismo','voidLord','#7a3ae0',300,300,32,2.9,'sombra',{def:2,xp:32,x:{boss:1,big:1,resp:600},eq:'weapon',loot:[['frag_lendario',1]]});
+REG.malgor='Pátio Norte, Fortaleza dos Condenados';REG.olho_abismo='Borda Norte, Abismo Eterno';
+const NB_LAIR={};
+for(const [map,boss,lore,title] of [
+ ['ilha100','malgor','<b>FORTALEZA DOS CONDENADOS</b><br><br>Esta prisão era da Coroa de Vussumi. O <b>Diretor Malgor</b> a vendeu ao Rei Aldemar, o Corrupto: quem denunciava a guarda comprada vinha parar aqui, sem julgamento.<br><br>Aldemar caiu, mas Malgor ficou. Trancou os portões por dentro, soltou os cães infernais no pátio e governa a ilha como se fosse o rei dela.<br><br><small>Chefe da ilha: Diretor Malgor (nível 108), no pátio norte.</small>','Aviso da Guarda'],
+ ['ilha260','olho_abismo','<b>ABISMO ETERNO</b><br><br>Quando Kael foi banido, a queda dele abriu este buraco no mundo. O que ficou olhando lá de dentro ganhou nome: <b>Nyxar, o Olho do Abismo</b>.<br><br>É ele quem chama os espectros, os colossos e os simbiontes errantes para a ilha. Enquanto o Olho estiver aberto, o Abismo não para de crescer.<br><br><small>Chefe da ilha: Nyxar (nível 300), na borda norte.</small>','Pedra Gravada']]){
+ const m=MAPS[map];if(!m||!PORTS[map])continue;const ok=(x,y)=>x>1&&y>1&&x<m.w-2&&y<m.h-2&&!SOLID.has(getT(m,x,y))&&getT(m,x,y)!==TL.WATER;
+ const s=[PORTS[map].x,PORTS[map].y],seen=new Set([s+'']),q=[s];while(q.length){const [x,y]=q.shift();for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const k=(x+dx)+','+(y+dy);if(!seen.has(k)&&ok(x+dx,y+dy)){seen.add(k);q.push([x+dx,y+dy])}}}
+ let best=null,bs=-1e9;for(const k of seen){const [x,y]=k.split(',').map(Number);if(x<6||x>m.w-7||y<5||y>m.h-6)continue;const sc=(s[1]-y)*2-Math.abs(x-s[0]);if(sc>bs){bs=sc;best=[x,y]}}
+ if(!best)continue;const floor=getT(m,best[0],best[1]);
+ for(let y=best[1]-2;y<=best[1]+2;y++)for(let x=best[0]-3;x<=best[0]+3;x++)if(x>1&&y>1&&x<m.w-2&&y<m.h-2&&getT(m,x,y)!==TL.WATER&&SOLID.has(getT(m,x,y))&&Math.hypot((x-best[0])/3.5,(y-best[1])/2.5)<1)setT(m,x,y,floor);
+ m.spawns.push([boss,best[0],best[1]]);NB_LAIR[map]=best;
+ let sp=null;outer:for(let r=2;r<7;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const x=s[0]+dx,y=s[1]+dy;if(Math.max(Math.abs(dx),Math.abs(dy))===r&&seen.has(x+','+y)&&!NEWNPCS.some(n=>n.map===map&&Math.abs(n.x-x)<=1&&Math.abs(n.y-y)<=1)&&!(m.portals||[]).some(p=>Math.abs(p.x-x)<=1&&Math.abs(p.y-y)<=1)){sp=[x,y];break outer}}
+ if(sp)NEWNPCS.push({id:'lore_'+map,n:title,map,x:sp[0],y:sp[1],sign:1,wander:false,talk:()=>say(title,lore,[['Fechar',closeAll]])})}
+</script>
+<script>
 /* Materiais das áreas altas: dão missões de entrega e valem ouro na loja */
 'use strict';
 {const MATS=[['poeira_estelar','Poeira Estelar','#c8d8ff',260,['e_estatua_viva','e_lobo_estelar','e_fada_corrompida','e_lanceiro_sombrio']],['lodo_negro','Lodo Negro','#3a5a3a',300,['e_afogado','e_serpente_brejo','e_bruxa_brejo','e_simbionte_lodo']],['escama_crepuscular','Escama Crepuscular','#e89040',340,['e_wyvern','e_golem_ambar','e_celeste_caido','e_arcanista_sombrio']],['pena_dourada','Pena Dourada','#f0d060',340,['s_sentinela_dourada','s_serpente_celeste','s_corvo_kael','s_cultista_kael']],['luz_corrompida','Luz Corrompida','#c890ff',400,['d_anjo_marcado','d_servo_divino','d_guardiao_caido','d_simbionte_divino']]];
@@ -13997,7 +14016,9 @@ const ISL=[
  ['lumen','de Lúmen','Ruínas de Lúmen',['e_lumen'],['e_guardiao_lumen'],'luz',245,'e_lumen'],
  ['brejo','do Brejo','Pântano das Lágrimas',['e_pantano'],['e_mae_brejo'],'terra',295,'e_pantano'],
  ['crepusculo','do Crepúsculo','Cumes do Crepúsculo',['e_cumes'],['e_dragao_crepusculo'],'fogo',345,'e_cumes'],
- ['dourado','Dourado','Ilha do Selo Esquecido',['ilha_selo','kol_selo'],['kol_guardiao_selo'],'raio',345,'ilha_selo']
+ ['dourado','Dourado','Ilha do Selo Esquecido',['ilha_selo','kol_selo'],['kol_guardiao_selo'],'raio',345,'ilha_selo'],
+ ['condenados','dos Condenados','Fortaleza dos Condenados',['ilha100','hunt_ilha100'],['malgor'],'fogo',108,'ilha100'],
+ ['abismo','do Abismo','Abismo Eterno',['ilha260','hunt_ilha260'],['olho_abismo'],'sombra',300,'ilha260']
 ].filter(r=>r[3].some(m=>MAPS[m])&&r[4].some(b=>MON[b]));
 const ISL_BY={},ISL_MAP={},ISL_BOSS={},ISL_COST={weapon:8,armor:6,shield:5,helmet:4,legs:4,boots:4,amulet:4},ISL_RES=6;
 for(const [key,nome,ilha,maps,bosses,el,lv,forge] of ISL){const I={key,nome,ilha,maps:maps.filter(m=>MAPS[m]),bosses:bosses.filter(b=>MON[b]),el,lv,forge};ISL_BY[key]=I;for(const m of I.maps)ISL_MAP[m]=I;for(const b of I.bosses)ISL_BOSS[b]=I}
@@ -14047,4 +14068,71 @@ function islForge(key,who){const I=ISL_BY[key],fid='frag_isl_'+key,have=countIte
   if(!p)continue;I.fx=p[0];I.fy=p[1];NEWNPCS.push({id:'forja_'+I.key,n:'Forja: Set '+I.nome,map:I.forge,x:p[0],y:p[1],sign:1,wander:false,talk:()=>islForge(I.key)})}}
 /* 5) o quadro de missões mostra o elemento e o set da ilha */
 {const mb=mqBoard;mqBoard=function(map){const r=mb.apply(this,arguments);try{const I=ISL_MAP[map];const t=document.getElementById('dlgText');if(I&&t&&!t.dataset.isl){t.dataset.isl=1;t.insertAdjacentHTML('afterbegin',`<div style="margin:0 0 8px;padding:6px 8px;border-radius:6px;background:rgba(127,127,127,.12)">${ELI[I.el]} <b>Elemento da ilha: ${ELN[I.el]}</b><br><small>Chefe: ${I.bosses.map(b=>MON[b].n).join(', ')} · dropa fragmentos do <b>Set ${I.nome}</b> (nível ${I.lv}).</small></div>`)}}catch(e){}return r}}
+</script>
+
+<script>
+/* ===== Mecânicas únicas para os chefes que só batiam (e para os dois chefes novos) ===== */
+'use strict';
+{
+ const bT=(mo,k,first,ev)=>{if(!mo[k]){mo[k]=nowT+first;return false}if(nowT>=mo[k]){mo[k]=nowT+ev;return true}return false};
+ const once=(mo,k,frac)=>{if(mo.hp>=mo.mhp)mo[k]=0;if(!mo[k]&&mo.hp<mo.mhp*frac){mo[k]=1;return true}return false};
+ const HZ2=(mo,tiles,o)=>{const m=MAPS[mo.map];tiles=tiles.filter(([x,y])=>x>0&&y>0&&x<m.w-1&&y<m.h-1&&!SOLID.has(getT(m,x,y)));if(tiles.length)hazard(Object.assign({map:mo.map,tiles},o))};
+ const dirTo=mo=>{const dx=P.x-mo.x,dy=P.y-mo.y;return Math.abs(dx)>=Math.abs(dy)?[Math.sign(dx)||1,0]:[0,Math.sign(dy)||1]};
+ const line=(mo,len,offs=[0])=>{const [dx,dy]=dirTo(mo),t=[];for(const o of offs)for(let i=1;i<=len;i++)t.push([mo.x+dx*i+dy*o,mo.y+dy*i+dx*o]);return t};
+ const donut=(x,y,r0,r1)=>area(x,y,r1).filter(([a,b])=>Math.max(Math.abs(a-x),Math.abs(b-y))>=r0);
+ const call=(mo,type,n,lv)=>{if(!MON[type])return;for(let i=0;i<n;i++){const o=addMon(type,mo.map,mo.x+(i%2?2:-2),mo.y+1+(i>>1),lv||mo.lv-3);if(o)o.e4sum=1}};
+ const minions=mo=>(MONBY[mo.map]||[]).filter(o=>!o.dead&&o.e4sum).length;
+ const localMob=mo=>{const s=(MAPS[mo.map].spawns||[]).find(s=>MON[s[0]]&&!MON[s[0]].boss);return s&&s[0]};
+ const say2=(mo,t,c)=>text(mo,t,c||'#ffd040',1400);
+ const move=(e,x,y)=>{const s=findSpot(MAPS[e.map],x,y);e.x=s[0];e.y=s[1];e.rx=s[0];e.ry=s[1];e.mv=null;if(e===P)P.path=null};
+ Object.assign(BM,{
+  /* Coração de Quartzo: pulsos em cruz e em X, alternados */
+  e_quartzo_rei(mo){if(bT(mo,'t1',4000,7000)){mo.alt=!mo.alt;const t=[];for(let i=1;i<=6;i++)for(const [a,b] of mo.alt?[[1,0],[-1,0],[0,1],[0,-1]]:[[1,1],[-1,1],[1,-1],[-1,-1]])t.push([mo.x+a*i,mo.y+b*i]);say2(mo,mo.alt?'PULSO EM CRUZ!':'PULSO EM X!','#9ae0ff');HZ2(mo,t,{warn:1500,pct:.22,col:'120,210,255',name:'Pulso de Quartzo'})}
+   if(once(mo,'f1',.4)){mo.shieldT=nowT+3000;mo.hp=Math.min(mo.mhp,mo.hp+Math.round(mo.mhp*.08));say2(mo,'O CRISTAL SE RECOMPÕE','#9ae0ff');ring(mo,2,'#9ae0ff')}},
+  /* Matriarca dos Cipós: cipós venenosos que ficam no chão */
+  amz65_matriarca(mo){if(bT(mo,'t1',4000,9000)){say2(mo,'CIPÓS!','#7ac040');HZ2(mo,area(P.x,P.y,1),{warn:1400,pct:.07,linger:5000,col:'110,190,60',name:'Cipós Venenosos'})}
+   if(once(mo,'f1',.5)){say2(mo,'A mata responde!','#7ac040');call(mo,localMob(mo),2)}},
+  /* Rainha do Enxame: imune enquanto o enxame estiver vivo */
+  amz65_rainha(mo){if(bT(mo,'t1',6000,16000)&&minions(mo)<3){say2(mo,'ENXAME, PROTEJAM-ME!','#ffd040');call(mo,localMob(mo),3);log('A Rainha do Enxame fica imune enquanto houver 2 ou mais do enxame vivos.','bad')}
+   if(minions(mo)>=2){mo.shieldT=nowT+600;if(bT(mo,'t2',1,1500))ring(mo,1.6,'#ffd040')}},
+  /* Mandíbula Anciã: a maré cobre o lado da sala em que você está */
+  amz65_mandibula(mo){if(bT(mo,'t1',5000,10000)){const dx=P.x-mo.x,dy=P.y-mo.y,h=Math.abs(dx)>=Math.abs(dy),sg=h?(Math.sign(dx)||1):(Math.sign(dy)||1),t=[];for(let i=1;i<=7;i++)for(let j=-6;j<=6;j++)t.push(h?[mo.x+sg*i,mo.y+j]:[mo.x+j,mo.y+sg*i]);say2(mo,'MARÉ!','#60b0ff');log('A maré vai cobrir este lado: passe para o outro lado da Mandíbula!','bad');HZ2(mo,t,{warn:2200,pct:.3,col:'70,150,255',name:'Maré da Mandíbula'})}},
+  /* Capitão Morak: virotes em chamas que deixam o chão queimando */
+  e_morak(mo){if(bT(mo,'t1',4000,8000)){say2(mo,'BESTEIROS, FOGO!','#ff8a3a');for(let i=0;i<5;i++)HZ2(mo,[[P.x+((R()*5|0)-2),P.y+((R()*5|0)-2)]],{warn:1300,pct:.06,linger:4000,col:'255,120,40',name:'Virotes em Chamas'})}
+   if(once(mo,'f1',.5)){mo.atk=Math.round(mo.atk*1.2);say2(mo,'PELA SOMBRA!','#ff4040');ring(mo,2,'#ff4040');log('Morak entra em fúria: +20% de dano.','bad')}},
+  /* Lorde Vaelor: desaparece, reaparece e lança a Marca Roxa; chama ilusões */
+  e_vaelor(mo){if(bT(mo,'t1',5000,10000)){ring(mo,1.5,'#c06aff');move(mo,P.x+((R()*9|0)-4),P.y+((R()*7|0)-3));ring(mo,1.5,'#c06aff');say2(mo,'MARCA ROXA!','#c06aff');HZ2(mo,area(P.x,P.y,1),{warn:1500,pct:.22,col:'170,80,230',name:'Marca Roxa'})}
+   if(once(mo,'f1',.5)){say2(mo,'Qual de nós é o verdadeiro?','#c06aff');call(mo,'e_elfo_sombrio',2,mo.lv-5)}},
+  /* Espectro da Batalha: fica intangível e solta um anel de gelo (fique colado nele ou bem longe) */
+  e_espectro_guerra(mo){if(bT(mo,'t1',5000,11000)){mo.shieldT=nowT+2500;say2(mo,'ANEL DE GELO!','#a8d8ff');HZ2(mo,donut(mo.x,mo.y,2,3),{warn:1600,pct:.25,col:'150,210,255',name:'Anel de Gelo'})}
+   if(once(mo,'f1',.35)){say2(mo,'A Guarda nunca recua!','#a8d8ff');call(mo,'e_eco_guarda',2,mo.lv-8)}},
+  /* General Morthil: salvas de lanças em fileiras, alternando os vãos seguros */
+  e_morthil(mo){if(bT(mo,'t1',4000,8000)){mo.alt=!mo.alt;say2(mo,'LANÇAS, AVANTE!','#b070e0');HZ2(mo,line(mo,10,mo.alt?[-2,0,2]:[-3,-1,1,3]),{warn:1500,pct:.25,col:'160,90,220',name:'Salva de Lanças'})}
+   if(once(mo,'f1',.3)){say2(mo,'GUARDA, A MIM!','#b070e0');call(mo,'e_lanceiro_sombrio',2,mo.lv-5)}},
+  /* Guardião de Lúmen: constelação (primeiro o anel em volta, depois o centro) */
+  e_guardiao_lumen(mo){if(bT(mo,'t1',4000,9000)){const x=P.x,y=P.y;say2(mo,'CONSTELAÇÃO!','#fff0a0');HZ2(mo,donut(x,y,2,2),{warn:1400,pct:.2,col:'255,240,150',name:'Constelação'});HZ2(mo,area(x,y,1),{warn:2800,pct:.25,col:'255,255,220',name:'Estrela Cadente'})}},
+  /* Mãe do Brejo: poças de lodo que ficam no chão e ninhadas de simbiontes */
+  e_mae_brejo(mo){if(bT(mo,'t1',4000,9000)){say2(mo,'LODO!','#7a9a4a');HZ2(mo,area(P.x,P.y,1),{warn:1400,pct:.08,linger:6000,col:'90,130,60',name:'Lodo Vivo'})}
+   if(once(mo,'f1',.6)||once(mo,'f2',.3)){say2(mo,'NINHADA!','#7a9a4a');call(mo,'e_simbionte_lodo',2,mo.lv-10)}},
+  /* Dragão do Crepúsculo: sopro em cone e chuva de brasas enquanto voa */
+  e_dragao_crepusculo(mo){if(bT(mo,'t1',4000,9000)){const [dx,dy]=dirTo(mo),t=[];for(let i=1;i<=7;i++)for(let j=-(i>>1);j<=(i>>1);j++)t.push([mo.x+dx*i+dy*j,mo.y+dy*i+dx*j]);say2(mo,'SOPRO DO CREPÚSCULO!','#ff9040');HZ2(mo,t,{warn:1600,pct:.3,col:'255,140,50',name:'Sopro do Crepúsculo'})}
+   if(once(mo,'f1',.66)||once(mo,'f2',.33)){mo.shieldT=nowT+3000;say2(mo,'O DRAGÃO LEVANTA VOO!','#ff9040');log('O Dragão voa fora de alcance e faz chover brasas!','bad');for(let i=0;i<7;i++)HZ2(mo,area(P.x+((R()*9|0)-4),P.y+((R()*9|0)-4),1),{warn:1400+i*250,pct:.2,col:'255,110,40',name:'Chuva de Brasas'})}},
+  /* Guardião do Selo: três quadrantes explodem, um fica seguro */
+  kol_guardiao_selo(mo){if(bT(mo,'t1',5000,10000)){const sx=R()<.5?1:-1,sy=R()<.5?1:-1,t=area(mo.x,mo.y,5).filter(([x,y])=>!(Math.sign(x-mo.x)===sx&&Math.sign(y-mo.y)===sy)&&!(x===mo.x&&y===mo.y));say2(mo,'TRÊS SELOS SE ROMPEM!','#ffe080');log('Só um canto em volta do Guardião fica seguro: corra para ele!','bad');HZ2(mo,t,{warn:2300,pct:.3,col:'255,220,90',name:'Selos Rompidos'})}},
+  /* Pilar de Correntes: puxa o jogador e esmaga em volta */
+  d_pilar_correntes(mo){if(bT(mo,'t1',4000,11000)&&cheb(mo,P)<=9){if(cheb(mo,P)>1){move(P,mo.x+Math.sign(P.x-mo.x),mo.y+Math.sign(P.y-mo.y));text(P,'puxado pelas correntes!','#c06aff',1200)}say2(mo,'CORRENTES!','#c06aff');HZ2(mo,area(mo.x,mo.y,2),{warn:1600,pct:.28,col:'170,80,230',name:'Esmagar das Correntes'})}},
+  /* Arauto de Kael: a lança que atravessa a sala, servos e um salto para as suas costas */
+  d_arauto_kael(mo){if(bT(mo,'t1',3000,7000)){say2(mo,'LANÇA DO ARAUTO!','#c06aff');HZ2(mo,line(mo,10),{warn:1000,pct:.3,col:'190,90,255',name:'Lança do Arauto'})}
+   if(bT(mo,'t2',12000,24000)&&(MONBY[mo.map]||[]).filter(o=>!o.dead&&o.type==='kael_sombra').length<4){say2(mo,'Em nome de Kael!','#c06aff');call(mo,'kael_sombra',2,mo.lv-5)}
+   if(once(mo,'f1',.4)){ring(mo,1.5,'#c06aff');const [dx,dy]=dirTo(mo);move(mo,P.x+dx,P.y+dy);ring(mo,1.5,'#c06aff');say2(mo,'ATRÁS DE VOCÊ.','#ff6aff')}},
+  /* Diretor Malgor: jaula em volta do jogador, chicote e os cães */
+  malgor(mo){if(bT(mo,'t1',5000,12000)){say2(mo,'JAULA!','#ff6040');log('Uma jaula em brasa se fecha em volta de você: fique parado no meio!','bad');HZ2(mo,donut(P.x,P.y,1,1),{warn:1200,pct:.12,linger:3500,col:'255,90,50',name:'Jaula em Brasa'})}
+   if(bT(mo,'t2',2500,7000)){say2(mo,'CHICOTE!','#ff6040');HZ2(mo,line(mo,5),{warn:1100,pct:.18,col:'255,140,80',name:'Chicote do Carcereiro'})}
+   if(once(mo,'f1',.5)){say2(mo,'SOLTEM OS CÃES!','#ff4040');call(mo,'cao_infernal',3,mo.lv-6)}},
+  /* Nyxar, o Olho do Abismo: gravidade que puxa e implosão; fendas no chão */
+  olho_abismo(mo){if(bT(mo,'t1',6000,14000)&&cheb(mo,P)<=10){if(cheb(mo,P)>1){move(P,mo.x+Math.sign(P.x-mo.x),mo.y+Math.sign(P.y-mo.y));text(P,'tragado pelo Abismo!','#b070ff',1200)}say2(mo,'IMPLOSÃO!','#b070ff');log('Nyxar puxou você: corra para longe antes da implosão!','bad');HZ2(mo,area(mo.x,mo.y,3),{warn:1900,pct:.35,col:'140,70,255',name:'Implosão do Abismo'})}
+   if(bT(mo,'t2',3000,8000))for(let i=0;i<3;i++)HZ2(mo,area(P.x+((R()*7|0)-3),P.y+((R()*7|0)-3),0),{warn:1300,pct:.08,linger:5000,col:'110,60,200',name:'Fenda do Abismo'});
+   if(once(mo,'f1',.3)){say2(mo,'O ABISMO OLHA DE VOLTA','#ff6aff');call(mo,'espectro_abismo',2,mo.lv-8)}}
+ });
+}
 </script>

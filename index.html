@@ -13982,8 +13982,8 @@ function mqBoard(map){const B=MQ_BOARDS[map];if(!B)return;const L=mqMissions(map
 function mqGoal(key){const [kind,map,k]=key.split(':');const B=MQ_BOARDS[map];if(!B)return null;const mm=(typeof MQ_GROUP!=='undefined'&&MQ_GROUP[map])||map,MB=MQ_BOARDS[mm]||B;const board={name:'📋 Mural de Missões · '+(MAPN[mm]||mm),map:mm,x:MB.x,y:MB.y};if(kind==='mqb')return board;
  const M=mqMissions(map).find(m=>m.k===k),s=M&&mqSt(map,k);if(!M||!s||s.st==='done')return null;if(mqProg(map,M)>=M.need)return{...board,name:'Missão pronta: entregue no Mural · '+(MAPN[mm]||mm)};
  if(M.kind==='exp'){const pts=mqPoints(map),j=pts.findIndex((p,j)=>!(s.vis||[])[j]);const p=pts[j];return p&&{name:`Explore: ${p.n} (${mqProg(map,M)}/${M.need})`,map,x:p.x,y:p.y}}
- const t=M.kind==='item'?M.from:M.type;const o=(MONBY[map]||[]).find(o=>o.type===t&&!o.dead)||(MONBY[map]||[]).find(o=>o.type===t)||((MAPS[map].spawns||[]).filter(s=>s[0]===t).map(s=>({x:s[1],y:s[2]}))[0]);
- return o&&{name:(M.kind==='item'?`${IT[M.item].n} (${mqProg(map,M)}/${M.need}) · de ${MON[t].n}`:`${MON[t].n} (${mqProg(map,M)}/${M.need})`),map,x:o.sx||o.x,y:o.sy||o.y}}
+ const t=M.kind==='item'?M.from:M.type;const o=(MONBY[map]||[]).find(o=>o.type===t&&!o.dead)||(MONBY[map]||[]).find(o=>o.type===t)||((MAPS[map].spawns||[]).filter(s=>s[0]===t).map(s=>({x:s[1],y:s[2]}))[0])||(()=>{for(const k in MAPS){const q=(MAPS[k].spawns||[]).find(q=>q[0]===t);if(q)return{x:q[1],y:q[2],_map:k}}})();
+ return o&&{name:(M.kind==='item'?`${IT[M.item].n} (${mqProg(map,M)}/${M.need}) · de ${MON[t].n}`:`${MON[t].n} (${mqProg(map,M)}/${M.need})`),map:o._map||map,x:o.sx||o.x,y:o.sy||o.y}}
 {const qb=questGoal;questGoal=function(){if(P&&typeof P.track==='string'&&/^mqb?:/.test(P.track)){try{return mqGoal(P.track)}catch(e){return null}}return qb.apply(this,arguments)}}
 /* progresso: exploração, aviso de missão pronta e de quadro na ilha */
 {let tk=0,last=null;const upd=update;update=function(){const r=upd.apply(this,arguments);
@@ -14233,4 +14233,53 @@ function pvpZone(map,x,y){if(map!==NUVEM)return false;const inR=r=>x>=r[0]&&y>=r
 /* --- entrada da Mata Corrompida bem marcada --- */
 {const m=MAPS.amazon;if(m&&typeof AMZ68!=='undefined'){for(const [x,y] of [[25,76],[25,78]])if(!SOLID.has(getT(m,x,y)))setT(m,x,y,TL.LAMP);setT(m,24,77,TL.PORTAL);
   NEWNPCS.push({id:'amz68_entrada',n:'Entrada: Mata Corrompida',map:'amazon',x:27,y:76,sign:1,wander:false,talk:()=>say('Entrada da Mata Corrompida','<b>← MATA CORROMPIDA</b> (nível 42 a 50)<br><br>Passe pelo <b>portal roxo</b> entre os dois lampiões, a oeste desta placa.<br><small>Lá dentro: a casa abandonada e o ritual da Árvore Corrompida.</small>',[['Fechar',closeAll]])})}}
+</script>
+
+<script>
+/* ===== Regra dos chefes: todo chefe fica numa sala atrás de um portal; aparece 10 s depois que o jogador entra; recarga de 3 h no modo online ===== */
+'use strict';
+let BOSS_COOLDOWN_ON=false;            /* ligar no lançamento online: o portal passa a mostrar a recarga */
+const BOSS_COOLDOWN_MS=3*60*60*1000,BOSS_SPAWN_MS=10000,BOSS_ROOM={},BOSS_PORTALS={},BOSS_ROOM_OF={};
+/* 1) salas novas para os chefes que ficavam soltos no mapa */
+{const regular=m=>(m.spawns||[]).filter(s=>MON[s[0]]&&!MON[s[0]].boss).length;
+ for(const map of Object.keys(MAPS)){const m=MAPS[map];if(regular(m)<5)continue;
+  for(const sp of (m.spawns||[]).filter(s=>MON[s[0]]&&MON[s[0]].boss&&s[0]!=='d_pilar_correntes')){const boss=sp[0],room='sala_'+boss,W=23,H=17,cx=11;if(MAPS[room])continue;
+   const walk=(x,y)=>x>0&&y>0&&x<m.w-1&&y<m.h-1&&!SOLID.has(getT(m,x,y))&&getT(m,x,y)!==TL.WATER&&!DSOL.has(map+','+x+','+y);
+   let px0=sp[1],py0=sp[2];if(!walk(px0,py0)||(m.portals||[]).some(p=>p.x===px0&&p.y===py0)){const f=findSpot(m,px0,py0);px0=f[0];py0=f[1]}
+   const floor=getT(m,px0,py0),cnt={};for(let y=0;y<m.h;y+=2)for(let x=0;x<m.w;x+=2){const t=getT(m,x,y);if(SOLID.has(t)&&t!==TL.WATER)cnt[t]=(cnt[t]||0)+1}
+   const wall=+(Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0]??TL.ROCK);
+   const a=M(W,H,floor,wall);box(a,0,0,W-1,H-1,wall,floor);
+   for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++)if(Math.hypot((x-cx)/10.5,(y-8)/7.6)>1)setT(a,x,y,wall);
+   for(let y=H-4;y<H-1;y++)for(let x=cx-2;x<=cx+2;x++)setT(a,x,y,floor);
+   setT(a,cx,H-1,TL.EXIT);let back=null;for(const [dx,dy] of [[0,1],[1,0],[-1,0],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]])if(walk(px0+dx,py0+dy)&&!(m.portals||[]).some(p=>p.x===px0+dx&&p.y===py0+dy)){back=[px0+dx,py0+dy];break}
+   back=back||[px0,py0];a.portals.push({x:cx,y:H-1,to:map,tx:back[0],ty:back[1]});a.safe.push([cx-2,H-4,cx+2,H-2]);a.spawns.push([boss,cx,5]);a.grown=1;
+   MAPS[room]=a;MAPN[room]='Covil · '+MON[boss].n;ZLV[room]='chefe · nível '+MON[boss].lv[0]+(MON[boss].el?' · '+ELI[MON[boss].el]+' '+ELN[MON[boss].el]:'');
+   m.spawns.splice(m.spawns.indexOf(sp),1);setT(m,px0,py0,TL.PORTAL);m.portals.push({x:px0,y:py0,to:room,tx:cx,ty:H-3});
+   BOSS_ROOM_OF[room]=map;if(ISL_MAP[map])ISL_MAP[room]=ISL_MAP[map];if(REG[boss])REG[boss]='Covil do chefe, '+(MAPN[map]||map)}}
+ const sb=b70Spawn;b70Spawn=function(map){return sb.call(this,BOSS_ROOM_OF[map]||map)};
+ const mz=musZoneNow;musZoneNow=function(){const o=P&&BOSS_ROOM_OF[P.map];if(!o)return mz();const k=P.map;P.map=o;try{return mz()}finally{P.map=k}};}
+/* 2) todas as salas de chefe do jogo e os portais que levam a elas */
+for(const map in MAPS){if(map==='ship')continue;const m=MAPS[map],bs=(m.spawns||[]).filter(s=>MON[s[0]]&&MON[s[0]].boss).map(s=>s[0]);if(!bs.length||(m.spawns||[]).filter(s=>MON[s[0]]&&!MON[s[0]].boss).length>=5)continue;BOSS_ROOM[map]=[...new Set(bs)]}
+for(const map in MAPS)for(const p of MAPS[map].portals||[])if(BOSS_ROOM[p.to]&&!BOSS_ROOM[map])(BOSS_PORTALS[map]=BOSS_PORTALS[map]||[]).push({x:p.x,y:p.y,room:p.to});
+function bossCdLeft(room){if(!BOSS_COOLDOWN_ON||!P||!P.fl||!P.fl.bcd)return 0;const t=Math.max(0,...BOSS_ROOM[room].map(b=>P.fl.bcd[b]||0));return Math.max(0,t+BOSS_COOLDOWN_MS-Date.now())}
+function bossCdTxt(ms){const m=Math.ceil(ms/60000);return m>=60?Math.floor(m/60)+' h '+String(m%60).padStart(2,'0')+' min':m+' min'}
+{let last=null,GATE=null;
+ const bosses=room=>(MONBY[room]||[]).filter(o=>!o.tmp&&MON[o.type]&&MON[o.type].boss&&BOSS_ROOM[room].includes(o.type));
+ const upd=update;update=function(){const r=upd.apply(this,arguments);if(!P)return r;
+  try{if(P.map!==last){const prev=last;last=P.map;GATE=null;const room=P.map;
+    if(BOSS_ROOM[room]&&!P.dead){const left=bossCdLeft(room);
+     if(left>0){const ex=MAPS[room].portals[0];toast(null,'⏳ '+MON[BOSS_ROOM[room][0]].n+' está em recarga: volta em '+bossCdTxt(left));log('O chefe desta sala foi derrotado há pouco. Ele volta em '+bossCdTxt(left)+'.','q');if(ex){last=ex.to;teleport({to:ex.to,tx:ex.tx,ty:ex.ty})}}
+     else{const L=bosses(room).filter(o=>o.dead||o.hp>=o.mhp);if(L.length){for(const o of L){o.dead=true;o.respawnAt=Infinity;if(P.target===o)P.target=null}GATE={room,at:nowT+BOSS_SPAWN_MS,L,n:11};toast(null,'⚔ '+MON[L[0].type].n+' aparece em 10 segundos. Prepare-se!');log(MON[L[0].type].n+' aparece em 10 segundos.','bad')}}}}
+   if(GATE&&P.map===GATE.room){const left=Math.ceil((GATE.at-nowT)/1000);
+    if(left<GATE.n&&left>0){GATE.n=left;const o=GATE.L[0];text({x:o.sx,y:o.sy,map:GATE.room},'⏳ '+left,'#ffd040',950);if(left<=3)sfx('click')}
+    if(nowT>=GATE.at){for(const o of GATE.L){for(const k of ['t1','t2','f1','f2','alt','stCall','kA','kS','waveDone','waveAt','fury','reborn','calls','heal','mt','ph','sum','exp','stk','shieldT','vanish'])delete o[k];Object.assign(o,{dead:false,hp:o.mhp,x:o.sx,y:o.sy,rx:o.sx,ry:o.sy,aggro:false,mv:null,nextAtk:nowT+1500,respawnAt:0});ring(o,2.5,'#ffd040');text(o,'O CHEFE APARECEU!','#ffd040',1600)}sfx('lvl');shake(4,300);GATE=null}}
+  }catch(e){console.error(e)}return r};
+ const kb=kill;kill=function(mo){const alive=mo&&!mo.dead;const r=kb.apply(this,arguments);
+  try{if(alive&&mo.dead&&!mo.tmp&&BOSS_ROOM[mo.map]&&BOSS_ROOM[mo.map].includes(mo.type)){mo.respawnAt=Infinity;P.fl=P.fl||{};(P.fl.bcd=P.fl.bcd||{})[mo.type]=Date.now();log(BOSS_COOLDOWN_ON?MON[mo.type].n+' só volta daqui a 3 horas. O portal mostra a recarga.':'Para enfrentar '+MON[mo.type].n+' de novo, saia da sala e entre outra vez.','q');save(true)}}catch(e){console.error(e)}return r};
+ /* o portal mostra o chefe e a situação dele */
+ const db=draw;draw=function(){const r=db.apply(this,arguments);
+  try{const L=P&&BOSS_PORTALS[P.map];if(L&&typeof ctx!=='undefined'){const camX=Math.round(P.rx*S+S/2-cv.width/2),camY=Math.round(P.ry*S+S/2-cv.height/2);ctx.save();ctx.font=`bold ${Math.round(4.2*Z)}px Verdana,Tahoma,Arial,sans-serif`;ctx.textAlign='center';ctx.lineWidth=Z*1.2;ctx.strokeStyle='#000';
+    for(const p of L){const x=p.x*S-camX+S/2,y=p.y*S-camY-S*.25;if(x<-S*3||y<-S||x>cv.width+S*3||y>cv.height+S)continue;const left=bossCdLeft(p.room),nm=MON[BOSS_ROOM[p.room][0]].n,t2=left>0?'⏳ volta em '+bossCdTxt(left):'⚔ chefe pronto';
+     ctx.strokeText(nm,x,y-Z*5);ctx.fillStyle='#ffe9a8';ctx.fillText(nm,x,y-Z*5);ctx.strokeText(t2,x,y);ctx.fillStyle=left>0?'#ff9a80':'#9af09a';ctx.fillText(t2,x,y)}ctx.restore()}}catch(e){}
+  return r};}
 </script>

@@ -12796,7 +12796,7 @@ for(const [k,q] of Object.entries(PROFESSIONS)){const human={place:q.place,map:q
      const bt=prof.querySelector('#professionTrack');if(bt){const on=P.track==='oficina_elfo';bt.textContent=on?'✕ Parar de rastrear':'🎯 Rastrear oficina';bt.className=on?'gold':'';bt.onclick=()=>{P.track=on?null:'oficina_elfo';P.guide=null;save(true);renderPanel()}}}
     if(!b.querySelector('.quest'))b.append(el('<p style="color:var(--muted)">Nenhuma missão élfica aqui por enquanto. A história élfica fica na aba <b>📜 História</b>.</p>'));
    }
-   if(QTAB==='dia')for(const p of [...b.querySelectorAll('p')])if(/Caçadora Bruna/.test(p.textContent))p.innerHTML='Além dos Contratos do Dia, os humanos organizam caçadas extras no Salão das Missões de Vussumi.';
+   if(QTAB==='dia')for(const p of [...b.querySelectorAll('p')])if(/Caçadora Bruna/.test(p.textContent))p.innerHTML='Pegue missões diárias nos 📋 Quadros de Missões de cada ilha. Os humanos também têm caçadas extras no Salão das Missões de Vussumi.';
    if(QTAB==='ent'){const bar=b.querySelector('.chips');const keep=bar?[bar]:[];b.innerHTML='';for(const k of keep)b.append(k);b.append(el('<p style="color:var(--muted)">As entregas diárias são da Intendente Clara, em Vussumi, nas terras dos humanos.</p>'))}
   }}catch(e){console.error(e)}
   return r};
@@ -13872,87 +13872,98 @@ function elfGuideTalk(){say('Guia Lirael','<i>"Perdido, viajante? Eu conheço ca
 /* O Guia Tião também explica a seta */
 {const gb=guideTalk2;guideTalk2=function(){gb.apply(this,arguments);const o=$('#dlgOpts');if(o&&!o.querySelector('[data-nav]')){const b=document.createElement('button');b.dataset.nav=1;b.textContent='🧭 Como não se perder';b.onclick=()=>navHelp(guideTalk2);o.insertBefore(b,o.children[1]||null)}}}
 </script>
+
 <script>
-/* ===== Contratos do Dia: diárias que acompanham o nível do jogador (humanos e elfos) ===== */
+/* Materiais das áreas altas: dão missões de entrega e valem ouro na loja */
 'use strict';
-const CT_N=3,CT_KILLS=.6,CT_RW=.35,CT_BONUS=.3;
-const ctElfMap=k=>k==='sylvaren'||/^e_/.test(k);
-function ctCandidates(L){const out={};for(const k in MONBY){if(HOUSES.has(k)||/^(arena|dg|torre|selo\d|ship|kol_selo|trono_divino|ilha230)/.test(k))continue;
-  for(const o of MONBY[k]){if(o.tmp||!MON[o.type]||MON[o.type].boss)continue;const lv=o.lv||MON[o.type].lv[0];if(lv<L-6||lv>L+3)continue;const c=out[o.type]||(out[o.type]={type:o.type,maps:{},n:0,lv:[]});c.maps[k]=(c.maps[k]||0)+1;c.n++;c.lv.push(lv)}}
- return Object.values(out).filter(c=>c.n>=3).map(c=>{const map=Object.entries(c.maps).sort((a,b)=>b[1]-a[1])[0][0];return{type:c.type,map,lv:Math.round(c.lv.reduce((a,b)=>a+b,0)/c.lv.length)}})}
-function ctGen(){const L=P.lvl,fac=P.fac==='elfo'?'elfo':'humano',all=ctCandidates(L),mine=all.filter(c=>fac==='elfo'?ctElfMap(c.map):!ctElfMap(c.map)),rest=all.filter(c=>!mine.includes(c));
- let seed=0;for(const ch of today()+(P.name||''))seed=(seed*31+ch.charCodeAt(0))|0;const r=rng(Math.abs(seed)+L);const shuf=a=>a.map(x=>[r(),x]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
- const pick=(mine.length?shuf(mine):shuf(rest)).slice(0,CT_N),mul=pick.length?CT_N/pick.length:1,k=Math.max(10,Math.round(killsPL(L)*CT_KILLS*mul));
- P.ct={d:today(),L,mul,bonus:0,told:0,list:pick.map(c=>({type:c.type,map:c.map,lv:c.lv,need:k,base:P.kills[c.type]||0,done:0}))}}
-function ctState(){if(!P)return null;if(!P.ct||P.ct.d!==today())ctGen();return P.ct}
-const ctN=c=>Math.max(0,(P.kills[c.type]||0)-c.base);
-const ctXp=S=>dailyXP(Math.round(need(S.L)*CT_RW*(S.mul||1))),ctGold=S=>Math.round(S.L*15*(S.mul||1)),ctBonusXp=S=>dailyXP(Math.round(need(S.L)*CT_BONUS));
-function ctGoal(i){const S=ctState(),c=S&&S.list[i];if(!c||c.done)return null;const m=MAPS[c.map];const o=(MONBY[c.map]||[]).find(o=>o.type===c.type&&!o.dead)||(m.spawns||[]).map(s=>({x:s[1],y:s[2],type:s[0]})).find(s=>s.type===c.type);if(!o)return null;
- return{name:`Contrato: ${MON[c.type].n} (${Math.min(ctN(c),c.need)}/${c.need})`,map:c.map,x:o.x,y:o.y}}
-{const qb=questGoal;questGoal=function(){if(P&&typeof P.track==='string'&&P.track.startsWith('contrato:')){try{return ctGoal(+P.track.split(':')[1])}catch(e){return null}}return qb.apply(this,arguments)}}
-/* recompensa na hora, sem voltar a ninguém */
-{let tk=0;const upd=update;update=function(){const r=upd.apply(this,arguments);
-  if(P&&!P.dead&&nowT>=tk){tk=nowT+1000;try{const S=ctState();if(!S.told&&S.list.length){S.told=1;log('📅 Novos Contratos do Dia: '+S.list.map(c=>MON[c.type].n).join(', ')+'. Veja em Missões → Diárias.','q')}
-   S.list.forEach((c,i)=>{if(!c.done&&ctN(c)>=c.need){c.done=1;const xp=ctXp(S),g=ctGold(S);P.gold+=g;gainXp(xp);sfx('ach');toast(null,`📅 Contrato concluído: +${xp.toLocaleString('pt-BR')} XP · +${g.toLocaleString('pt-BR')} ouro`);log(`Contrato do Dia concluído (${MON[c.type].n}): +${xp.toLocaleString('pt-BR')} XP.`,'lv');
-     if(P.track==='contrato:'+i){const nx=S.list.findIndex(x=>!x.done);P.track=nx>=0?'contrato:'+nx:'story'}save(true)}});
-   if(!S.bonus&&S.list.length&&S.list.every(c=>c.done)){S.bonus=1;const xp=ctBonusXp(S),pot=S.L>=40?'pocao_vida_g':'pocao_vida';gainXp(xp);addItem(pot,10);sfx('lvl');toast(itemIcon(pot),`📅 Todos os contratos do dia: +${xp.toLocaleString('pt-BR')} XP e 10 poções!`);log('Você cumpriu todos os Contratos do Dia. Amanhã tem mais.','lv');save(true)}}catch(e){console.error(e)}}
-  return r}}
-/* aba Missões → Diárias */
-{const qb=pQuest;pQuest=function(b){const r=qb.apply(this,arguments);
- try{if(typeof QTAB!=='undefined'&&QTAB==='dia'){const S=ctState(),done=S.list.filter(c=>c.done).length;
-  const cards=S.list.length?S.list.map((c,i)=>{const n=Math.min(ctN(c),c.need),tr=P.track==='contrato:'+i;return `<div class="quest ${c.done?'done':''}"><h4>🎯 ${esc(MON[c.type].n)} <small style="color:var(--muted)">· nível ${c.lv}</small>${c.done?'':` <button data-ct="${i}" style="float:right;font-size:11px;padding:2px 8px" class="${tr?'gold':''}">${tr?'Rastreando':'Rastrear'}</button>`}</h4><p>${c.done?'✅ Concluído':'⬜ Derrote '+c.need+' · '+n+'/'+c.need}<br><small>Onde: <b>${esc(MAPN[c.map]||c.map)}</b> · Recompensa: ${ctXp(S).toLocaleString('pt-BR')} XP · ${ctGold(S).toLocaleString('pt-BR')} ouro</small></p></div>`}).join(''):'<div class="quest"><p>Nenhum monstro do seu nível por perto hoje.</p></div>';
-  const box=el(`<div><div class="sect">📅 Contratos do Dia <span>${done}/${S.list.length}</span></div><p style="color:var(--muted);font-size:12px;margin:0 0 8px">Renovam todo dia, sempre no seu nível. A recompensa chega na hora: não precisa voltar a ninguém. Cumpra os três e ganhe <b>+${ctBonusXp(S).toLocaleString('pt-BR')} XP</b> e 10 poções${S.bonus?' ✅':''}.</p>${cards}</div>`);
-  const first=b.querySelector('.sect');const nodes=[...box.childNodes];if(first)first.before(...nodes);else b.append(...nodes);
-  b.querySelectorAll('[data-ct]').forEach(bt=>bt.onclick=()=>{trackMission('contrato:'+bt.dataset.ct);renderPanel()})}}catch(e){console.error(e)}
- return r}}
+{const MATS=[['poeira_estelar','Poeira Estelar','#c8d8ff',260,['e_estatua_viva','e_lobo_estelar','e_fada_corrompida','e_lanceiro_sombrio']],['lodo_negro','Lodo Negro','#3a5a3a',300,['e_afogado','e_serpente_brejo','e_bruxa_brejo','e_simbionte_lodo']],['escama_crepuscular','Escama Crepuscular','#e89040',340,['e_wyvern','e_golem_ambar','e_celeste_caido','e_arcanista_sombrio']],['pena_dourada','Pena Dourada','#f0d060',340,['s_sentinela_dourada','s_serpente_celeste','s_corvo_kael','s_cultista_kael']],['luz_corrompida','Luz Corrompida','#c890ff',400,['d_anjo_marcado','d_servo_divino','d_guardiao_caido','d_simbionte_divino']]];
+ for(const [id,n,c,price,mons] of MATS){IT[id]=IT[id]||{n,price,ic:'loot',c,loot:1,desc:'Material raro. Pode ser vendido ou entregue nos Quadros de Missões.'};for(const k of mons)if(MON[k]){MON[k].loot=MON[k].loot||[];if(!MON[k].loot.some(e=>e[0]===id))MON[k].loot.push([id,1])}}}
 </script>
 <script>
-/* ===== Contratos de Região: cada ilha e área tem tarefas diárias para explorar o mapa inteiro ===== */
+/* ===== Quadros de Missões: cada ilha tem um quadro com missões diárias (caça, entrega, exploração e chefe) ===== */
 'use strict';
-const RG_EXCL=/^(arena|dg|torre|selo\d|ship|kol_selo|trono_divino|ilha230|e_santuario_lua|e_trono_sombrio|e_clareira_lua)/;
-const RG_TASK=.12,RG_BONUS=.25,RG_KILLS=.3,RG_PTS={};
-function rgInfo(map){const ms=(MONBY[map]||[]).filter(o=>!o.tmp&&MON[o.type]&&!MON[o.type].boss);if(ms.length<5)return null;const lv=ms.map(o=>o.lv||MON[o.type].lv[0]);const cnt={};for(const o of ms)cnt[o.type]=(cnt[o.type]||0)+1;
- const types=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]);const boss=(MONBY[map]||[]).find(o=>!o.tmp&&MON[o.type]&&MON[o.type].boss&&!/kael_final|kraken/.test(o.type));
- return{map,lo:Math.min(...lv),hi:Math.max(...lv),types,boss:boss&&boss.type,elf:map==='sylvaren'||/^e_/.test(map)}}
-function rgList(){const out=[];for(const k in MONBY){if(HOUSES.has(k)||RG_EXCL.test(k)||!MAPS[k])continue;const i=rgInfo(k);if(!i)continue;if(P.lvl<i.lo-3||P.lvl>i.hi+8)continue;out.push(i)}
- const mine=P.fac==='elfo';return out.sort((a,b)=>((b.map===P.map)-(a.map===P.map))||((b.elf===mine)-(a.elf===mine))||(Math.abs((a.lo+a.hi)/2-P.lvl)-Math.abs((b.lo+b.hi)/2-P.lvl)))}
-function rgPoints(map){if(RG_PTS[map])return RG_PTS[map];const m=MAPS[map];const ok=(x,y)=>x>0&&y>0&&x<m.w-1&&y<m.h-1&&!SOLID.has(getT(m,x,y))&&getT(m,x,y)!==TL.WATER&&!DSOL.has(map+','+x+','+y);
- let s=null;const cands=(m.portals||[]).map(p=>[p.x,p.y]).concat((MONBY[map]||[]).slice(0,3).map(o=>[o.sx||o.x,o.sy||o.y]));
- for(const [px,py] of cands){for(const [dx,dy] of [[0,0],[1,0],[-1,0],[0,1],[0,-1]])if(ok(px+dx,py+dy)){s=[px+dx,py+dy];break}if(s)break}if(!s)return RG_PTS[map]=[];
- const seen=new Map([[s[0]+','+s[1],0]]),q=[s];while(q.length){const [x,y]=q.shift(),d=seen.get(x+','+y);for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy,k=nx+','+ny;if(!seen.has(k)&&ok(nx,ny)){seen.set(k,d+1);q.push([nx,ny])}}}
- const tiles=[...seen.keys()].map(k=>k.split(',').map(Number)).filter(([x,y])=>!inSafe(m,x,y));if(tiles.length<30)return RG_PTS[map]=[];
+const MQ_EXCL=/^(arena|dg|torre|selo\d|ship|kol_selo|trono_divino|ilha230|e_santuario_lua|e_trono_sombrio|e_clareira_lua)/;
+const MQ_RW={kill:.15,item:.15,exp:.12,boss:.2},MQ_BONUS=.25,MQ_PTS={},MQ_BOARDS={};
+function mqScan(map){const m=MAPS[map];const sp=(m.spawns||[]).filter(s=>MON[s[0]]),reg=sp.filter(s=>!MON[s[0]].boss);if(reg.length<5)return null;
+ const cnt={};for(const s of reg)cnt[s[0]]=(cnt[s[0]]||0)+1;const types=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]);
+ const b=sp.find(s=>MON[s[0]].boss&&!/kael_final|kraken/.test(s[0]));
+ return{map,lo:Math.min(...types.map(t=>MON[t].lv[0])),hi:Math.max(...types.map(t=>MON[t].lv[1])),types,boss:b&&b[0],elf:map==='sylvaren'||/^e_/.test(map)}}
+/* posição do quadro: no acampamento (zona segura) ou perto da entrada */
+{let base=[];try{base=npcList0()}catch(e){}
+ const occ=(map,x,y)=>NEWNPCS.concat(base).some(n=>n.map===map&&Math.abs(n.x-x)<=1&&Math.abs(n.y-y)<=1);
+ for(const map in MAPS){if(HOUSES.has(map)||MQ_EXCL.test(map))continue;const B=mqScan(map);if(!B)continue;const m=MAPS[map];
+  const ok=(x,y)=>x>0&&y>0&&x<m.w-1&&y<m.h-1&&!SOLID.has(getT(m,x,y))&&getT(m,x,y)!==TL.WATER&&!DSOL.has(map+','+x+','+y)&&!(m.portals||[]).some(p=>Math.abs(p.x-x)<=1&&Math.abs(p.y-y)<=1)&&!occ(map,x,y);
+  const near=(cx,cy,R=8)=>{for(let r=0;r<R;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;if(ok(cx+dx,cy+dy))return[cx+dx,cy+dy]}return null};
+  let p=null;const sf=(m.safe||[]).find(s=>(s[2]-s[0])*(s[3]-s[1])<=400);if(sf)p=near(Math.round((sf[0]+sf[2])/2)+1,Math.round((sf[1]+sf[3])/2)+1,6);
+  if(!p)for(const q of m.portals||[]){p=near(q.x,q.y);if(p)break}
+  if(!p&&PORTS[map])p=near(PORTS[map].x,PORTS[map].y);
+  if(!p)continue;B.x=p[0];B.y=p[1];MQ_BOARDS[map]=B;
+  NEWNPCS.push({id:'mq_'+map,n:'Quadro de Missões',map,x:p[0],y:p[1],sign:1,wander:false,talk:()=>mqBoard(map)})}}
+function mqPoints(map){if(MQ_PTS[map])return MQ_PTS[map];const m=MAPS[map],B=MQ_BOARDS[map];const ok=(x,y)=>x>0&&y>0&&x<m.w-1&&y<m.h-1&&!SOLID.has(getT(m,x,y))&&getT(m,x,y)!==TL.WATER&&!DSOL.has(map+','+x+','+y);
+ const s=[B.x,B.y];const seen=new Set([s+'']),q=[s];while(q.length){const [x,y]=q.shift();for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy,k=nx+','+ny;if(!seen.has(k)&&ok(nx,ny)){seen.add(k);q.push([nx,ny])}}}
+ const tiles=[...seen].map(k=>k.split(',').map(Number)).filter(([x,y])=>!inSafe(m,x,y));if(tiles.length<30)return MQ_PTS[map]=[];
  const pts=[s];for(let n=0;n<3;n++){let best=null,bd=-1;for(let i=0;i<tiles.length;i+=3){const [x,y]=tiles[i];const d=Math.min(...pts.map(p=>Math.abs(p[0]-x)+Math.abs(p[1]-y)));if(d>bd){bd=d;best=[x,y]}}if(best)pts.push(best)}
- const cx=m.w/2,cy=m.h/2,used={};return RG_PTS[map]=pts.slice(1).map(([x,y])=>{const w=dirWord(x-cx,y-cy);let d=w==='aqui'?'central':w.replace(/^(a|ao) /,'');used[d]=(used[d]||0)+1;if(used[d]>1)d+=' '+used[d];return{x,y,n:'Explore a parte '+d}})}
-function rgDay(){if(!P.rg||P.rg.d!==today())P.rg={d:today(),k0:Object.assign({},P.kills),m:{}};return P.rg}
-function rgTasks(i){const D=rgDay(),S=D.m[i.map]||(D.m[i.map]={vis:[],done:{},bonus:0});const lvMid=Math.round((i.lo+i.hi)/2),n=Math.max(8,Math.round(killsPL(lvMid)*RG_KILLS));
- const T=[];const h=i.types.slice(0,2);for(const t of h)T.push({k:'h_'+t,l:'Derrote '+n+'× '+MON[t].n,type:t,need:n});
- const pts=rgPoints(i.map);if(pts.length)T.push({k:'exp',l:'Explore a região: '+pts.map(p=>p.n.replace('Explore a parte ','')).join(', '),pts});
- if(i.boss)T.push({k:'boss',l:'Derrote o chefe '+MON[i.boss].n,type:i.boss,need:1});
- for(const t of T){t.prog=t.k==='exp'?t.pts.filter((p,j)=>S.vis[j]).length:Math.min(t.need,(P.kills[t.type]||0)-(D.k0[t.type]||0));t.max=t.k==='exp'?t.pts.length:t.need;t.ok=t.prog>=t.max;t.done=!!S.done[t.k]}
- return{S,T}}
-const rgXp=()=>dailyXP(Math.round(need(P.lvl)*RG_TASK)),rgBonusXp=()=>dailyXP(Math.round(need(P.lvl)*RG_BONUS));
-function rgGoal(map,k){const i=rgInfo(map);if(!i)return null;const {S,T}=rgTasks(i),t=T.find(t=>t.k===k);if(!t||t.done||t.ok)return null;const nm=(MAPN[map]||map)+': ';
- if(t.k==='exp'){const j=t.pts.findIndex((p,j)=>!S.vis[j]);const p=t.pts[j];return p&&{name:'Região · '+nm+p.n,map,x:p.x,y:p.y}}
- const o=(MONBY[map]||[]).find(o=>o.type===t.type&&!o.dead)||(MONBY[map]||[]).find(o=>o.type===t.type);return o&&{name:'Região · '+nm+MON[t.type].n+' ('+t.prog+'/'+t.need+')',map,x:o.sx||o.x,y:o.sy||o.y}}
-{const qb=questGoal;questGoal=function(){if(P&&typeof P.track==='string'&&P.track.startsWith('regiao:')){const [,map,k]=P.track.split(':');try{return rgGoal(map,k)}catch(e){return null}}return qb.apply(this,arguments)}}
-function rgChest(i){const lv=Math.min(P.lvl,i.hi+2),got=[];const id=pickEquip(lv,null);if(id&&addItem(id))got.push(IT[arConv(id)]?IT[arConv(id)].n:IT[id].n);const pot=P.lvl>=40?'pocao_vida_g':'pocao_vida';if(addItem(pot,5))got.push('5 '+IT[pot].n);
- if(i.map==='e_ravina'&&addItem('espinho_vivo',8))got.push('8 Espinhos Vivos');if(i.map==='e_ambar'&&addItem('ambar_antigo',8))got.push('8 Âmbar Antigo');return got}
-{let tk=0,lastMap=null;const upd=update;update=function(){const r=upd.apply(this,arguments);
-  if(P&&!P.dead&&nowT>=tk){tk=nowT+800;try{const D=rgDay();
-   if(P.map!==lastMap){lastMap=P.map;const i=rgInfo(P.map);if(i&&!HOUSES.has(P.map)&&!RG_EXCL.test(P.map)&&P.lvl>=i.lo-3&&P.lvl<=i.hi+8){const {T}=rgTasks(i),d=T.filter(t=>t.done).length;if(d<T.length)log(`🗺️ ${MAPN[P.map]||P.map} tem Contratos de Região (${d}/${T.length}). Veja em Missões → Diárias.`,'q')}}
-   const i=rgInfo(P.map);if(i&&!RG_EXCL.test(P.map)&&P.lvl>=i.lo-3&&P.lvl<=i.hi+8){const {S,T}=rgTasks(i);
-    const ex=T.find(t=>t.k==='exp');if(ex)ex.pts.forEach((p,j)=>{if(!S.vis[j]&&Math.abs(P.x-p.x)+Math.abs(P.y-p.y)<=3){S.vis[j]=1;text(P,'📍 '+p.n.replace('Explore a parte ','')+' explorada','#7fe0ff',1600);sfx('lvl');save(true)}});
-    for(const t of rgTasks(i).T){if(t.ok&&!t.done){S.done[t.k]=1;const xp=rgXp(),g=P.lvl*10;P.gold+=g;gainXp(xp);sfx('ach');toast(null,`🗺️ ${MAPN[i.map]||i.map}: ${t.k==='exp'?'exploração concluída':t.l} · +${xp.toLocaleString('pt-BR')} XP`);
-      if(P.track==='regiao:'+i.map+':'+t.k){const nx=rgTasks(i).T.find(x=>!x.done&&!x.ok);P.track=nx?'regiao:'+i.map+':'+nx.k:'story'}save(true)}}
-    const all=rgTasks(i);if(!S.bonus&&all.T.length&&all.T.every(t=>t.done)){S.bonus=1;const xp=rgBonusXp();gainXp(xp);const got=rgChest(i);sfx('lvl');toast(null,`🗺️ ${MAPN[i.map]||i.map} completa! +${xp.toLocaleString('pt-BR')} XP`);log(`Baú da região ${MAPN[i.map]||i.map}: ${got.join(', ')}.`,'lv');save(true)}}
-  }catch(e){console.error(e)}}
-  return r}}
-/* aba Missões → Diárias */
-{const qb=pQuest;pQuest=function(b){const r=qb.apply(this,arguments);
- try{if(typeof QTAB!=='undefined'&&QTAB==='dia'){const L=rgList().slice(0,8),mine=P.fac==='elfo';
-  const cards=L.map(i=>{const {S,T}=rgTasks(i),d=T.filter(t=>t.done).length;return `<div class="quest ${S.bonus?'done':''}"><h4>${i.elf===mine?(mine?'🌿':'🏰'):'⛵'} ${esc(MAPN[i.map]||i.map)} <small style="color:var(--muted)">· nível ${i.lo}–${i.hi}</small> <span style="float:right;font-size:12px">${d}/${T.length}</span></h4><p style="margin:0">${T.map(t=>`${t.done?'✅':'⬜'} ${esc(t.k==='exp'?'Explore: '+t.pts.map(p=>p.n.replace('Explore a parte ','')).join(', '):t.l)} ${t.done?'':`<small>(${t.prog}/${t.max})</small> <button data-rg="${i.map}:${t.k}" style="font-size:11px;padding:1px 6px" class="${P.track==='regiao:'+i.map+':'+t.k?'gold':''}">${P.track==='regiao:'+i.map+':'+t.k?'Rastreando':'Rastrear'}</button>`}`).join('<br>')}</p></div>`}).join('')||'<div class="quest"><p>Nenhuma região no seu nível agora.</p></div>';
-  const box=el(`<div><div class="sect">🗺️ Contratos de Região</div><p style="color:var(--muted);font-size:12px;margin:0 0 8px">Cada ilha e área tem tarefas próprias, que renovam todo dia: caçar, explorar cada canto do mapa e derrubar o chefe. Cada tarefa dá <b>+${rgXp().toLocaleString('pt-BR')} XP</b>; completar a região dá <b>+${rgBonusXp().toLocaleString('pt-BR')} XP</b> e um baú com equipamento.</p>${cards}</div>`);
-  const anchor=[...b.querySelectorAll('.sect')].find(x=>x.textContent.startsWith('📅'));let after=anchor;if(anchor){let n=anchor.nextElementSibling;while(n&&!n.classList.contains('sect'))n=(after=n).nextElementSibling;after.after(...box.childNodes)}else b.append(...box.childNodes);
-  b.querySelectorAll('[data-rg]').forEach(bt=>bt.onclick=()=>{trackMission('regiao:'+bt.dataset.rg);renderPanel()})}}catch(e){console.error(e)}
+ const cx=m.w/2,cy=m.h/2,used={};return MQ_PTS[map]=pts.slice(1).map(([x,y])=>{const w=dirWord(x-cx,y-cy);let d=w==='aqui'?'centro':w.replace(/^(a|ao) /,'');used[d]=(used[d]||0)+1;if(used[d]>1)d+=' '+used[d];return{x,y,n:d}})}
+function mqMissions(map){const B=MQ_BOARDS[map];if(!B)return[];const lvMid=Math.round((B.lo+B.hi)/2),K=Math.max(8,Math.round(killsPL(lvMid)*.4)),L=[];
+ B.types.slice(0,3).forEach(t=>L.push({k:'k_'+t,kind:'kill',type:t,need:K,l:`Caça: derrote ${K}× ${MON[t].n}`}));
+ const items={};for(const t of B.types){const lt=MON[t].loot||[],sum=lt.reduce((s,e)=>s+e[1],0)||1;for(const [id,w] of lt){if(!IT[id]||IT[id].slot||id==='frag_lendario'||/^pocao_/.test(id))continue;const per=.25*w/sum;if(!items[id]||items[id].per<per)items[id]={id,per,from:t}}}
+ Object.values(items).sort((a,b)=>b.per-a.per).slice(0,2).forEach(it=>{const q=Math.max(3,Math.min(15,Math.round(K*it.per)));L.push({k:'i_'+it.id,kind:'item',item:it.id,from:it.from,need:q,l:`Entrega: traga ${q}× ${IT[it.id].n}`})});
+ if(mqPoints(map).length)L.push({k:'exp',kind:'exp',need:mqPoints(map).length,l:'Exploração: visite '+mqPoints(map).map(p=>p.n).join(', ')});
+ if(B.boss)L.push({k:'boss',kind:'boss',type:B.boss,need:1,l:`Chefe: derrote ${MON[B.boss].n}`});
+ return L}
+function mqDay(){if(!P.mq||P.mq.d!==today())P.mq={d:today(),a:{},bonus:{},told:{}};return P.mq}
+function mqSt(map,k){return(mqDay().a[map]||{})[k]}
+function mqProg(map,M){const s=mqSt(map,M.k);if(!s)return 0;if(M.kind==='item')return Math.min(M.need,countItem(M.item));if(M.kind==='exp')return(s.vis||[]).filter(Boolean).length;return Math.min(M.need,Math.max(0,(P.kills[M.type]||0)-s.base))}
+const mqCan=B=>P.lvl>=B.lo-5&&P.lvl<=B.hi+15;
+const mqXp=kind=>dailyXP(Math.round(need(P.lvl)*MQ_RW[kind]));
+function mqAccept(map,M){const D=mqDay();const A=D.a[map]||(D.a[map]={});if(A[M.k])return;A[M.k]={st:'on',base:M.type?(P.kills[M.type]||0):0,vis:[]};sfx('lvl');save(true)}
+function mqClaim(map,M){const s=mqSt(map,M.k);if(!s||s.st!=='on'||mqProg(map,M)<M.need)return false;if(M.kind==='item'&&!removeItem(M.item,M.need))return false;
+ s.st='done';const xp=mqXp(M.kind),g=P.lvl*10;P.gold+=g;gainXp(xp);sfx('ach');toast(null,`📋 Missão entregue: +${xp.toLocaleString('pt-BR')} XP · +${g.toLocaleString('pt-BR')} ouro`);
+ if(P.track==='mq:'+map+':'+M.k)P.track='story';
+ const D=mqDay(),L=mqMissions(map);if(!D.bonus[map]&&L.every(m=>(mqSt(map,m.k)||{}).st==='done')){D.bonus[map]=1;const B=MQ_BOARDS[map],bx=dailyXP(Math.round(need(P.lvl)*MQ_BONUS));gainXp(bx);const got=[];const id=pickEquip(Math.min(P.lvl,B.hi+2),null);if(id&&addItem(id))got.push((IT[arConv(id)]||IT[id]).n);const pot=P.lvl>=40?'pocao_vida_g':'pocao_vida';if(addItem(pot,5))got.push('5× '+IT[pot].n);
+  if(map==='e_ravina'&&addItem('espinho_vivo',8))got.push('8× Espinho Vivo');if(map==='e_ambar'&&addItem('ambar_antigo',8))got.push('8× Âmbar Antigo');
+  say('📋 '+(MAPN[map]||map)+' completa!',`Você cumpriu todas as missões do quadro hoje.<br><br><b>Baú da ilha:</b> +${bx.toLocaleString('pt-BR')} XP · ${got.join(', ')}`,[['Ótimo',()=>mqBoard(map)]]);save(true);return 'bonus'}
+ save(true);return true}
+function mqBoard(map){const B=MQ_BOARDS[map];if(!B)return;const L=mqMissions(map),nm=MAPN[map]||map;
+ if(P.lvl<B.lo-5)return say('📋 Quadro de Missões · '+nm,`As missões desta ilha são para o <b>nível ${B.lo}–${B.hi}</b>. Volte quando estiver mais forte.`,[['Fechar',closeAll]]);
+ if(P.lvl>B.hi+15)return say('📋 Quadro de Missões · '+nm,`Você já é forte demais para esta ilha (nível ${B.lo}–${B.hi}). Procure um quadro do seu nível em <b>Missões → Diárias</b>.`,[['Fechar',closeAll]]);
+ const rows=L.map(M=>{const s=mqSt(map,M.k),p=mqProg(map,M);const st=!s?'⬜ disponível':s.st==='done'?'✅ entregue hoje':p>=M.need?'🟢 pronta para entregar':`⏳ ${p}/${M.need}`;return `<b>${esc(M.l)}</b><br><small>${st} · ${mqXp(M.kind).toLocaleString('pt-BR')} XP</small>`}).join('<br><br>');
+ const opts=[];const free=L.filter(M=>!mqSt(map,M.k));if(free.length>1)opts.push(['✋ Pegar todas',()=>{for(const M of free)mqAccept(map,M);toast(null,'📋 Missões aceitas: '+free.length);mqBoard(map)}]);
+ for(const M of L){const s=mqSt(map,M.k);if(!s)opts.push(['✋ Pegar: '+M.l.split(':')[0]+(M.type?' · '+MON[M.type].n:M.item?' · '+IT[M.item].n:''),()=>{mqAccept(map,M);if(!String(P.track||'').startsWith('mq:'))P.track='mq:'+map+':'+M.k;mqBoard(map)}]);else if(s.st==='on'&&mqProg(map,M)>=M.need)opts.push(['✅ Entregar: '+M.l.split(':')[0]+(M.type?' · '+MON[M.type].n:M.item?' · '+IT[M.item].n:''),()=>{const r=mqClaim(map,M);if(r!=='bonus')mqBoard(map)}])}
+ opts.push(['Fechar',closeAll]);
+ say('📋 Quadro de Missões · '+nm,`<small>Missões diárias desta ilha (nível ${B.lo}–${B.hi}). Pegue as que quiser, cumpra e volte aqui para entregar. Cumprindo todas, você ganha o <b>baú da ilha</b>.</small><br><br>${rows}`,opts)}
+/* seta */
+function mqGoal(key){const [kind,map,k]=key.split(':');const B=MQ_BOARDS[map];if(!B)return null;const board={name:'📋 Quadro de Missões · '+(MAPN[map]||map),map,x:B.x,y:B.y};if(kind==='mqb')return board;
+ const M=mqMissions(map).find(m=>m.k===k),s=M&&mqSt(map,k);if(!M||!s||s.st==='done')return null;if(mqProg(map,M)>=M.need)return{...board,name:'Missão pronta: entregue no Quadro · '+(MAPN[map]||map)};
+ if(M.kind==='exp'){const pts=mqPoints(map),j=pts.findIndex((p,j)=>!(s.vis||[])[j]);const p=pts[j];return p&&{name:`Explore: ${p.n} (${mqProg(map,M)}/${M.need})`,map,x:p.x,y:p.y}}
+ const t=M.kind==='item'?M.from:M.type;const o=(MONBY[map]||[]).find(o=>o.type===t&&!o.dead)||(MONBY[map]||[]).find(o=>o.type===t)||((MAPS[map].spawns||[]).filter(s=>s[0]===t).map(s=>({x:s[1],y:s[2]}))[0]);
+ return o&&{name:(M.kind==='item'?`${IT[M.item].n} (${mqProg(map,M)}/${M.need}) · de ${MON[t].n}`:`${MON[t].n} (${mqProg(map,M)}/${M.need})`),map,x:o.sx||o.x,y:o.sy||o.y}}
+{const qb=questGoal;questGoal=function(){if(P&&typeof P.track==='string'&&/^mqb?:/.test(P.track)){try{return mqGoal(P.track)}catch(e){return null}}return qb.apply(this,arguments)}}
+/* progresso: exploração, aviso de missão pronta e de quadro na ilha */
+{let tk=0,last=null;const upd=update;update=function(){const r=upd.apply(this,arguments);
+ if(P&&!P.dead&&nowT>=tk){tk=nowT+800;try{const D=mqDay(),B=MQ_BOARDS[P.map];
+  if(P.map!==last){last=P.map;if(B&&mqCan(B)&&!D.told[P.map]){D.told[P.map]=1;const n=mqMissions(P.map).filter(M=>!mqSt(P.map,M.k)).length;if(n)log(`📋 ${MAPN[P.map]||P.map} tem um Quadro de Missões com ${n} missões para hoje.`,'q')}}
+  if(B){const A=D.a[P.map]||{},ex=A.exp;if(ex&&ex.st==='on')mqPoints(P.map).forEach((p,j)=>{if(!ex.vis[j]&&Math.abs(P.x-p.x)+Math.abs(P.y-p.y)<=3){ex.vis[j]=1;text(P,'📍 '+p.n+' explorado','#7fe0ff',1600);sfx('lvl');save(true)}})}
+  for(const map in D.a)for(const M of mqMissions(map)){const s=D.a[map][M.k];if(s&&s.st==='on'&&!s.rd&&mqProg(map,M)>=M.need){s.rd=1;toast(null,`📋 Missão pronta: entregue no Quadro de ${MAPN[map]||map}`);if(P.track==='mq:'+map+':'+M.k)P.track='mq:'+map+':'+M.k}}
+ }catch(e){console.error(e)}}
  return r}}
+/* aba Missões → Diárias: só as missões que o jogador pegou + onde ficam os quadros */
+{const qb=pQuest;pQuest=function(b){const r=qb.apply(this,arguments);
+ try{if(typeof QTAB!=='undefined'&&QTAB==='dia'){const D=mqDay();const acc=[];for(const map in D.a)for(const M of mqMissions(map)){const s=D.a[map][M.k];if(s&&s.st==='on')acc.push([map,M])}
+  const tb=(key)=>`<button data-mq="${key}" style="font-size:11px;padding:1px 6px" class="${P.track===key?'gold':''}">${P.track===key?'Rastreando':'Rastrear'}</button>`;
+  const accH=acc.length?acc.map(([map,M])=>{const p=mqProg(map,M),rd=p>=M.need;return `<div class="quest"><h4>${rd?'🟢':'⏳'} ${esc(M.l)}</h4><p style="margin:0"><small>${esc(MAPN[map]||map)} · ${rd?'pronta: entregue no Quadro de Missões':p+'/'+M.need}</small> ${tb('mq:'+map+':'+M.k)}</p></div>`}).join(''):'<div class="quest"><p style="margin:0">Você não pegou nenhuma missão hoje. Vá a um <b>📋 Quadro de Missões</b> e escolha as que quiser.</p></div>';
+  const mine=P.fac==='elfo';const Bs=Object.values(MQ_BOARDS).filter(B=>mqCan(B)&&P.lvl>=B.lo-3&&P.lvl<=B.hi+8).sort((a,b)=>((b.map===P.map)-(a.map===P.map))||((b.elf===mine)-(a.elf===mine))||(Math.abs((a.lo+a.hi)/2-P.lvl)-Math.abs((b.lo+b.hi)/2-P.lvl))).slice(0,8);
+  const bH=Bs.map(B=>{const L=mqMissions(B.map),dn=L.filter(M=>(mqSt(B.map,M.k)||{}).st==='done').length;return `<div class="quest ${D.bonus[B.map]?'done':''}"><h4>${B.elf===mine?(mine?'🌿':'🏰'):'⛵'} ${esc(MAPN[B.map]||B.map)} <small style="color:var(--muted)">· nível ${B.lo}–${B.hi} · ${dn}/${L.length} entregues</small></h4><p style="margin:0"><small>${L.length} missões no quadro</small> ${tb('mqb:'+B.map)}</p></div>`}).join('')||'<div class="quest"><p style="margin:0">Nenhum quadro no seu nível.</p></div>';
+  const box=el(`<div><div class="sect">📋 Missões aceitas <span>${acc.length}</span></div>${accH}<div class="sect">🗺️ Quadros de Missões do seu nível</div><p style="color:var(--muted);font-size:12px;margin:0 0 8px">Cada ilha tem um quadro com missões de caça, entrega, exploração e chefe, que renovam todo dia. Toque em Rastrear para a seta levar até o quadro.</p>${bH}</div>`);
+  const first=b.querySelector('.sect');const nodes=[...box.childNodes];if(first)first.before(...nodes);else b.append(...nodes);
+  b.querySelectorAll('[data-mq]').forEach(bt=>bt.onclick=()=>{trackMission(bt.dataset.mq);renderPanel()})}}catch(e){console.error(e)}
+ return r}}
+</script>
+
+<script>
+/* Toda ilha com quadro tem missão de entrega: as que não têm material próprio ganham um troféu dos seus monstros */
+'use strict';
+for(const map in MQ_BOARDS){const B=MQ_BOARDS[map];const has=B.types.some(t=>(MON[t].loot||[]).some(([id])=>IT[id]&&!IT[id].slot&&id!=='frag_lendario'&&!/^pocao_/.test(id)));if(has)continue;
+ const id='trofeu_'+map,nm=MAPN[map]||map;IT[id]={n:'Troféu: '+nm,price:Math.round(20+B.hi*1.5),ic:'loot',c:'#e0c080',loot:1,desc:'Caiu de um monstro de '+nm+'. Vale ouro na loja e é pedido no Quadro de Missões da ilha.'};
+ for(const t of B.types.slice(0,3)){MON[t].loot=MON[t].loot||[];MON[t].loot.push([id,1])}}
 </script>

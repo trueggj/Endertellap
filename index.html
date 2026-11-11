@@ -13074,3 +13074,21 @@ for(const c of ELF_ACT)if(c.n==='O Traidor da Corte')c.done=c.done.replace('O At
   return daveBefore.apply(this,arguments)};
 }
 </script>
+
+<script>
+/* ===== Começo mais rápido: XP dos ratos, aviso para trocar de área e lembrete de pontos ===== */
+'use strict';
+{const lvBefore=setLv;setLv=function(mo,lv){const r=lvBefore.apply(this,arguments);const m={e_ratinho:2.5,rato:2.5,cobra:1.5,morcego:1.5,lobo:1.5}[mo&&mo.type];if(m)mo.xpMul=(mo.xpMul||1)*m;return r}}
+for(const o of MONS||[])if(['e_ratinho','rato','cobra','morcego','lobo'].includes(o.type))setLv(o,o.lv);
+{
+ const sagaBefore=sagaKill;
+ sagaKill=function(mo){const r=sagaBefore.apply(this,arguments);
+  try{if(P&&mo&&['e_ratinho','rato'].includes(mo.type)&&P.lvl>=3){P.fl=P.fl||{};if(!P.fl.dicaRatos){P.fl.dicaRatos=1;save(true);
+   const elf=P.fac==='elfo';setTimeout(()=>say('Hora de seguir em frente',elf?'Você já está forte demais para os ratinhos. Os próximos monstros dão bem mais XP:<br><br>🐍 <b>Clareira das Cobras</b>, a leste da saída sul de Sylvaren (nível 3 a 6);<br>🌲 depois, o <b>Bosque do Sul</b>, depois da ponte (nível 4 a 9).':'Você já está forte demais para os ratos. Procure monstros do seu nível: eles dão bem mais XP. O <b>📖 Guia</b> e o Sábio Edrin mostram para onde ir.',[['Entendi',closeAll]]),300)}}}catch(e){console.error(e)}
+  return r};
+ const xpBefore=gainXp;
+ gainXp=function(n){const lv=P&&P.lvl;const r=xpBefore.apply(this,arguments);
+  try{if(P&&P.lvl>lv&&P.pts>0&&P.lvl<=40)setTimeout(()=>toast(null,`⭐ Você tem ${P.pts} pontos de atributo! Toque no 👤 Herói para distribuir. Vitalidade aumenta a vida.`),700)}catch(e){}
+  return r};
+}
+</script>

@@ -13620,7 +13620,7 @@ function godOwned(id){const is=x=>x&&IT[x]&&(x===id||IT[x].base===id);return (P.
 function godForge(){
  const have=countItem('frag_divino');
  const rows=GOD_SET.map(([k,n,,,,cost])=>{const id='god_'+k,owned=godOwned(id);return [`${owned?'✅':'⚒️'} ${n} · ${cost} fragmentos`,()=>godForgePiece(k,cost)]});
- say('Jaogg · Forja Divina',`<i>"Os fragmentos da espada de Kael guardam o meu poder. Traga-os, e eu forjo a armadura dos deuses."</i><br><br><b>GOD ARMOR</b> (nível 300): cada peça dá <b>-${GOD_RES}% de dano de todos os elementos</b>. As 5 peças juntas chegam a <b>65%</b>, o máximo do jogo.<br>Nenhuma profissão consegue forjar este set.<br><br>Você tem <b>${have}</b> Fragmento${have===1?'':'s'} Divino${have===1?'':'s'}. Cada vitória sobre Kael dá 3 (2 dele e 1 do baú): são 30 vitórias para o set inteiro.`,rows.concat([['Até mais',closeAll]]))}
+ say('Jaogg · Forja Divina',`<i>"Os fragmentos da espada de Kael guardam o meu poder. Traga-os, e eu forjo a armadura dos deuses."</i><br><br><b>GOD ARMOR</b> (nível 300): cada peça dá <b>-${GOD_RES}% de dano de todos os elementos</b>. As 5 peças juntas dão <b>65%</b>.<br>Nenhuma profissão consegue forjar este set.<br><br>Você tem <b>${have}</b> Fragmento${have===1?'':'s'} Divino${have===1?'':'s'}. Cada vitória sobre Kael dá 3 (2 dele e 1 do baú): são 30 vitórias para o set inteiro.`,rows.concat([['Até mais',closeAll]]))}
 function godForgePiece(k,cost){const id='god_'+k,have=countItem('frag_divino');
  if(P.lvl<300){say('Jaogg','<i>"Este metal queimaria você. Volte no nível 300."</i>',[['Voltar',godForge]]);return}
  if(have<cost){say('Jaogg',`<i>"Ainda faltam ${cost-have} fragmentos."</i>`,[['Voltar',godForge]]);return}
@@ -13631,8 +13631,8 @@ for(const j of [NPCS.find(n=>n.id==='jaogg_livre'),NEWNPCS.find(n=>n.id==='jaogg
 {
  const heroBefore=pHero;
  pHero=function(b){const r=heroBefore.apply(this,arguments);
-  try{const rows=ELS.map(e=>{const v=Math.round(elemRes(e)*100);return `<dt><span style="color:${ELC[e]}">${ELI[e]} ${ELN[e]}</span></dt><dd>${v}%<span style="display:inline-block;vertical-align:middle;margin-left:8px;width:60px;height:6px;border-radius:3px;background:rgba(127,127,127,.25)"><span style="display:block;height:100%;width:${Math.round(v/65*100)}%;border-radius:3px;background:${ELC[e]}"></span></span></dd>`}).join('');
-   const box=el(`<div><div class="sect">Proteção elemental <span>máximo 65%</span></div><dl class="kv">${rows}</dl><p style="margin:-4px 0 12px;color:var(--muted);font-size:12px">Quanto menos dano você leva de cada elemento. Vem dos sets elementais, da GOD ARMOR, do seu elemento e de elixires.</p></div>`);
+  try{const rows=ELS.map(e=>{const v=Math.round(elemRes(e)*100);return `<dt><span style="color:${ELC[e]}">${ELI[e]} ${ELN[e]}</span></dt><dd>${v}%<span style="display:inline-block;vertical-align:middle;margin-left:8px;width:60px;height:6px;border-radius:3px;background:rgba(127,127,127,.25)"><span style="display:block;height:100%;width:${Math.min(100,v)}%;border-radius:3px;background:${ELC[e]}"></span></span></dd>`}).join('');
+   const box=el(`<div><div class="sect">Proteção elemental</div><dl class="kv">${rows}</dl></div>`);
    const at=[...b.querySelectorAll('.sect')].find(x=>x.textContent.startsWith('Atributos'));const nodes=[...box.childNodes];if(at)at.before(...nodes);else b.append(...nodes)}catch(e){console.error(e)}
   return r};
 }

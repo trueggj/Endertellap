@@ -13751,3 +13751,98 @@ for(const [map,x,y] of [[ELF_MAPS.fronteira,86,66],[ELF_MAPS.bosque,48,76]]){con
 for(const map of [ELF4.ravina,ELF4.ambar]){const m=MAPS[map],seen=e4Reach(map,4,35);
  for(const sp of m.spawns){const p=findSpot(m,sp[1],sp[2]);if(seen.has(p[0]+','+p[1]))continue;let best=null,bd=1e9;for(const k of seen){const [x,y]=k.split(',').map(Number);if(inSafe(m,x,y))continue;const d=Math.abs(x-sp[1])+Math.abs(y-sp[2]);if(d<bd){bd=d;best=[x,y]}}if(best){sp[1]=best[0];sp[2]=best[1]}}}
 </script>
+<script>
+/* ===== Crônicas: capítulos que preenchem os níveis sem história (elfos e humanos) ===== */
+'use strict';
+const CRON_NPC=[
+ ['cr_faelis','Guardiã Faelis','e_bosque',7,37,EPAL('#3a6a3a','#e8d8a0'),['As árvores respiram devagar.','Ouça as raízes.']],
+ ['cr_aelith','Vigia Aelith','e_lumen',6,32,EPAL('#2a3a6a','#e8e8f8'),['As estrelas mentem pouco.','Lúmen já foi linda.']],
+ ['cr_iselle','Caçadora Iselle','e_pantano',6,32,EPAL('#3a4a2a','#c8b880'),['Não pise no lodo escuro.','Simbiontes não dormem.']],
+ ['cr_caelum','Ancião Caelum','e_cumes',6,32,EPAL('#5a3a2a','#f0f0f0'),['O vento dos cumes traz notícias.','Eu vi o dragão nascer.']],
+ ['cr_maren','Capitã Maren','ilha_selo',48,72,{h:'#3a2a1a',c:'#2a4a7a',d:'#1a2a4a'},['Ilha estranha, esta.','A guarda de Vussumi vigia.']]];
+for(const [id,n,map,x,y,pal,lines] of CRON_NPC)NEWNPCS.push({id,n,map,x,y,wander:false,pal,lines,talk:()=>say(n,'<i>"'+lines[0]+'"</i>',[['Até mais',closeAll]])});
+const CRON={
+ elfo:[
+  {n:'A Ravina dos Espinhos',minLv:56,req:()=>(P.fl.elf||{}).ch>=7,reqTxt:'Termine "A Escolta de Ezequiel" (Ato I).',start:'e4_sylra',back:'e4_sylra',rw:3,items:[['espinho_vivo',10]],
+   tasks:[{t:'kill',mon:['e_druida_renegado'],q:12,l:'Derrote 12 Druidas Renegados'},{t:'boss',mon:'e_matriarca_espinhos',l:'Derrote a Matriarca dos Espinhos, no ninho a sudeste'}],
+   intro:'<i>"O Comandante Thalor mandou você? Ótimo. Os druidas renegados carregam a <b>marca roxa</b> e acordaram a Matriarca dos Espinhos. Se ela chegar à Fronteira, a estrada para Peace fecha."</i>',
+   done:'A ravina fica em silêncio pela primeira vez em meses.<br><br>Num dos druidas você encontra um selo de cera roxa com o brasão de uma casa nobre de Peace.<br><br>Sylra fica pálida: <i>"Esse brasão é da casa de <b>Lorde Vaelor</b>. Um conselheiro do rei, pagando druidas renegados? Guarde isso. Não conte a ninguém da corte."</i>'},
+  {n:'O Bosque Doente',minLv:70,req:()=>(P.fl.elf||{}).ch>=8,reqTxt:'Termine "As Árvores que Ainda Vivem" (Ato I).',start:'cr_faelis',back:'cr_faelis',rw:3,
+   tasks:[{t:'kill',mon:['e_ent_corrompido','e_driade'],q:25,l:'Derrote 25 Ents Corrompidos ou Dríades Murchas'}],
+   intro:'Uma elfa com folhas presas no cabelo encosta o ouvido num tronco.<br><br><i>"Sou Faelis, guardiã das árvores vivas. Elas estão adoecendo. Os Ents corrompidos e as dríades murchas espalham a marca pelas raízes. Cada um que cai é uma árvore que volta a respirar."</i>',
+   done:'Faelis encosta a mão numa árvore e sorri pela primeira vez.<br><br><i>"Elas respiram melhor. Mas me contaram outra coisa: à noite, <b>elfos sombrios</b> atravessam o bosque, vindos de Peace. Elfos da nossa própria corte."</i>'},
+  {n:'Os Espiões da Corte',minLv:80,req:()=>(P.fl.elf||{}).ch>=8,reqTxt:'Termine "As Árvores que Ainda Vivem" (Ato I).',start:'cr_faelis',back:'cr_faelis',rw:3,
+   tasks:[{t:'kill',mon:['e_elfo_sombrio'],q:15,l:'Derrote 15 Elfos Sombrios no norte do Bosque'}],
+   intro:'<i>"Os elfos sombrios acampam no norte do bosque. Descubra para quem eles trabalham."</i>',
+   done:'No corpo do último elfo sombrio há uma carta: <i>"Mantenham o bosque doente. Quando o rei estiver fraco, a corte será minha. — V."</i><br><br>Faelis amassa a carta. <i>"V. Como no selo da ravina. Leve isso ao <b>Mestre Walter</b>. Agora."</i>'},
+  {n:'O Olhar do Basilisco',minLv:95,req:()=>(P.fl.elf||{}).ch>=9,reqTxt:'Termine o Ato I élfico.',start:'e4_oren',back:'e4_oren',rw:4,items:[['ambar_antigo',10]],
+   tasks:[{t:'boss',mon:'e_basilisco',l:'Derrote o Basilisco Ancião, na toca a nordeste'}],
+   intro:'<i>"Vaelor caiu. Eu ouvi pela seiva."</i><br><br>A voz de Oren range dentro da pedra.<br><br><i>"Mas existe um mal mais velho que ele nesta floresta. O <b>Basilisco Ancião</b> transformou a Guarda da Lua em pedra durante a Guerra dos Onze. Enquanto ele viver, meus irmãos não descansam."</i>',
+   done:'Quando o Basilisco cai, as estátuas de âmbar racham devagar. Uma luz fraca sai de cada uma e sobe entre as árvores.<br><br><i>"Eles estão dormindo"</i>, diz Oren, com a voz cada vez mais baixa. <i>"Uma última ordem da Guarda, pequeno: nossa comandante, <b>Lirien</b>, ficou no Vale Branco. Se um dia você passar por lá... diga que a Guarda cumpriu o juramento."</i><br><br>E Oren fica em silêncio para sempre.'},
+  {n:'As Ruínas de Lúmen',minLv:200,req:()=>(P.fl.elf2||{}).ch>=10,reqTxt:'Termine o Ato II élfico.',start:'cr_aelith',back:'cr_aelith',rw:3,
+   tasks:[{t:'kill',mon:['e_estatua_viva','e_lobo_estelar'],q:30,l:'Derrote 30 Estátuas Vivas ou Lobos Estelares'}],
+   intro:'<i>"Lúmen era a cidade dos astrônomos élficos. Eles liam o futuro nas estrelas."</i><br><br>Aelith aponta para as estátuas que se mexem entre as ruínas.<br><br><i>"Quando a marca roxa chegou, as estátuas acordaram. Abra caminho até o observatório para mim."</i>',
+   done:'No observatório há um mural antigo, ainda com tinta: um velho de barba branca e aura dourada, preso a um trono por <b>correntes roxas</b>.<br><br>Aelith passa os dedos na pintura. <i>"Isso foi desenhado há mil anos. É Jaogg. Os astrônomos viram isso acontecer antes de acontecer."</i>'},
+  {n:'O Guardião de Lúmen',minLv:235,req:()=>(P.fl.elf2||{}).ch>=10,reqTxt:'Termine o Ato II élfico.',start:'cr_aelith',back:'cr_aelith',rw:4,
+   tasks:[{t:'kill',mon:['e_fada_corrompida','e_lanceiro_sombrio'],q:20,l:'Derrote 20 Fadas Corrompidas ou Lanceiros Sombrios'},{t:'boss',mon:'e_guardiao_lumen',l:'Derrote o Guardião de Lúmen'}],
+   intro:'<i>"O Guardião de Lúmen protegia o observatório. Agora protege quem tem a marca. Se alguém sabe o resto da profecia, é ele."</i>',
+   done:'O Guardião cai de joelhos, e por um instante a luz dos olhos dele fica branca de novo.<br><br><i>"O irmão banido virá buscar o irmão preso. Procurem quem enxerga sem olhos."</i><br><br>Aelith repete devagar: <i>"Quem enxerga sem olhos... o oráculo <b>Dave</b>, nas Nuvens Partidas. Ele sabe o que vai acontecer com Jaogg."</i>'},
+  {n:'A Mãe do Brejo',minLv:280,req:()=>(P.fl.trap||{}).ch>=3,reqTxt:'Termine "A Estrada do Selo" (Ato III élfico).',start:'cr_iselle',back:'cr_iselle',rw:4,
+   tasks:[{t:'kill',mon:['e_simbionte_lodo'],q:20,l:'Derrote 20 Simbiontes do Lodo'},{t:'boss',mon:'e_mae_brejo',l:'Derrote a Mãe do Brejo'}],
+   intro:'<i>"Simbiontes no Pântano das Lágrimas. Eles sempre foram maus, desde a Guerra dos Onze, e se escondem no lodo."</i><br><br>Iselle afia uma flecha.<br><br><i>"Quem cria os simbiontes é a <b>Mãe do Brejo</b>. Enquanto ela viver, o pântano não para de cuspir esses bichos."</i>',
+   done:'O brejo borbulha uma última vez e fica parado. Os afogados param de se levantar.<br><br>Iselle encontra pegadas de botas na lama, indo para o norte. <i>"Cultistas. Eles usaram o pântano para esconder a passagem. A trilha sobe para os <b>Cumes do Crepúsculo</b>."</i>'},
+  {n:'Asas no Crepúsculo',minLv:310,req:()=>(P.fl.trap||{}).ch>=3,reqTxt:'Termine "A Estrada do Selo" (Ato III élfico).',start:'cr_caelum',back:'cr_caelum',rw:3,
+   tasks:[{t:'kill',mon:['e_wyvern','e_celeste_caido'],q:30,l:'Derrote 30 Wyverns ou Celestes Caídos'}],
+   intro:'Um elfo muito velho, embrulhado em peles, olha o céu laranja.<br><br><i>"Sou Caelum. Vivo nestes cumes desde antes de você nascer. Os <b>Celestes Caídos</b> eram anjos, sabia? A marca de Kael os derrubou do céu. E as wyverns caçam qualquer um que suba."</i>',
+   done:'<i>"Agora dá para respirar aqui em cima."</i><br><br>Caelum aponta para o oeste. <i>"Os arcanistas sombrios abriram um caminho pelo ar até o ninho do <b>Dragão do Crepúsculo</b>. Eles querem algo que o dragão guarda."</i>'},
+  {n:'O Dragão do Crepúsculo',minLv:330,req:()=>(P.fl.trap||{}).ch>=3,reqTxt:'Termine "A Estrada do Selo" (Ato III élfico).',start:'cr_caelum',back:'cr_caelum',rw:4,
+   tasks:[{t:'kill',mon:['e_arcanista_sombrio'],q:15,l:'Derrote 15 Arcanistas Elfos Sombrios'},{t:'boss',mon:'e_dragao_crepusculo',l:'Derrote o Dragão do Crepúsculo'}],
+   intro:'<i>"Primeiro os arcanistas. Depois, o dragão. Ele está marcado, e não vai deixar ninguém chegar perto do ninho."</i>',
+   done:'Do alto do ninho, com o dragão caído atrás de você, dá para ver no horizonte uma ilha com um templo dourado.<br><br>Caelum chega ofegante. <i>"A <b>Ilha do Selo Esquecido</b>. O dragão vigiava a rota para lá. É onde Jaogg dorme, selado. E é para lá que Kael vai."</i>'}
+ ],
+ humano:[
+  {n:'A Ilha do Selo Esquecido',minLv:300,req:()=>(P.fl.trap||{}).ch>=3,reqTxt:'Termine "A Estrada do Selo" (Ato IV).',start:'cr_maren',back:'cr_maren',rw:3,
+   tasks:[{t:'kill',mon:['s_sentinela_dourada','s_serpente_celeste'],q:30,l:'Derrote 30 Sentinelas Douradas ou Serpentes Celestes'}],
+   intro:'Uma mulher de armadura azul, com o brasão de Vussumi, espera no cais.<br><br><i>"Capitã Maren, da guarda da cidade. Eldoran me mandou vigiar esta ilha depois que você voltou da estrada do selo. As <b>sentinelas douradas</b> guardavam o templo há eras. Agora atacam qualquer um."</i>',
+   done:'<i>"Elas não estavam loucas"</i>, diz Maren, chutando um pedaço de sentinela. <i>"Estavam obedecendo. Alguém trocou as ordens delas. E os corvos que voam sobre o templo não são corvos comuns."</i>'},
+  {n:'Os Corvos de Kael',minLv:320,req:()=>(P.fl.trap||{}).ch>=3,reqTxt:'Termine "A Estrada do Selo" (Ato IV).',start:'cr_maren',back:'cr_maren',rw:4,
+   tasks:[{t:'kill',mon:['s_corvo_kael','s_cultista_kael'],q:25,l:'Derrote 25 Corvos de Kael ou Cultistas de Kael'}],
+   intro:'<i>"Os cultistas de Kael acampam perto do templo, e os corvos são os olhos dele. Derrube os dois."</i>',
+   done:'Um dos cultistas carrega um mapa do templo. Embaixo, uma data marcada em roxo: o dia em que Kael virá buscar o irmão.<br><br>Maren enrola o mapa e entrega a você. <i>"Isso tem que chegar a <b>Ezequiel</b>, na Torre Arcana. E rápido."</i>'}
+ ]};
+function cronS(){P.fl=P.fl||{};return P.fl.cron||(P.fl.cron={ch:0,started:0,base:{},notif:{}})}
+function cronList(){return CRON[P&&P.fac==='elfo'?'elfo':'humano']}
+function cronCh(){return cronList()[cronS().ch]}
+function cronAvail(C){return !!(C&&P.lvl>=C.minLv&&C.req())}
+function cronN(t){const E=cronS(),ms=t.t==='kill'?t.mon:[t.mon];return ms.reduce((s,m)=>s+Math.max(0,(P.kills[m]||0)-(E.base[m]||0)),0)}
+function cronOk(t){return cronN(t)>=(t.t==='kill'?t.q:1)}
+function cronProg(C){return C.tasks.map(t=>(cronOk(t)?'✅ ':'⬜ ')+t.l+(t.t==='kill'?` (${Math.min(cronN(t),t.q)}/${t.q})`:'')).join('<br>')}
+function cronStart(){const E=cronS(),C=cronCh();E.started=1;E.base={};for(const t of C.tasks)for(const m of (t.t==='kill'?t.mon:[t.mon]))E.base[m]=P.kills[m]||0;save(true);offerTracking('story')}
+function cronComplete(n){const E=cronS(),C=cronCh(),xp=Math.round(need(P.lvl)*C.rw),gold=P.lvl*20*C.rw;P.gold+=gold;gainXp(xp);const got=[];for(const [id,q] of C.items||[])if(addItem(id,q))got.push(q+'× '+IT[id].n);
+ E.ch++;E.started=0;E.base={};sfx('ach');save(true);const N=cronCh();
+ say(n.n+' · Crônica · '+C.n,C.done+'<br><br><b>Recompensa:</b> '+xp.toLocaleString('pt-BR')+' XP · '+gold.toLocaleString('pt-BR')+' ouro'+(got.length?' · '+got.join(', '):'')+(N?'<br><br><small>Próxima crônica: <b>'+esc(N.n)+'</b> (nível '+N.minLv+').</small>':'<br><br><small>Você completou todas as crônicas.</small>'),[['Até mais',closeAll]])}
+function cronTalk(n){if(!P||!n)return false;const E=cronS(),C=cronCh();if(!C||(n.id!==C.start&&n.id!==C.back))return false;const head=n.n+' · Crônica · '+C.n;
+ if(!E.started){if(n.id!==C.start)return false;if(!C.req())return false;
+  if(P.lvl<C.minLv){say(n.n,(n.n==='Oren, o Guardião de Pedra'?'A pedra range: ':'')+'<i>"Ainda não é a hora. Volte no <b>nível '+C.minLv+'</b>."</i>',[['Certo',closeAll]]);return true}
+  cronStart();sfx('lvl');say(head,C.intro+'<br><br>'+cronProg(C),[['Aceitar',closeAll]]);return true}
+ if(n.id===C.back&&C.tasks.every(cronOk)){cronComplete(n);return true}
+ say(head,cronProg(C),[['Até mais',closeAll]]);return true}
+function cronGoal(){if(!P)return null;const E=cronS(),C=cronCh();if(!C||!cronAvail(C))return null;const who=id=>({name:'Crônica: falar com '+elfNpcName(id),...npcAt(id)});
+ if(!E.started)return who(C.start);const t=C.tasks.find(t=>!cronOk(t));if(!t)return who(C.back);const mon=t.t==='kill'?t.mon[0]:t.mon;
+ for(const k in MAPS){const s=(MAPS[k].spawns||[]).find(x=>x[0]===mon);if(s)return{name:'Crônica: '+t.l,map:k,x:s[1],y:s[2]}}return who(C.back)}
+function cronMainWaits(g){if(!g)return true;if(g.noArrow)return true;if(P.fac==='elfo'){const e=P.fl.elf||{};if((e.ch||0)<ELF_ACT.length){const c=ELF_ACT[e.ch||0];return !!(c&&c.minLv>P.lvl)}}return false}
+{
+ const talkBefore=talk;talk=function(n){if(n&&cronTalk(n))return;return talkBefore.apply(this,arguments)};
+ const goalBefore=storyGoal;storyGoal=function(){const g=goalBefore.apply(this,arguments);try{const E=cronS(),cg=cronGoal();if(cg&&(E.started||cronMainWaits(g)))return cg}catch(e){console.error(e)}return g};
+ const qBefore=pQuest;pQuest=function(b){const r=qBefore.apply(this,arguments);
+  try{if(typeof QTAB!=='undefined'&&QTAB==='hist'){const E=cronS(),A=cronList(),C=A[E.ch];
+   const st=!C?'Todas as crônicas concluídas ✓':E.started?cronProg(C):!C.req()?C.reqTxt:P.lvl<C.minLv?'Chegue ao nível '+C.minLv+'.':'Fale com <b>'+esc(elfNpcName(C.start))+'</b>.';
+   const box=el(`<div><div class="sect">📖 Crônicas <span>${Math.min(E.ch,A.length)}/${A.length}</span></div><div class="quest ${C?'':'done'}"><h4>${C?esc(C.n)+' <small style="color:var(--muted)">· nível '+C.minLv+'</small>':'Concluídas ✓'}${C&&cronAvail(C)?` <button id="cronTrk" style="float:right;font-size:11px;padding:2px 8px" class="${P.track==='story'?'gold':''}">${P.track==='story'?'Rastreando':'Rastrear'}</button>`:''}</h4><p>${st}</p><p style="color:var(--muted);font-size:12px;margin:4px 0 0">Capítulos extras que contam o que acontece entre os atos.</p></div></div>`);
+   const sects=[...b.querySelectorAll('.sect')];const anchor=sects[1]||null;const nodes=[...box.childNodes];if(anchor)anchor.before(...nodes);else b.append(...nodes);
+   const bt=b.querySelector('#cronTrk');if(bt)bt.onclick=()=>{trackMission('story');renderPanel()}}}catch(e){console.error(e)}
+  return r};
+ let tk=0;const upd=update;update=function(){const r=upd.apply(this,arguments);
+  if(P&&nowT>=tk){tk=nowT+2000;try{const E=cronS(),C=cronCh();if(C&&!E.started&&cronAvail(C)&&!E.notif[E.ch]){E.notif[E.ch]=1;log('📖 Nova crônica: "'+C.n+'". Fale com '+elfNpcName(C.start)+' ('+(MAPN[npcAt(C.start).map]||'')+').','q')}}catch(e){}}
+  return r};
+}
+</script>

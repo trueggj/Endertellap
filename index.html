@@ -13967,3 +13967,84 @@ for(const map in MQ_BOARDS){const B=MQ_BOARDS[map];const has=B.types.some(t=>(MO
  const id='trofeu_'+map,nm=MAPN[map]||map;IT[id]={n:'Troféu: '+nm,price:Math.round(20+B.hi*1.5),ic:'loot',c:'#e0c080',loot:1,desc:'Caiu de um monstro de '+nm+'. Vale ouro na loja e é pedido no Quadro de Missões da ilha.'};
  for(const t of B.types.slice(0,3)){MON[t].loot=MON[t].loot||[];MON[t].loot.push([id,1])}}
 </script>
+
+<script>
+/* ===== Sets das Ilhas: cada ilha tem um elemento; o chefe dropa fragmentos para forjar o set da ilha; os monstros dropam a versão comum ===== */
+'use strict';
+const ISL=[
+ // chave, nome do set, ilha, mapas, chefes, elemento, nível do set, mapa da forja
+ ['goblin','Goblin','Caverna Goblin',['gcave','arena_grak','arena_goblinRei'],['grak','goblinRei'],'terra',18,'gcave'],
+ ['dragao','do Dragão','Mina',['cave','arena_dragao'],['dragao'],'fogo',30,'cave'],
+ ['sombrio','do Cavaleiro Sombrio','Castelo',['castle','arena_sombrio'],['sombrio'],'sombra',32,'castle'],
+ ['brumas','das Brumas','Ilha das Brumas',['ilha_brumas','cav_brumas','hunt_ilha_brumas'],['guardiao_brumas'],'luz',34,'ilha_brumas'],
+ ['farao','do Faraó','Deserto',['desert','pyr1','pyr2','cavdes','hunt_desert','arena_farao'],['farao'],'terra',45,'desert'],
+ ['selva','da Selva','Ilha Amazônia',['amazon','amz65_cipos','amz65_enxame','amz65_aguas','amz68_mata','cavama','hunt_amazon'],['amz65_matriarca','amz65_rainha','amz65_mandibula'],'terra',52,'amazon'],
+ ['teia','da Teia','Ilha Verdejante',['ilha60','cav60','hunt_ilha60','arena_rainha_aranha'],['rainha_aranha'],'terra',70,'ilha60'],
+ ['magma','do Magma','Ilha Vulcânica',['ilha70','cav70','hunt_ilha70','arena_senhor_magma'],['senhor_magma'],'fogo',80,'ilha70'],
+ ['glacial','Glacial','Montanhas Geladas',['gelo','hunt_gelo','covil'],['dragao_gelo'],'gelo',88,'gelo'],
+ ['abissal','Abissal','Ilha dos Naufrágios',['ilha80','cav80','hunt_ilha80','oceano_naufragios','oceano_corais','oceano_naufragio','oceano_fenda','arena_kraken'],['kraken'],'raio',90,'ilha80'],
+ ['brasa','do Rei das Cinzas','Ilha das Cinzas',['ilha110','cav120','hunt_ilha110','arena_rei_cinzas'],['rei_cinzas'],'fogo',140,'ilha110'],
+ ['trevas','do Senhor do Vazio','Ilha do Vazio',['ilha170','cav180','hunt_ilha170','arena_senhor_vazio'],['senhor_vazio'],'sombra',195,'ilha170'],
+ ['serafim','do Serafim','Ilha Flutuante',['ceu','hunt_ceu','santuario'],['serafim'],'luz',225,'ceu'],
+ ['caido','do Herói Caído','Mundo Sombrio',['mundo_sombrio','hunt_mundo_sombrio','covil_tarn'],['tarnished_rei'],'sombra',260,'mundo_sombrio'],
+ ['quartzo','de Quartzo','Floresta de Cristal',['e_cristal'],['e_quartzo_rei'],'gelo',30,'e_cristal'],
+ ['morak','do Capitão Sombrio','Fronteira Queimada',['e_fronteira'],['e_morak'],'fogo',55,'e_fronteira'],
+ ['espinho','dos Espinhos','Ravina dos Espinhos',['e_ravina'],['e_matriarca_espinhos'],'terra',58,'e_ravina'],
+ ['arvores','das Árvores Vivas','Bosque das Árvores Vivas',['e_bosque','e_santuario_lua'],['e_vaelor'],'terra',90,'e_bosque'],
+ ['ambar','de Âmbar','Floresta de Âmbar',['e_ambar'],['e_basilisco'],'terra',94,'e_ambar'],
+ ['vale','do Vale Branco','Vale Branco',['e_vale_branco'],['e_espectro_guerra'],'gelo',125,'e_vale_branco'],
+ ['cidadela','da Cidadela','Cidadela Sombria',['e_cidadela','e_raizes','e_trono_sombrio'],['e_morthil'],'sombra',195,'e_cidadela'],
+ ['lumen','de Lúmen','Ruínas de Lúmen',['e_lumen'],['e_guardiao_lumen'],'luz',245,'e_lumen'],
+ ['brejo','do Brejo','Pântano das Lágrimas',['e_pantano'],['e_mae_brejo'],'terra',295,'e_pantano'],
+ ['crepusculo','do Crepúsculo','Cumes do Crepúsculo',['e_cumes'],['e_dragao_crepusculo'],'fogo',345,'e_cumes'],
+ ['dourado','Dourado','Ilha do Selo Esquecido',['ilha_selo','kol_selo'],['kol_guardiao_selo'],'raio',345,'ilha_selo']
+].filter(r=>r[3].some(m=>MAPS[m])&&r[4].some(b=>MON[b]));
+const ISL_BY={},ISL_MAP={},ISL_BOSS={},ISL_COST={weapon:8,armor:6,shield:5,helmet:4,legs:4,boots:4,amulet:4},ISL_RES=6;
+for(const [key,nome,ilha,maps,bosses,el,lv,forge] of ISL){const I={key,nome,ilha,maps:maps.filter(m=>MAPS[m]),bosses:bosses.filter(b=>MON[b]),el,lv,forge};ISL_BY[key]=I;for(const m of I.maps)ISL_MAP[m]=I;for(const b of I.bosses)ISL_BOSS[b]=I}
+/* 1) elemento da ilha: monstros que só existem nela e os chefes */
+{const where={};for(const k in MAPS)for(const s of MAPS[k].spawns||[])(where[s[0]]=where[s[0]]||new Set()).add(k);
+ for(const I of Object.values(ISL_BY)){I.mobs=[];for(const t in where){if(!MON[t]||MON[t].boss)continue;const ms=[...where[t]];if(!ms.some(m=>ISL_MAP[m]===I))continue;I.mobs.push(t);if(ms.every(m=>ISL_MAP[m]===I))MON[t].el=I.el}
+  for(const b of I.bosses)MON[b].el=I.el;
+  for(const m of I.maps)if(ZLV[m]&&!ZLV[m].includes(ELI[I.el]))ZLV[m]+=' · '+ELI[I.el]+' '+ELN[I.el]}}
+/* 2) itens: fragmento, set forjado (forte) e peças comuns (dropadas pelos monstros) */
+{const SL=[['espada','Espada','weapon','sword','knight',L=>({atk:1.55*L+8})],['cajado','Cajado','weapon','staff','mage',L=>({atk:1.55*L+8,mp:.6*L})],['armadura','Armadura','armor','armor',null,L=>({def:.28*L+3,hp:1.2*L})],['elmo','Elmo','helmet','helmet',null,L=>({def:.13*L+1,hp:.5*L})],['escudo','Escudo','shield','shield','knight',L=>({def:.17*L+2,hp:.4*L})],['tomo','Tomo','shield','book','mage',L=>({def:.15*L+1,mp:1.2*L})],['calca','Calça','legs','legs',null,L=>({def:.1*L+1,hp:.4*L})],['botas','Botas','boots','boots',null,L=>({def:.1*L+1,hp:.3*L})],['amuleto','Amuleto','amulet','amulet',null,L=>({hp:.5*L,mp:1.2*L})]];
+ for(const I of Object.values(ISL_BY)){const c=ELC[I.el],bn=MON[I.bosses[0]].n;
+  IT['frag_isl_'+I.key]={n:'Fragmento '+(I.bosses.length>1?'de '+I.ilha:'de '+bn),ic:'frag',c,price:Math.round(30+I.lv*4),loot:1,desc:`Dropado pelo chefe de ${I.ilha}. Forja o Set ${I.nome} (nível ${I.lv}) na forja da ilha.`};
+  I.pieces={};I.weak={};
+  for(const [sk,sn,slot,ic,cls,f] of SL){const st=f(I.lv),strong={},weak={};for(const s in st){strong[s]=Math.round(st[s]*(s==='atk'?1.1:1.15));weak[s]=Math.round(strong[s]*.8)}
+   const sid=(I.key==='espinho'||I.key==='ambar')&&IT[I.key+'_'+sk]?I.key+'_'+sk:'isf_'+I.key+'_'+sk,wid='isw_'+I.key+'_'+sk;if(!sid.startsWith('isf_'))for(const s of ['atk','def','hp','mp']){if(IT[sid][s])weak[s]=Math.round(IT[sid][s]*.8);else delete weak[s]}
+   if(sid.startsWith('isf_'))IT[sid]=Object.assign({n:`${sn} ${I.nome}`,lv:I.lv,slot,ic,c,price:Math.round((I.lv*I.lv*.9+I.lv*25+120)*(slot==='weapon'?1.1:.7)),noDrop:1,islSet:I.key},strong);
+   if(slot!=='weapon'&&slot!=='amulet')IT[sid].res=Object.assign({},IT[sid].res||{},{[I.el]:ISL_RES});else if(slot==='amulet')IT[sid].res=Object.assign({},IT[sid].res||{},{[I.el]:ISL_RES});
+   if(slot==='weapon')IT[sid].el=I.el;
+   IT[wid]=Object.assign({n:`${sn} ${I.nome} (comum)`,lv:Math.max(1,I.lv-3),slot,ic,c,price:Math.round(IT[sid].price*.35),noDrop:1,islWeak:I.key},weak);
+   if(slot!=='weapon')IT[wid].res={[I.el]:ISL_RES/2};else IT[wid].el=I.el;
+   if(cls){IT[sid].cls=cls;IT[wid].cls=cls}
+   if(slot==='weapon'&&cls==='knight')for(const id of [sid,wid])if(!IT[id+'_b'])IT[id+'_b']=Object.assign({},IT[id],{n:IT[id].n.replace(/^Espada/,'Arco'),ic:'bow',bow:1,twin:id});
+   I.pieces[sk]=sid;I.weak[sk]=wid}}}
+{const sk=setKey_t;setKey_t=function(id){const it=IT[id];if(it){const b=IT[it.base||id];const k=(b&&b.islSet)||it.islSet;if(k)return 'isl_'+k}return sk.apply(this,arguments)};for(const I of Object.values(ISL_BY))if(!SETNAME[I.key])SETNAME['isl_'+I.key]=I.nome}
+function islSlots(){const m=P&&P.cls==='mage';return ['armadura','elmo','calca','botas','amuleto',m?'cajado':'espada',m?'tomo':'escudo']}
+/* 3) drops: chefe → fragmentos; monstros da ilha → peça comum (rara) */
+{const killB=kill;kill=function(mo){const alive=mo&&!mo.dead;const r=killB.apply(this,arguments);
+  try{if(alive&&mo.dead&&!mo.e4sum){const B=ISL_BOSS[mo.type];
+   if(B&&ISL_MAP[mo.map]===B){const n=2+(R()<.5?1:0),id='frag_isl_'+B.key;if(addItem(id,n)){text(mo,'+'+n+' '+IT[id].n,ELC[B.el],1800);toast(itemIcon(id),`+${n} ${IT[id].n}`);log(`${MON[mo.type].n} deixou ${n} ${IT[id].n}. Leve à forja de ${B.ilha}.`,'lv')}}
+   else{const I=ISL_MAP[mo.map];if(I&&!MON[mo.type].boss&&!mo.tmp&&R()<.012*(1+buffV('drop'))){const sk=islSlots()[(R()*7)|0],id=I.weak[sk];if(id&&addItem(id)){const it=IT[arConv(id)]||IT[id];text(mo,it.n,'#c0c0c0',1600);log('Peça comum de '+I.ilha+': '+it.n+'.','loot')}}}}}catch(e){console.error(e)}
+  return r}}
+/* o Set dos Espinhos e o de Âmbar seguem a mesma regra: sem peças prontas dos monstros e do chefe */
+for(const k of Object.keys(E4_DROP))delete E4_DROP[k];
+/* 4) forja da ilha */
+function islForge(key,who){const I=ISL_BY[key],fid='frag_isl_'+key,have=countItem(fid);who=who||'⚒️ Forja de '+I.ilha;
+ const rows=islSlots().map(sk=>{const id=I.pieces[sk],it=IT[arConv(id)]||IT[id],cost=ISL_COST[IT[id].slot],gold=I.lv*100;return [`${it.n} · ${cost} frag. + ${gold.toLocaleString('pt-BR')} ouro`,()=>{
+   if(countItem(fid)<cost||P.gold<gold){say(who,`Faltam ${Math.max(0,cost-countItem(fid))} fragmentos${P.gold<gold?' e ouro':''}.`,[['Voltar',()=>islForge(key,who)]]);return}
+   if(!addItem(id)){say(who,'Sua mochila está cheia.',[['Voltar',()=>islForge(key,who)]]);return}
+   removeItem(fid,cost);P.gold-=gold;sfx('ach');toast(itemIcon(arConv(id)),'Forjado: '+it.n+'!');log('Forjado: '+it.n+'.','lv');save(true);islForge(key,who)}]});
+ say(who,`<b>Set ${I.nome}</b> · nível ${I.lv} · ${ELI[I.el]} ${ELN[I.el]}<br><small>Os monstros de ${I.ilha} atacam com <b>${ELN[I.el]}</b>. Cada peça do set protege <b>-${ISL_RES}%</b> contra ${ELN[I.el]}, e as 6 peças dão <b>+25% de defesa</b>.<br>Os fragmentos caem do chefe da ilha (${I.bosses.map(b=>MON[b].n).join(', ')}): 2 ou 3 por vitória. Os monstros da ilha às vezes deixam cair a <b>versão comum</b>, mais fraca e sem bônus de set.</small><br><br>Você tem <b>${have}</b> ${IT[fid].n}.`,rows.concat([['Até mais',closeAll]]))}
+{let base=[];try{base=npcList0()}catch(e){}const occ=(map,x,y)=>NEWNPCS.concat(base).some(n=>n.map===map&&Math.abs(n.x-x)<=0&&Math.abs(n.y-y)<=0);
+ for(const I of Object.values(ISL_BY)){
+  if(I.key==='espinho'||I.key==='ambar'){const id=I.key==='espinho'?'e4_ilvana':'e4_fenwe',who=I.key==='espinho'?'Artesã Ilvana':'Lapidário Fenwë';const n=NEWNPCS.find(o=>o.id===id);if(n){const old=n.talk;n.talk=()=>say(who,I.key==='espinho'?'<i>"Espinho vivo é mais duro que aço quando seca do jeito certo. Mas o set de verdade pede os fragmentos da Matriarca."</i>':'<i>"O âmbar desta floresta é seiva de mil anos. Para lapidar o set completo, preciso dos fragmentos do Basilisco."</i>',[['⚒️ Forjar o Set '+I.nome,()=>islForge(I.key,who)],['Até mais',closeAll]])}continue}
+  const m=MAPS[I.forge],B=MQ_BOARDS[I.forge];if(!m)continue;const sx=B?B.x:(m.portals[0]||{x:5}).x,sy=B?B.y:(m.portals[0]||{y:5}).y;
+  const ok=(x,y)=>x>0&&y>0&&x<m.w-1&&y<m.h-1&&!SOLID.has(getT(m,x,y))&&getT(m,x,y)!==TL.WATER&&!DSOL.has(I.forge+','+x+','+y)&&!(m.portals||[]).some(p=>Math.abs(p.x-x)<=1&&Math.abs(p.y-y)<=1)&&!occ(I.forge,x,y);
+  let p=null;outer:for(let r=1;r<7;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;if(ok(sx+dx,sy+dy)){p=[sx+dx,sy+dy];break outer}}
+  if(!p)continue;I.fx=p[0];I.fy=p[1];NEWNPCS.push({id:'forja_'+I.key,n:'Forja: Set '+I.nome,map:I.forge,x:p[0],y:p[1],sign:1,wander:false,talk:()=>islForge(I.key)})}}
+/* 5) o quadro de missões mostra o elemento e o set da ilha */
+{const mb=mqBoard;mqBoard=function(map){const r=mb.apply(this,arguments);try{const I=ISL_MAP[map];const t=document.getElementById('dlgText');if(I&&t&&!t.dataset.isl){t.dataset.isl=1;t.insertAdjacentHTML('afterbegin',`<div style="margin:0 0 8px;padding:6px 8px;border-radius:6px;background:rgba(127,127,127,.12)">${ELI[I.el]} <b>Elemento da ilha: ${ELN[I.el]}</b><br><small>Chefe: ${I.bosses.map(b=>MON[b].n).join(', ')} · dropa fragmentos do <b>Set ${I.nome}</b> (nível ${I.lv}).</small></div>`)}}catch(e){}return r}}
+</script>

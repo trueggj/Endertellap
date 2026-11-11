@@ -13099,6 +13099,20 @@ for(const o of MONS||[])if(['e_ratinho','rato','cobra','morcego','lobo'].include
 // remove degraus de escada sem passagem nas saídas das áreas élficas (ficavam dois degraus lado a lado)
 for(const k of ['sylvaren','e_cristal','e_fronteira','e_bosque','e_vale_branco','e_raizes','e_cidadela']){const m=MAPS[k];if(!m)continue;
  for(let y=0;y<m.h;y++)for(let x=0;x<m.w;x++){const t=getT(m,x,y);if((t===TL.STAIRS||t===TL.CAVE)&&!m.portals.some(p=>p.x===x&&p.y===y))setT(m,x,y,k==='sylvaren'?TL.TREE:m.edge)}}
-NEWNPCS.push({id:'barraca_pocoes',n:'Barraca de Poções · Lírel',map:'sylvaren',x:35,y:31,wander:false,pal:EPAL('#8a5aa8','#f0c870'),lines:['Poções frescas!','Para a Campina dos Brotos!'],
- talk:()=>shop('Barraca de Poções · Lírel','Vai sair da cidade? Leve poções! Também compro o que você caçar. Mais opções na loja da Herbalista Elanor, na casa <b>Ervas de Elanor</b>.',['pocao_vida','pocao_mana','pocao_vida_g','pocao_mana_g'])});
+// (barraca de poções removida: as poções élficas ficam com a Herbalista Elanor, na casa Ervas de Elanor)
+</script>
+
+<script>
+/* ===== Monstros que nasciam dentro de decorações (presos) vão para o lugar livre mais próximo ===== */
+'use strict';
+{
+ const STARTS={sylvaren:[32,16],e_cristal:[40,4],e_fronteira:[50,4],e_bosque:[4,40],e_vale_branco:[4,35],e_raizes:[4,35],e_cidadela:[4,35]};
+ for(const [map,[sx,sy]] of Object.entries(STARTS)){const m=MAPS[map];if(!m)continue;
+  const ok=(x,y)=>x>=0&&y>=0&&x<m.w&&y<m.h&&!SOLID.has(getT(m,x,y))&&getT(m,x,y)!==TL.WATER&&!DSOL.has(map+','+x+','+y);
+  const seen=new Set([sx+','+sy]),q=[[sx,sy]];while(q.length){const [x,y]=q.shift();for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy,k=nx+','+ny;if(!seen.has(k)&&ok(nx,ny)){seen.add(k);q.push([nx,ny])}}}
+  for(const sp of m.spawns||[]){const p=findSpot(m,sp[1],sp[2]);if(seen.has(p[0]+','+p[1]))continue;
+   let best=null,bd=1e9;for(const k of seen){const [x,y]=k.split(',').map(Number);if(inSafe(m,x,y))continue;const d=Math.abs(x-sp[1])+Math.abs(y-sp[2]);if(d<bd){bd=d;best=[x,y]}}
+   if(best){sp[1]=best[0];sp[2]=best[1]}}
+ }
+}
 </script>

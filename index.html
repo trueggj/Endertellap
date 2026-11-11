@@ -13637,3 +13637,117 @@ for(const j of [NPCS.find(n=>n.id==='jaogg_livre'),NEWNPCS.find(n=>n.id==='jaogg
   return r};
 }
 </script>
+<script>
+/* ===== Áreas élficas que faltavam: Ravina dos Espinhos (54 a 62) e Floresta de Âmbar (88 a 100) ===== */
+'use strict';
+const ELF4={ravina:'e_ravina',ambar:'e_ambar'};
+/* --- Tiles da Ravina --- */
+const tground=(g,r,v)=>{px(g,0,0,16,16,v%2?'#5a3a2a':'#603e2c');for(let i=0;i<12;i++)px(g,r()*16|0,r()*16|0,2,1,r()<.5?'#4a2e20':'#74503a');for(let i=0;i<4;i++)px(g,r()*16|0,r()*16|0,1,2,'#5a7a2a')};
+elfTile('TGROUND',tground,false,'#603e2c');
+elfTile('TTHORN',(g,r,v)=>{tground(g,r,v);disc(g,8,9,6,'#2e4a1a');disc(g,6,8,3,'#3e6a22');disc(g,11,10,3,'#3a5a1e');for(let i=0;i<9;i++){const x=2+(r()*12|0),y=3+(r()*11|0);px(g,x,y,1,2,'#d8c890');px(g,x,y,1,1,'#ffffff')}if(v%3===0){px(g,5,5,2,2,'#c02a2a');px(g,10,11,2,2,'#c02a2a')}},true,'#2e4a1a');
+elfTile('TCLIFF',(g,r,v)=>{px(g,0,0,16,16,'#3a2418');for(let y=0;y<16;y+=4)px(g,0,y,16,1,'#2a1a10');for(let i=0;i<4;i++)px(g,r()*14|0,r()*14|0,2,3,'#6a4a32');px(g,0,0,16,2,'#7a5a3a');for(let x=1;x<16;x+=5)px(g,x,2,1,4,'#4a7a2a')},true,'#3a2418');
+elfTile('TPATH',(g,r,v)=>{px(g,0,0,16,16,'#9a7a5a');for(let y=0;y<16;y+=5)for(let x=(y/5%2)*3;x<16;x+=6){px(g,x,y,5,4,v%2?'#ae8e6a':'#a68664');px(g,x,y+4,5,1,'#76583e')}},false,'#a68664');
+elfTile('TFLOWER',(g,r,v)=>{tground(g,r,v);for(let i=0;i<6;i++){const x=1+(r()*13|0),y=1+(r()*13|0);px(g,x,y+1,1,2,'#3e6a22');px(g,x-1,y,3,1,i%2?'#e04a3a':'#f08a3a');px(g,x,y,1,1,'#ffe080')}},false,'#a04a2a');
+/* --- Tiles da Floresta de Âmbar --- */
+const pmoss=(g,r,v)=>{px(g,0,0,16,16,v%2?'#7a7a64':'#80806a');for(let i=0;i<14;i++)px(g,r()*16|0,r()*16|0,1,2,r()<.5?'#9a9a7a':'#646452');if(r()<.4)px(g,r()*15|0,r()*15|0,1,1,'#f0b040')};
+elfTile('PMOSS',pmoss,false,'#80806a');
+elfTile('PTREE',(g,r,v)=>{pmoss(g,r,v);px(g,7,7,2,9,'#8a8478');px(g,7,7,1,9,'#a8a294');disc(g,8,5,6,'#a49e8c');disc(g,6,4,3,'#bab4a2');disc(g,10,6,3,'#94907e');px(g,5,9,2,1,'#6a6658');px(g,4+(v%3)*3,3,2,2,'#f0a030');px(g,4+(v%3)*3,3,1,1,'#ffe0a0')},true,'#a49e8c');
+elfTile('PAMBER',(g,r,v)=>{pmoss(g,r,v);const sh=(x,h,c1,c2)=>{g.fillStyle=c1;g.beginPath();g.moveTo(x,15);g.lineTo(x+2,15-h);g.lineTo(x+4,15);g.fill();px(g,x+1,15-h+3,1,h-4,c2)};sh(2,10,'#e08a20','#ffd080');sh(7,13,'#f0a030','#fff0c0');sh(11,9,'#d07818','#ffc070')},true,'#f0a030');
+elfTile('PPATH',(g,r,v)=>{px(g,0,0,16,16,'#b8ae94');for(let y=0;y<16;y+=5)for(let x=(y/5%2)*3;x<16;x+=6){px(g,x,y,5,4,v%2?'#cac0a6':'#c2b89e');px(g,x,y+4,5,1,'#8a826c')}if(r()<.3)px(g,r()*14|0,r()*14|0,1,1,'#f0b040')},false,'#c2b89e');
+elfTile('PSAP',(g,r,v)=>{px(g,0,0,16,16,'#c87810');for(let y=2;y<16;y+=4)px(g,(y*3+v*2)%9,y,6,1,'#f0a830');px(g,3+(v%4)*2,4,2,2,'#ffe0a0')},true,'#e09020');
+/* --- Decorações --- */
+DK2.e_ninho_espinhos=(R,W,H,t)=>{const a=.4+.4*Math.sin(t*2.4);R(4,36,72,24,'#3a2a1a');R(10,28,60,12,'#2e4a1a');for(let i=0;i<9;i++){const x=8+i*7,h=14+(i%3)*8;R(x,40-h,3,h,'#4a6a22');R(x,40-h,3,3,'#d8c890')}R(30,42,20,10,`rgba(220,40,40,${a.toFixed(2)})`);R(36,44,8,6,'#ffb0a0')};
+DK2.e_torre_vigia=(R,W,H,t)=>{R(6,20,36,44,'#8a8478');R(6,20,36,4,'#a8a294');for(let y=26;y<64;y+=8)R(6,y,36,1,'#6a6658');R(16,46,16,18,'#2a2018');R(6,10,10,12,'#8a8478');R(28,4,14,18,'#8a8478');R(30,14,4,30,'#3e6a22');R(20,24,8,10,'#5a2a6a');const s=Math.sin(t*2)*2;R(36,0+s,2,10,'#d8d8e8')};
+DK2.e_toca_basilisco=(R,W,H,t)=>{const a=.5+.4*Math.sin(t*1.6);R(0,30,80,34,'#6a6658');R(6,24,68,10,'#8a8478');R(18,36,44,24,'#1a1612');R(26,42,8,5,`rgba(255,180,40,${a.toFixed(2)})`);R(46,42,8,5,`rgba(255,180,40,${a.toFixed(2)})`);R(29,43,2,3,'#1a1612');R(49,43,2,3,'#1a1612');for(let x=4;x<80;x+=12)R(x,18+(x%3)*3,6,12,'#a49e8c')};
+DK2.e_elfo_ambar=(R,W,H,t)=>{const a=.35+.2*Math.sin(t*1.3);R(4,4,24,42,'#e08a20');R(6,6,20,38,`rgba(255,200,90,${(.7).toFixed(2)})`);R(12,10,8,8,'#e8d0b0');R(11,18,10,16,'#3a5a7a');R(12,34,3,8,'#2a2a3a');R(17,34,3,8,'#2a2a3a');R(13,8,6,3,'#f0f0f4');R(4,4,24,42,`rgba(255,240,180,${a.toFixed(2)})`)};
+/* --- Materiais --- */
+IT.espinho_vivo={n:'Espinho Vivo',price:45,ic:'loot',c:'#7aa040',loot:1,desc:'Arrancado dos monstros da Ravina dos Espinhos. A Artesã Ilvana troca por peças do Set dos Espinhos.'};
+IT.ambar_antigo={n:'Âmbar Antigo',price:110,ic:'gem',c:'#f0a030',loot:1,desc:'Seiva das árvores petrificadas. O Lapidário Fenwë troca por peças do Set de Âmbar.'};
+/* --- Sets das áreas --- */
+const E4_SETS={espinho:{nome:'dos Espinhos',lv:58,c:'#7aa040',mat:'espinho_vivo',extra:'+8% de ataque e de poder mágico'},ambar:{nome:'de Âmbar',lv:94,c:'#f0a030',mat:'ambar_antigo',extra:'+10% de vida máxima'}};
+{const ST={espinho:{atk:106,def:[19,9,11,7],hp:[70,25,20,15,70],mp:70,price:5000},ambar:{atk:160,def:[29,13,16,10],hp:[110,40,30,25,120],mp:110,price:8500}};
+ for(const key in ST){const S=ST[key],E=E4_SETS[key];
+  const L=[['espada','Espada','weapon','sword','knight',{atk:S.atk},1.1],['cajado','Cajado','weapon','staff','mage',{atk:S.atk,mp:Math.round(S.mp*.5)},1.1],['armadura','Armadura','armor','armor',null,{def:S.def[0],hp:S.hp[0]},1],['elmo','Elmo','helmet','helmet',null,{def:S.def[1],hp:S.hp[1]},.6],['escudo','Escudo','shield','shield','knight',{def:S.def[2],hp:S.hp[2]},.7],['tomo','Tomo','shield','book','mage',{def:S.def[2],mp:S.mp},.7],['calca','Calça','legs','legs',null,{def:S.def[3],hp:S.hp[3]},.55],['botas','Botas','boots','boots',null,{def:S.def[3],hp:S.hp[3]},.55],['amuleto','Amuleto','amulet','amulet',null,{hp:S.hp[4],mp:S.mp},.6]];
+  for(const [sk,sn,slot,ic,cls,st,pm] of L){const id=key+'_'+sk;IT[id]=Object.assign({n:`${sn} ${E.nome}`,lv:E.lv,slot,ic,c:E.c,price:Math.round(S.price*pm),noDrop:1,e4set:key},st);if(cls)IT[id].cls=cls}
+  IT[key+'_espada_b']=Object.assign({},IT[key+'_espada'],{n:'Arco '+E.nome,ic:'bow',bow:1,twin:key+'_espada'})}}
+{const sk=setKey_t;setKey_t=function(id){const it=IT[id];if(it){const b=IT[it.base||id];if(b&&b.e4set)return b.e4set;if(it.e4set)return it.e4set}return sk.apply(this,arguments)}}
+SETNAME.espinho='dos Espinhos';SETNAME.ambar='de Âmbar';
+{const fb=fullBonusTxt;fullBonusTxt=function(k){const t=fb.apply(this,arguments);return E4_SETS[k]?t+' e '+E4_SETS[k].extra:t}}
+{const sb=stats;stats=function(){const s=sb.apply(this,arguments);if(P&&s){if(isFull('espinho')){s.atk=Math.round(s.atk*1.08);s.mag=Math.round(s.mag*1.08)}if(isFull('ambar'))s.maxHp=Math.round(s.maxHp*1.1)}return s}}
+function e4Pieces(key){const k=P&&P.cls==='mage';return ['armadura','elmo','calca','botas','amuleto',k?'cajado':'espada',k?'tomo':'escudo'].map(s=>key+'_'+s)}
+function e4Piece(key){const L=e4Pieces(key);return L[(R()*L.length)|0]}
+/* --- Monstros --- */
+e3Mon('e_javali_espinho','Javali de Espinhos','tame_javali','#8a3a2a',54,60,1.2,1,'terra',{loot:[['espinho_vivo',1]]});
+e3Mon('e_vespa_rubra','Vespa Rubra','waspS','#d03a2a',55,61,.9,1.1,'fogo',{loot:[['espinho_vivo',1]]});
+e3Mon('e_lagarto_espinho','Lagarto de Espinhos','jLizard','#7a5a2a',56,62,1.1,1,'terra',{loot:[['espinho_vivo',1]]});
+e3Mon('e_druida_renegado','Druida Renegado',elfPerson(EPAL('#4a6a2a','#d0c0a0')),'',57,62,.9,1,'terra',{eq:'weapon',loot:[['espinho_vivo',1]]});MON.e_druida_renegado.rng=4;
+e3Mon('e_matriarca_espinhos','Matriarca dos Espinhos','spiderQueen','#6a8a2a',62,62,20,1.4,'terra',{def:1.6,xp:22,x:{boss:1,big:1,resp:300},eq:'armor',loot:[['espinho_vivo',1]]});
+e3Mon('e_lince_pedra','Lince de Pedra','jaguar','#9a9488',88,95,1.2,1,'terra',{loot:[['ambar_antigo',1]]});
+e3Mon('e_golem_seiva','Golem de Seiva','lavaGolem','#e0a040',90,97,1.5,.9,'terra',{loot:[['ambar_antigo',1]]});
+e3Mon('e_cocatriz','Cocatriz','harpy','#c0a060',92,99,1,1.1,'raio',{loot:[['ambar_antigo',1]]});
+e3Mon('e_espectro_ambar','Espectro do Âmbar','ghost','#f0c060',94,100,.9,1.1,'luz',{loot:[['ambar_antigo',1]]});MON.e_espectro_ambar.rng=3;
+e3Mon('e_basilisco','Basilisco Ancião','boa','#8a8a70',100,100,30,1.6,'terra',{def:1.8,xp:30,x:{boss:1,big:1,resp:600},eq:'weapon',loot:[['ambar_antigo',1]]});
+const E4_DROP={e_javali_espinho:'espinho',e_vespa_rubra:'espinho',e_lagarto_espinho:'espinho',e_druida_renegado:'espinho',e_matriarca_espinhos:'espinho',e_lince_pedra:'ambar',e_golem_seiva:'ambar',e_cocatriz:'ambar',e_espectro_ambar:'ambar',e_basilisco:'ambar'};
+for(const k in E4_DROP)REG[k]=E4_DROP[k]==='espinho'?'Ravina dos Espinhos':'Floresta de Âmbar';
+/* Chefes */
+BM.e_matriarca_espinhos=function(mo){if(mo.hp>=mo.mhp)mo.heal=0;
+ if(nowT>=(mo.t1||(mo.t1=nowT+4000))){mo.t1=nowT+9000;text(mo,'CHUVA DE ESPINHOS!','#9ad040',1200);for(let i=0;i<3;i++){const x=P.x+((R()*5|0)-2),y=P.y+((R()*5|0)-2);hazard({map:mo.map,tiles:area(x,y,1),warn:1500,pct:.15,col:'150,200,60',name:'Chuva de Espinhos'})}}
+ if(nowT>=(mo.t2||(mo.t2=nowT+11000))){mo.t2=nowT+18000;if((MONBY[mo.map]||[]).filter(o=>!o.dead&&o.e4sum).length<4){text(mo,'Filhos, venham!','#9ad040',1200);for(let i=0;i<2;i++){const o=addMon('e_lagarto_espinho',mo.map,mo.x+(i?2:-2),mo.y+1,mo.lv-2);if(o)o.e4sum=1}}}
+ if(!mo.heal&&mo.hp<mo.mhp*.4){mo.heal=1;mo.hp=Math.min(mo.mhp,mo.hp+Math.round(mo.mhp*.12));text(mo,'A RAVINA ME CURA!','#7cf07c',1600);ring(mo,2.5,'#7cf07c');log('A Matriarca dos Espinhos se cura com as raízes da ravina.','bad')}};
+BM.e_basilisco=function(mo){if(mo.hp>=mo.mhp)mo.calls=0;
+ if(nowT>=(mo.t1||(mo.t1=nowT+5000))){mo.t1=nowT+10000;const dx=Math.abs(P.x-mo.x)>=Math.abs(P.y-mo.y)?Math.sign(P.x-mo.x)||1:0,dy=dx?0:Math.sign(P.y-mo.y)||1,t=[];
+  for(let i=1;i<=8;i++){const x=mo.x+dx*i,y=mo.y+dy*i;if(SOLID.has(getT(MAPS[mo.map],x,y)))break;t.push([x,y]);t.push([x+dy,y+dx]);t.push([x-dy,y-dx])}
+  if(t.length){text(mo,'OLHAR DE PEDRA!','#f0b040',1200);hazard({map:mo.map,tiles:t,warn:1400,pct:.28,col:'240,170,60',name:'Olhar de Pedra'})}}
+ if(nowT>=(mo.t2||(mo.t2=nowT+14000))){mo.t2=nowT+20000;mo.shieldT=nowT+3500;text(mo,'CASCA DE ÂMBAR','#f0a030',1400);ring(mo,2,'#f0a030');log('O Basilisco se cobre de âmbar: ele fica imune por alguns segundos.','bad')}
+ if(!mo.calls&&mo.hp<mo.mhp*.35){mo.calls=1;text(mo,'SSSSS!','#f0b040',1400);for(let i=0;i<2;i++)addMon('e_cocatriz',mo.map,mo.x+(i?3:-3),mo.y+2,mo.lv-4)}};
+/* --- Mapas --- */
+const ravina=e3Map(ELF4.ravina,'Ravina dos Espinhos','nível 54 a 62',ELF_T.TGROUND,ELF_T.TCLIFF,[[.07,ELF_T.TTHORN],[.09,ELF_T.TCLIFF],[.13,ELF_T.TFLOWER]],{tile:ELF_T.TPATH,list:[[[1,35],[16,35],[28,26],[44,22],[58,30],[72,36],[84,35]],[[28,26],[30,12],[40,9]],[[44,22],[48,46],[64,56],[70,58]],[[16,35],[20,56],[32,60]]]},
+ [{k:'e_javali_espinho',area:[8,18,50,68]},{k:'e_vespa_rubra',area:[30,2,88,30]},{k:'e_lagarto_espinho',area:[8,2,50,40]},{k:'e_druida_renegado',area:[44,30,88,68]}],70,
+ (m,r)=>{const isP=(x,y)=>getT(m,x,y)===ELF_T.TPATH||inSafe(m,x,y);
+  for(let x=10;x<86;x++){const a=16+Math.round(Math.sin(x/6)*2),b=50+Math.round(Math.sin(x/5+1)*2);for(const y of [a,a+1,b,b+1])if(!isP(x,y)&&(x%13)>1)setT(m,x,y,ELF_T.TCLIFF)}
+  elf2Oval(m,40,9,6,4,ELF_T.TPATH);elf2Oval(m,70,58,9,6,ELF_T.TPATH);elf2Oval(m,32,60,6,4,ELF_T.TFLOWER);elfPath(m,[[20,56],[32,60]],ELF_T.TPATH);
+  m.spawns.push(['e_matriarca_espinhos',70,59])});
+deco(ELF4.ravina,39,2,'e_torre_vigia',3,4);deco(ELF4.ravina,67,49,'e_ninho_espinhos',5,4);
+const ambarM=e3Map(ELF4.ambar,'Floresta de Âmbar','nível 88 a 100',ELF_T.PMOSS,ELF_T.PTREE,[[.08,ELF_T.PTREE],[.1,ELF_T.PAMBER]],{tile:ELF_T.PPATH,list:[[[1,35],[18,35],[30,46],[46,50],[60,40],[72,24],[74,16]],[[30,46],[26,60],[40,62]],[[46,50],[50,24],[40,13]],[[60,40],[84,35]]]},
+ [{k:'e_lince_pedra',area:[8,18,50,68]},{k:'e_golem_seiva',area:[8,40,60,68]},{k:'e_cocatriz',area:[40,2,88,40]},{k:'e_espectro_ambar',area:[50,30,88,68]}],70,
+ (m,r)=>{const pool=(cx,cy,rx,ry)=>{for(let y=cy-ry;y<=cy+ry;y++)for(let x=cx-rx;x<=cx+rx;x++)if(Math.hypot((x-cx)/rx,(y-cy)/ry)<1&&getT(m,x,y)!==ELF_T.PPATH&&!inSafe(m,x,y))setT(m,x,y,ELF_T.PSAP)};
+  pool(62,58,5,3);pool(20,20,4,3);pool(56,12,3,2);
+  elf2Oval(m,74,16,9,6,ELF_T.PPATH);elf2Oval(m,40,13,5,3,ELF_T.PPATH);elf2Oval(m,40,62,6,4,ELF_T.PPATH);
+  m.spawns.push(['e_basilisco',74,17])});
+deco(ELF4.ambar,72,4,'e_toca_basilisco',5,4);for(const [x,y] of [[36,9],[43,9],[37,60],[42,60]])deco(ELF4.ambar,x,y,'e_elfo_ambar',2,3);
+/* --- Ligações: Fronteira (sul) → Ravina; Bosque (sul) → Floresta de Âmbar --- */
+function e4Reach(map,sx,sy){const m=MAPS[map],ok=(x,y)=>x>0&&y>0&&x<m.w-1&&y<m.h-1&&!SOLID.has(getT(m,x,y))&&getT(m,x,y)!==TL.WATER&&!DSOL.has(map+','+x+','+y);const seen=new Set([sx+','+sy]),q=[[sx,sy]];while(q.length){const [x,y]=q.shift();for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy,k=nx+','+ny;if(!seen.has(k)&&ok(nx,ny)){seen.add(k);q.push([nx,ny])}}}return seen}
+function e4Link(map,start,ex,ey,tile,to,tx,ty){const m=MAPS[map],seen=e4Reach(map,start[0],start[1]);let best=start,bd=1e9;for(const k of seen){const [x,y]=k.split(',').map(Number);const d=Math.abs(x-ex)+Math.abs(y-ey+1);if(d<bd){bd=d;best=[x,y]}}
+ elfPath(m,[best,[ex,ey-1]],tile);elfPath(m,[[ex,best[1]],[ex,ey-1]],tile);for(let y=ey-2;y<ey;y++)for(let x=ex-1;x<=ex+1;x++)if(SOLID.has(getT(m,x,y)))setT(m,x,y,tile);
+ setT(m,ex,ey,TL.STAIRS);m.portals.push({x:ex,y:ey,to,tx,ty})}
+e4Link(ELF_MAPS.fronteira,[50,5],88,68,ELF_T.ASH,ELF4.ravina,4,35);
+setT(ravina,1,35,TL.STAIRS);ravina.portals.push({x:1,y:35,to:ELF_MAPS.fronteira,tx:88,ty:66});
+e4Link(ELF_MAPS.bosque,[5,40],50,78,ELF_T.LEAFPATH,ELF4.ambar,4,35);
+setT(ambarM,1,35,TL.STAIRS);ambarM.portals.push({x:1,y:35,to:ELF_MAPS.bosque,tx:50,ty:76});
+/* --- Personagens e placas --- */
+function e4Trade(who,key){const E=E4_SETS[key],have=countItem(E.mat),cost=30;
+ say(who+' · Set '+E.nome,`Cada peça do <b>Set ${E.nome}</b> (nível ${E.lv}) custa <b>${cost} ${IT[E.mat].n}</b>. Você tem <b>${have}</b>.<br><small>As peças também caem dos monstros da área (raro) e do chefe (sempre). Com 6 peças vestidas: +25% de defesa e ${E.extra}.</small>`,
+  e4Pieces(key).map(id=>[`${IT[bowOf(id)]&&isArch()?IT[bowOf(id)].n:IT[id].n}`,()=>{if(countItem(E.mat)<cost){say(who,`Faltam ${cost-countItem(E.mat)} ${IT[E.mat].n}.`,[['Voltar',()=>e4Trade(who,key)]]);return}if(!addItem(id)){say(who,'Sua mochila está cheia.',[['Voltar',()=>e4Trade(who,key)]]);return}removeItem(E.mat,cost);sfx('ach');toast(itemIcon(arConv(id)),IT[arConv(id)].n+'!');log(who+' fez: '+IT[arConv(id)].n+'.','lv');save(true);e4Trade(who,key)}]).concat([['Até mais',closeAll]]))}
+NEWNPCS.push(
+ {id:'e4_sylra',n:'Patrulheira Sylra',map:ELF4.ravina,x:6,y:32,wander:false,pal:EPAL('#5a3a2a','#d8c070'),lines:['Os espinhos crescem à noite.','Cuidado com os druidas.'],talk:()=>say('Patrulheira Sylra','<i>"Esta ravina era a nossa melhor torre de vigia. Até os druidas do posto começarem a ouvir vozes nas raízes."</i><br><br>Ela aponta para o leste.<br><br><i>"Eles acordaram a <b>Matriarca dos Espinhos</b>. Ela fica no ninho, a sudeste. Tudo o que tem espinho aqui obedece a ela."</i>',[['E a torre?',()=>say('Patrulheira Sylra','<i>"Ao norte, nas ruínas. O último vigia deixou um diário. Leia, se tiver estômago."</i>',[['Até mais',closeAll]])],['Até mais',closeAll]])},
+ {id:'e4_ilvana',n:'Artesã Ilvana',map:ELF4.ravina,x:6,y:38,wander:false,pal:EPAL('#7a5a3a','#e8d0a0'),lines:['Traga espinhos!','Couro e espinho, nada se perde.'],talk:()=>say('Artesã Ilvana','<i>"Espinho vivo é mais duro que aço quando seca do jeito certo. Me traga os espinhos e eu faço a sua armadura."</i>',[['🛡️ Set dos Espinhos',()=>e4Trade('Artesã Ilvana','espinho')],['Até mais',closeAll]])},
+ {id:'e4_diario',n:'Diário do Vigia',map:ELF4.ravina,x:42,y:9,sign:1,wander:false,talk:()=>say('Diário do Vigia','<i>"Dia 12. Os druidas não dormem mais. Dizem que as raízes falam com eles, que a ravina quer crescer."<br><br>"Dia 19. Vi uma marca roxa na mão do druida-chefe. Ele disse que é um presente."<br><br>"Dia 23. Os espinhos fecharam a estrada. Ouço algo enorme se mexendo no ninho. Se alguém ler isto: não deixem a Matriarca chegar à Fronteira."</i>',[['Fechar',closeAll]])},
+ {id:'e4_oren',n:'Oren, o Guardião de Pedra',map:ELF4.ambar,x:6,y:32,still:1,wander:false,pal:{h:'#c8c4b8',c:'#8a8478',d:'#6a6658',s:'#b8b4a8'},lines:['...','A seiva lembra.'],talk:()=>say('Oren, o Guardião de Pedra','Um elfo de pedra, coberto de musgo. A voz sai rouca, de dentro do âmbar.<br><br><i>"Na Guerra dos Onze, a Guarda da Lua recuou para esta floresta. O <b>Basilisco Ancião</b> nos encontrou. Bastou um olhar."</i><br><br><i>"Meus irmãos ainda estão presos na seiva, por toda a floresta. Derrube o Basilisco, e talvez eles durmam em paz."</i>',[['Até mais',closeAll]])},
+ {id:'e4_fenwe',n:'Lapidário Fenwë',map:ELF4.ambar,x:6,y:38,wander:false,pal:EPAL('#6a5a3a','#f0d090'),lines:['Âmbar antigo, o melhor que há.','Cada pedra guarda uma memória.'],talk:()=>say('Lapidário Fenwë','<i>"O âmbar desta floresta é seiva de árvores com mil anos. Lapidado, ele vira a armadura mais leve que um elfo já vestiu."</i>',[['🛡️ Set de Âmbar',()=>e4Trade('Lapidário Fenwë','ambar')],['Até mais',closeAll]])},
+ {id:'e4_placa_ravina',n:'Placa: Ravina dos Espinhos',map:ELF_MAPS.fronteira,x:86,y:66,sign:1,wander:false,talk:()=>say('Placa','<b>↓ Ravina dos Espinhos</b><br>nível 54 a 62<br><small>Chefe: Matriarca dos Espinhos · Set dos Espinhos</small>',[['Fechar',closeAll]])},
+ {id:'e4_placa_ambar',n:'Placa: Floresta de Âmbar',map:ELF_MAPS.bosque,x:48,y:76,sign:1,wander:false,talk:()=>say('Placa','<b>↓ Floresta de Âmbar</b><br>nível 88 a 100<br><small>Chefe: Basilisco Ancião · Set de Âmbar</small>',[['Fechar',closeAll]])}
+);
+for(const [map,x,y] of [[ELF_MAPS.fronteira,86,66],[ELF_MAPS.bosque,48,76]]){const m=MAPS[map];if(SOLID.has(getT(m,x,y)))setT(m,x,y,map===ELF_MAPS.bosque?ELF_T.LEAFPATH:ELF_T.ASH)}
+{const pc=NEWNPCS.find(n=>n.id==='placa_cristal');if(pc)pc.talk=()=>say('Placa','<b>↓ Floresta de Cristal</b><br>nível 10 a 30<br><small>Depois dela: Fronteira Queimada (30 a 54), Ravina dos Espinhos (54 a 62), Bosque das Árvores Vivas (62 a 88) e Floresta de Âmbar (88 a 100).</small>',[['Fechar',closeAll]])}
+/* --- Drops das peças: raro nos monstros, garantido no chefe --- */
+{const killB=kill;kill=function(mo){const alive=mo&&!mo.dead;const r=killB.apply(this,arguments);
+  try{if(alive&&mo.dead&&E4_DROP[mo.type]&&!mo.e4sum){const key=E4_DROP[mo.type],boss=MON[mo.type].boss;const n=boss?1+(R()<.35?1:0):(R()<.015*(1+buffV('drop'))?1:0);
+   for(let i=0;i<n;i++){const id=e4Piece(key);if(addItem(id)){const it=IT[arConv(id)]||IT[id];text(mo,it.n,'#7cf07c',1800);toast(itemIcon(arConv(id)),'Set '+E4_SETS[key].nome+': '+it.n+'!');log('Peça do Set '+E4_SETS[key].nome+': '+it.n+'.','lv')}}}}catch(e){console.error(e)}
+  return r}}
+/* --- Acampamentos, música e monstros presos --- */
+{const spawnBefore=b70Spawn;const CAMPS={e_ravina:[ELF4.ravina,5,35,'Acampamento da Ravina'],e_ambar:[ELF4.ambar,5,35,'Acampamento da Floresta de Âmbar']};
+ b70Spawn=function(map){const c=CAMPS[map];if(c){const p={map:c[0],x:c[1],y:c[2],name:c[3]},m=MAPS[p.map];const ok=(x,y)=>!SOLID.has(getT(m,x,y))&&!m.portals.some(q=>q.x===x&&q.y===y)&&!NPCS.some(n=>n.map===p.map&&n.x===x&&n.y===y);if(!ok(p.x,p.y))outer:for(let r=1;r<6;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++)if(ok(p.x+dx,p.y+dy)){p.x+=dx;p.y+=dy;break outer}return p}return spawnBefore.apply(this,arguments)}}
+{const music=musZoneNow;musZoneNow=function(){if(P){if(P.map===ELF4.ravina)return 'jungle';if(P.map===ELF4.ambar)return 'desert'}return music()}}
+for(const map of [ELF4.ravina,ELF4.ambar]){const m=MAPS[map],seen=e4Reach(map,4,35);
+ for(const sp of m.spawns){const p=findSpot(m,sp[1],sp[2]);if(seen.has(p[0]+','+p[1]))continue;let best=null,bd=1e9;for(const k of seen){const [x,y]=k.split(',').map(Number);if(inSafe(m,x,y))continue;const d=Math.abs(x-sp[1])+Math.abs(y-sp[2]);if(d<bd){bd=d;best=[x,y]}}if(best){sp[1]=best[0];sp[2]=best[1]}}}
+</script>

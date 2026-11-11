@@ -12796,7 +12796,7 @@ for(const [k,q] of Object.entries(PROFESSIONS)){const human={place:q.place,map:q
      const bt=prof.querySelector('#professionTrack');if(bt){const on=P.track==='oficina_elfo';bt.textContent=on?'✕ Parar de rastrear':'🎯 Rastrear oficina';bt.className=on?'gold':'';bt.onclick=()=>{P.track=on?null:'oficina_elfo';P.guide=null;save(true);renderPanel()}}}
     if(!b.querySelector('.quest'))b.append(el('<p style="color:var(--muted)">Nenhuma missão élfica aqui por enquanto. A história élfica fica na aba <b>📜 História</b>.</p>'));
    }
-   if(QTAB==='dia')for(const p of [...b.querySelectorAll('p')])if(/Caçadora Bruna/.test(p.textContent))p.innerHTML='As caçadas diárias são organizadas pelos humanos, no Salão das Missões de Vussumi.';
+   if(QTAB==='dia')for(const p of [...b.querySelectorAll('p')])if(/Caçadora Bruna/.test(p.textContent))p.innerHTML='Além dos Contratos do Dia, os humanos organizam caçadas extras no Salão das Missões de Vussumi.';
    if(QTAB==='ent'){const bar=b.querySelector('.chips');const keep=bar?[bar]:[];b.innerHTML='';for(const k of keep)b.append(k);b.append(el('<p style="color:var(--muted)">As entregas diárias são da Intendente Clara, em Vussumi, nas terras dos humanos.</p>'))}
   }}catch(e){console.error(e)}
   return r};
@@ -13871,4 +13871,38 @@ function elfGuideTalk(){say('Guia Lirael','<i>"Perdido, viajante? Eu conheço ca
  NEWNPCS.push({id:'guia_lirael',n:'Guia Lirael',map:'sylvaren',x:spot[0],y:spot[1],wander:false,pal:EPAL('#3a7a5a','#e8d8a0'),lines:['Perdido? Fale comigo.','Eu mostro onde caçar.'],talk:elfGuideTalk})}
 /* O Guia Tião também explica a seta */
 {const gb=guideTalk2;guideTalk2=function(){gb.apply(this,arguments);const o=$('#dlgOpts');if(o&&!o.querySelector('[data-nav]')){const b=document.createElement('button');b.dataset.nav=1;b.textContent='🧭 Como não se perder';b.onclick=()=>navHelp(guideTalk2);o.insertBefore(b,o.children[1]||null)}}}
+</script>
+<script>
+/* ===== Contratos do Dia: diárias que acompanham o nível do jogador (humanos e elfos) ===== */
+'use strict';
+const CT_N=3,CT_KILLS=.6,CT_RW=.35,CT_BONUS=.3;
+const ctElfMap=k=>k==='sylvaren'||/^e_/.test(k);
+function ctCandidates(L){const out={};for(const k in MONBY){if(HOUSES.has(k)||/^(arena|dg|torre|selo\d|ship|kol_selo|trono_divino|ilha230)/.test(k))continue;
+  for(const o of MONBY[k]){if(o.tmp||!MON[o.type]||MON[o.type].boss)continue;const lv=o.lv||MON[o.type].lv[0];if(lv<L-6||lv>L+3)continue;const c=out[o.type]||(out[o.type]={type:o.type,maps:{},n:0,lv:[]});c.maps[k]=(c.maps[k]||0)+1;c.n++;c.lv.push(lv)}}
+ return Object.values(out).filter(c=>c.n>=3).map(c=>{const map=Object.entries(c.maps).sort((a,b)=>b[1]-a[1])[0][0];return{type:c.type,map,lv:Math.round(c.lv.reduce((a,b)=>a+b,0)/c.lv.length)}})}
+function ctGen(){const L=P.lvl,fac=P.fac==='elfo'?'elfo':'humano',all=ctCandidates(L),mine=all.filter(c=>fac==='elfo'?ctElfMap(c.map):!ctElfMap(c.map)),rest=all.filter(c=>!mine.includes(c));
+ let seed=0;for(const ch of today()+(P.name||''))seed=(seed*31+ch.charCodeAt(0))|0;const r=rng(Math.abs(seed)+L);const shuf=a=>a.map(x=>[r(),x]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
+ const pick=(mine.length?shuf(mine):shuf(rest)).slice(0,CT_N),mul=pick.length?CT_N/pick.length:1,k=Math.max(10,Math.round(killsPL(L)*CT_KILLS*mul));
+ P.ct={d:today(),L,mul,bonus:0,told:0,list:pick.map(c=>({type:c.type,map:c.map,lv:c.lv,need:k,base:P.kills[c.type]||0,done:0}))}}
+function ctState(){if(!P)return null;if(!P.ct||P.ct.d!==today())ctGen();return P.ct}
+const ctN=c=>Math.max(0,(P.kills[c.type]||0)-c.base);
+const ctXp=S=>dailyXP(Math.round(need(S.L)*CT_RW*(S.mul||1))),ctGold=S=>Math.round(S.L*15*(S.mul||1)),ctBonusXp=S=>dailyXP(Math.round(need(S.L)*CT_BONUS));
+function ctGoal(i){const S=ctState(),c=S&&S.list[i];if(!c||c.done)return null;const m=MAPS[c.map];const o=(MONBY[c.map]||[]).find(o=>o.type===c.type&&!o.dead)||(m.spawns||[]).map(s=>({x:s[1],y:s[2],type:s[0]})).find(s=>s.type===c.type);if(!o)return null;
+ return{name:`Contrato: ${MON[c.type].n} (${Math.min(ctN(c),c.need)}/${c.need})`,map:c.map,x:o.x,y:o.y}}
+{const qb=questGoal;questGoal=function(){if(P&&typeof P.track==='string'&&P.track.startsWith('contrato:')){try{return ctGoal(+P.track.split(':')[1])}catch(e){return null}}return qb.apply(this,arguments)}}
+/* recompensa na hora, sem voltar a ninguém */
+{let tk=0;const upd=update;update=function(){const r=upd.apply(this,arguments);
+  if(P&&!P.dead&&nowT>=tk){tk=nowT+1000;try{const S=ctState();if(!S.told&&S.list.length){S.told=1;log('📅 Novos Contratos do Dia: '+S.list.map(c=>MON[c.type].n).join(', ')+'. Veja em Missões → Diárias.','q')}
+   S.list.forEach((c,i)=>{if(!c.done&&ctN(c)>=c.need){c.done=1;const xp=ctXp(S),g=ctGold(S);P.gold+=g;gainXp(xp);sfx('ach');toast(null,`📅 Contrato concluído: +${xp.toLocaleString('pt-BR')} XP · +${g.toLocaleString('pt-BR')} ouro`);log(`Contrato do Dia concluído (${MON[c.type].n}): +${xp.toLocaleString('pt-BR')} XP.`,'lv');
+     if(P.track==='contrato:'+i){const nx=S.list.findIndex(x=>!x.done);P.track=nx>=0?'contrato:'+nx:'story'}save(true)}});
+   if(!S.bonus&&S.list.length&&S.list.every(c=>c.done)){S.bonus=1;const xp=ctBonusXp(S),pot=S.L>=40?'pocao_vida_g':'pocao_vida';gainXp(xp);addItem(pot,10);sfx('lvl');toast(itemIcon(pot),`📅 Todos os contratos do dia: +${xp.toLocaleString('pt-BR')} XP e 10 poções!`);log('Você cumpriu todos os Contratos do Dia. Amanhã tem mais.','lv');save(true)}}catch(e){console.error(e)}}
+  return r}}
+/* aba Missões → Diárias */
+{const qb=pQuest;pQuest=function(b){const r=qb.apply(this,arguments);
+ try{if(typeof QTAB!=='undefined'&&QTAB==='dia'){const S=ctState(),done=S.list.filter(c=>c.done).length;
+  const cards=S.list.length?S.list.map((c,i)=>{const n=Math.min(ctN(c),c.need),tr=P.track==='contrato:'+i;return `<div class="quest ${c.done?'done':''}"><h4>🎯 ${esc(MON[c.type].n)} <small style="color:var(--muted)">· nível ${c.lv}</small>${c.done?'':` <button data-ct="${i}" style="float:right;font-size:11px;padding:2px 8px" class="${tr?'gold':''}">${tr?'Rastreando':'Rastrear'}</button>`}</h4><p>${c.done?'✅ Concluído':'⬜ Derrote '+c.need+' · '+n+'/'+c.need}<br><small>Onde: <b>${esc(MAPN[c.map]||c.map)}</b> · Recompensa: ${ctXp(S).toLocaleString('pt-BR')} XP · ${ctGold(S).toLocaleString('pt-BR')} ouro</small></p></div>`}).join(''):'<div class="quest"><p>Nenhum monstro do seu nível por perto hoje.</p></div>';
+  const box=el(`<div><div class="sect">📅 Contratos do Dia <span>${done}/${S.list.length}</span></div><p style="color:var(--muted);font-size:12px;margin:0 0 8px">Renovam todo dia, sempre no seu nível. A recompensa chega na hora: não precisa voltar a ninguém. Cumpra os três e ganhe <b>+${ctBonusXp(S).toLocaleString('pt-BR')} XP</b> e 10 poções${S.bonus?' ✅':''}.</p>${cards}</div>`);
+  const first=b.querySelector('.sect');const nodes=[...box.childNodes];if(first)first.before(...nodes);else b.append(...nodes);
+  b.querySelectorAll('[data-ct]').forEach(bt=>bt.onclick=()=>{trackMission('contrato:'+bt.dataset.ct);renderPanel()})}}catch(e){console.error(e)}
+ return r}}
 </script>

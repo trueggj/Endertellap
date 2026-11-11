@@ -4894,7 +4894,7 @@ function travel_e(who,from){const opts=[];const ks=Object.keys(PORTS).filter(k=>
  for(const k of ks){
   const d=PORTS[k],fee=from===V75_KOL&&k==='goodyear'?0:100;
   opts.push([`${d.n} · ${fee?fee+' ouro':'retorno gratuito'}`,()=>{
-   if(d.minLevel&&P.lvl<d.minLevel){say(d.n,`Você poderá visitar o cais e as ruas abertas ao chegar ao nível ${d.minLevel}. ${d.minMsg||'A patrulha mantém o bairro das fendas isolado.'}`,[['Voltar às rotas',()=>travel(who,from)],['Fechar',closeAll]]);return}
+   if(d.minLevel&&P.lvl<d.minLevel){say(d.n,d.minMsg||`Você poderá visitar o cais e as ruas abertas ao chegar ao nível ${d.minLevel}. A patrulha mantém o bairro das fendas isolado.`,[['Voltar às rotas',()=>travel(who,from)],['Fechar',closeAll]]);return}
    if(P.gold<fee){toast(null,'Ouro insuficiente para a viagem');return}
    P.gold-=fee;closeAll();teleport({to:d.map,tx:d.x,ty:d.y});toast(null,`Você chegou: ${d.n}`);save(true);
   }]);
@@ -13117,7 +13117,7 @@ for(const k of ['sylvaren','e_cristal','e_fronteira','e_bosque','e_vale_branco',
 }
 </script>
 <script>
-/* ===== Ato da Armadilha (humanos: Ato IV · elfos: Ato III) — o Selo de Jaogg em Kol Kar ===== */
+/* ===== Ato da Armadilha (humanos: Ato IV · elfos: Ato III) — o Selo de Jaogg (Ilha do Selo Esquecido) ===== */
 'use strict';
 const SELO='kol_selo';
 /* --- Mapa do Selo --- */
@@ -13127,14 +13127,14 @@ DK2.e_selo_jaogg=(R,W,H,t,d)=>{const a=.5+.4*Math.sin(t*2),open=P&&P.fl&&P.fl.tr
  for(let y=1;y<20;y++)for(let x=1;x<26;x++){const d=Math.hypot((x-13)/11,(y-10)/8.5);if(d>1)setT(m,x,y,ELF_T.OBS);else if(d>.88)setT(m,x,y,ELF_T.PCARPET)}
  for(const [x,y] of [[4,4],[22,4],[4,16],[22,16]])setT(m,x,y,ELF_T.OBSPIL);
  setT(m,13,20,TL.EXIT);m.portals.push({x:13,y:20,to:V75_KOL,tx:26,ty:30});m.spawns.push(['kol_guardiao_selo',13,6]);m.grown=1;
- MAPS[SELO]=m;MAPN[SELO]='Selo de Jaogg';ZLV[SELO]='nível 350+';deco(SELO,11,8,'e_selo_jaogg',4,3);}
+ MAPS[SELO]=m;MAPN[SELO]='Selo de Jaogg';ZLV[SELO]='chefe · nível 350';deco(SELO,11,8,'e_selo_jaogg',4,3);}
 const bigPerson=pal=>{const c=document.createElement('canvas');c.width=c.height=32;const g=c.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(human(pal),0,0,32,32);return c};
-MSPR.kol_guardiao_selo=tintSpr(MSPR.sentinel||MSPR.wolf,'#e8c060',.45);mkMon('kol_guardiao_selo','Guardião do Selo','kol_guardiao_selo',360,360,{hp:40,atk:2,def:2,xp:40,x:{boss:1,big:1,resp:600},loot:[['frag_lendario',5],['essencia_celeste',2]]});MON.kol_guardiao_selo.el='raio';SPAWNED.add('kol_guardiao_selo');REG.kol_guardiao_selo='Selo de Jaogg, Kol Kar';
+MSPR.kol_guardiao_selo=tintSpr(MSPR.sentinel||MSPR.wolf,'#e8c060',.45);mkMon('kol_guardiao_selo','Guardião do Selo','kol_guardiao_selo',350,350,{hp:40,atk:2,def:2,xp:40,x:{boss:1,big:1,resp:600},loot:[['frag_lendario',5],['essencia_celeste',2]]});MON.kol_guardiao_selo.el='raio';SPAWNED.add('kol_guardiao_selo');REG.kol_guardiao_selo='Templo do Selo, Ilha do Selo Esquecido';
 MSPR.kael_sombra=bigPerson({h:'#140a1a',c:'#4a1a6a',d:'#2a0a3a',s:'#d8c8d0'});mkMon('kael_sombra','Servo de Kael','kael_sombra',355,365,{hp:2.5,atk:2.2});MON.kael_sombra.el='sombra';
 const JAOGG_IMG=bigPerson({h:'#f8f8f8',c:'#f0e0a0',d:'#c8a850',s:'#f0d8c0'}),KAEL_IMG=bigPerson({h:'#1a0a20',c:'#5a1a7a',d:'#2a0a3a',s:'#e0d0d8'});
 NEWNPCS.push(
  {id:'kol_fenda',n:'Fenda do Selo',map:V75_KOL,x:26,y:29,sign:1,wander:false,talk:()=>trapFenda()},
- {id:'selo_jaogg',n:'Selo de Jaogg',map:SELO,x:14,y:11,still:1,wander:false,img0:(()=>{const c=document.createElement('canvas');c.width=c.height=16;return c})(),lines:['...'],talk:()=>say('Selo de Jaogg','Um círculo dourado gravado no chão, mais antigo que Kol Kar. Algo roxo pulsa embaixo dele.',[['Fechar',closeAll]])},
+ {id:'selo_jaogg',n:'Selo de Jaogg',map:SELO,x:14,y:11,still:1,wander:false,img0:(()=>{const c=document.createElement('canvas');c.width=c.height=16;return c})(),lines:['...'],talk:()=>say('Selo de Jaogg','Um círculo dourado gravado no chão, mais antigo que qualquer cidade de Endertell. Algo roxo pulsa embaixo dele.',[['Fechar',closeAll]])},
  {id:'jaogg',n:'Jaogg',map:'oculto',x:13,y:11,still:1,wander:false,img0:JAOGG_IMG,lines:['...'],talk:()=>{}},
  {id:'kael',n:'Kael',map:'oculto',x:13,y:4,still:1,wander:false,img0:KAEL_IMG,lines:['...'],talk:()=>{}},
  {id:'ezequiel_vus',n:'Ezequiel',map:'oculto',x:11,y:5,wander:false,pal:EPAL('#5a5a6a','#c8d0d8'),lines:['...'],talk:()=>say('Ezequiel','Um elfo de capa cinza, com uma luva na mão esquerda. Ele observa os humanos da torre com cuidado.<br><br><i>"Não vim lutar. Vim avisar."</i>',[['Até mais',closeAll]])},
@@ -13145,41 +13145,41 @@ const KAEL_ABISMO=['cao_abissal','espectro_abismo','harpia_vazio','colosso_abiss
 const TRAP_ACT={
  humano:[
   {n:'O Que Dave Sabe',start:'dave_oraculo',back:'dave_oraculo',minLv:250,tasks:[],
-   intro:'<i>"Você voltou. Então escute com atenção."</i><br><br><i>"Quando Jaogg prendeu o poder do irmão, escondeu o selo no lugar mais fundo de Endertell: debaixo de <b>Kol Kar</b>, a cidade dos Az Abel. Por isso Kael espalha a marca roxa pelos dois povos: ele precisa de mãos para abrir o que não consegue tocar."</i>',
+   intro:'<i>"Você voltou. Então escute com atenção."</i><br><br><i>"Quando Jaogg prendeu o poder do irmão, escondeu o selo numa ilha que não aparece em nenhum mapa: a <b>Ilha do Selo Esquecido</b>. Só os barqueiros mais velhos ainda sabem o caminho. Por isso Kael espalha a marca roxa pelos dois povos: ele precisa de mãos para abrir o que não consegue tocar."</i>',
    done:'<i>"Se o selo for aberto por quem quer protegê-lo, o poder pode ser destruído para sempre. Mas você não vai conseguir sozinho. Volte a Vussumi. Alguém que você não espera está esperando por você na Torre Arcana."</i>',rw:2},
   {n:'O Enviado',start:'eldoran',back:'eldoran',minLv:250,tasks:[{t:'talk',npc:'ezequiel_vus',l:'Fale com o elfo que chegou à Torre Arcana',
-    line:'<i>"Meu nome é Ezequiel. Sou elfo, e sei o que isso significa para vocês. Também sei o que é carregar a marca roxa: eu a carreguei por muito tempo."</i><br><br>Ele tira a luva e mostra a cicatriz de queimadura.<br><br><i>"Kael está preparando algo em Kol Kar. Os Humanos Sombrios estão se juntando no Abismo Eterno. Eu vou com vocês, se aceitarem."</i>'}],
+    line:'<i>"Meu nome é Ezequiel. Sou elfo, e sei o que isso significa para vocês. Também sei o que é carregar a marca roxa: eu a carreguei por muito tempo."</i><br><br>Ele tira a luva e mostra a cicatriz de queimadura.<br><br><i>"Kael está preparando algo na Ilha do Selo Esquecido. Os Humanos Sombrios estão se juntando no Abismo Eterno. Eu vou com vocês, se aceitarem."</i>'}],
    intro:'Eldoran está tenso. Lyra, ao lado dele, não tira os olhos de alguém no canto da torre.<br><br><i>"Um <b>elfo</b> entrou em Vussumi pedindo para falar com você. Os guardas quase o prenderam. Ele diz que Dave o mandou."</i><br><br>Lyra cruza os braços: <i>"Eu não confio nele. Ele tem o mesmo cheiro que o simbionte tinha."</i>',
    done:'<i>"Ele mostrou a cicatriz"</i>, diz Eldoran. <i>"Um homem não inventa uma dor dessas. Vamos confiar nele, mas de olhos abertos."</i><br><br>Lyra não responde.',rw:2},
-  {n:'A Estrada de Kol Kar',start:'ezequiel_vus',back:'ezequiel_vus',minLv:280,tasks:[{t:'kill',mon:KAEL_ABISMO,q:30,l:'Derrote 30 criaturas no Abismo Eterno'}],
-   intro:'<i>"Antes de Kol Kar, precisamos enfraquecer o exército que Kael reúne no <b>Abismo Eterno</b>. Derrote 30 deles."</i>',
-   done:'<i>"Viu as marcas? Humanos Sombrios, simbiontes, criaturas do vazio, todos com a marca roxa. Kael está juntando tudo o que tem. Quando estiver forte, siga para Kol Kar. A <b>Fenda do Selo</b> fica no cais."</i>',rw:3},
-  {n:'O Selo de Jaogg',start:'ezequiel_vus',back:'selo_jaogg',minLv:350,tasks:[{t:'boss',mon:'kol_guardiao_selo',l:'Derrote o Guardião do Selo, embaixo de Kol Kar'}],
-   intro:'<i>"O selo tem um guardião deixado por Jaogg. Ele não sabe quem é amigo. Você vai precisar vencê-lo para chegar ao selo. Entre pela <b>Fenda do Selo</b>, no cais de Kol Kar."</i>',
+  {n:'A Estrada do Selo',start:'ezequiel_vus',back:'ezequiel_vus',minLv:280,tasks:[{t:'kill',mon:KAEL_ABISMO,q:30,l:'Derrote 30 criaturas no Abismo Eterno'}],
+   intro:'<i>"Antes da ilha, precisamos enfraquecer o exército que Kael reúne no <b>Abismo Eterno</b>. Derrote 30 deles."</i>',
+   done:'<i>"Viu as marcas? Humanos Sombrios, simbiontes, criaturas do vazio, todos com a marca roxa. Kael está juntando tudo o que tem. Quando estiver forte, pegue um barco para a <b>Ilha do Selo Esquecido</b>. Qualquer barqueiro leva você, a partir do nível 300."</i>',rw:3},
+  {n:'O Selo de Jaogg',start:'ezequiel_vus',back:'selo_jaogg',minLv:340,tasks:[{t:'boss',mon:'kol_guardiao_selo',l:'Derrote o Guardião do Selo, no templo da Ilha do Selo Esquecido'}],
+   intro:'<i>"O selo tem um guardião deixado por Jaogg. Ele não sabe quem é amigo. Você vai precisar vencê-lo para chegar ao selo. O templo fica no alto da <b>Ilha do Selo Esquecido</b>."</i>',
    done:'O guardião se desfaz em luz dourada. No centro da sala, o selo de Jaogg brilha. Embaixo dele, algo roxo pulsa como um coração.',rw:3},
-  {n:'A Armadilha',start:'selo_jaogg',back:'eldoran',minLv:350,tasks:[{t:'event',id:'armadilha',l:'Toque no selo'}],trap:1,intro:'',
+  {n:'A Armadilha',start:'selo_jaogg',back:'eldoran',minLv:340,tasks:[{t:'event',id:'armadilha',l:'Toque no selo'}],trap:1,intro:'',
    done:'Eldoran escuta tudo de pé, segurando o cajado com força.<br><br><i>"Jaogg desceu por você. E Kael sabia que ele desceria. Tudo isso, desde o começo, era para tirar um deus do lugar dele."</i>',rw:4},
-  {n:'Depois da Queda',start:'eldoran',back:'eldoran',minLv:350,tasks:[{t:'talk',npc:'elric',l:'Conte ao Sábio Edrin o que aconteceu',line:'<i>"Um deus preso, e o irmão dele com o poder dos dois."</i> Edrin fecha os olhos. <i>"Só sobrou uma coisa que Kael não tem: os dois últimos povos. Juntos."</i>'},{t:'talk',npc:'lyra',l:'Fale com Lyra',line:'Lyra está sentada sozinha. <i>"Eu senti a voz de Kael quando o simbionte me prendia. Ele não grita. Ele sorri. Quando ele sorriu para Jaogg, eu senti de novo."</i><br><br><i>"Eu estava errada sobre o elfo. Ele voltou para nos tirar de lá."</i>'}],
+  {n:'Depois da Queda',start:'eldoran',back:'eldoran',minLv:340,tasks:[{t:'talk',npc:'elric',l:'Conte ao Sábio Edrin o que aconteceu',line:'<i>"Um deus preso, e o irmão dele com o poder dos dois."</i> Edrin fecha os olhos. <i>"Só sobrou uma coisa que Kael não tem: os dois últimos povos. Juntos."</i>'},{t:'talk',npc:'lyra',l:'Fale com Lyra',line:'Lyra está sentada sozinha. <i>"Eu senti a voz de Kael quando o simbionte me prendia. Ele não grita. Ele sorri. Quando ele sorriu para Jaogg, eu senti de novo."</i><br><br><i>"Eu estava errada sobre o elfo. Ele voltou para nos tirar de lá."</i>'}],
    intro:'<i>"Fale com Edrin e com Lyra. Precisamos estar todos juntos para o que vem."</i>',
    done:'Eldoran abre um mapa sobre a mesa.<br><br><i>"Kael tem a Espada Abissal e o poder de Jaogg. Ele não vai mais se esconder. E o hino é claro: ele só cai quando homens e elfos lutarem lado a lado."</i><br><br><i>"Ezequiel voltou a Peace para convencer o rei deles. Nós vamos preparar Vussumi."</i><br><br><b>Fim do Ato IV. A batalha final contra Kael chega em uma próxima atualização.</b>',rw:5}
  ],
  elfo:[
   {n:'O Que Dave Sabe',start:'dave_oraculo',back:'dave_oraculo',minLv:250,tasks:[],
-   intro:'<i>"Você carrega o hino, então já sabe que Jaogg prendeu o poder do irmão. Eu sei onde: debaixo de <b>Kol Kar</b>, a cidade dos Az Abel. É por isso que Kael precisa da marca roxa: ele não consegue tocar o selo com as próprias mãos."</i>',
+   intro:'<i>"Você carrega o hino, então já sabe que Jaogg prendeu o poder do irmão. Eu sei onde: na <b>Ilha do Selo Esquecido</b>, que não aparece em nenhum mapa. Só os barqueiros mais velhos sabem o caminho. É por isso que Kael precisa da marca roxa: ele não consegue tocar o selo com as próprias mãos."</i>',
    done:'<i>"Volte a Peace. Um humano chegou lá pedindo para falar com Walter, e ninguém sabe se prende ou ouve."</i>',rw:2},
   {n:'O Enviado',start:'peace_walter',back:'peace_walter',minLv:250,tasks:[{t:'talk',npc:'eldoran_peace',l:'Fale com o mago humano no Arquivo da Coroa',
     line:'<i>"Sou Eldoran, guardião dos selos de Vussumi. Trinta anos atrás, ajudei a prender um demônio que vocês conheceram como Vorath. Agora quem está solto é algo pior."</i><br><br>Ele olha para Walter: <i>"Seu velho aqui me odeia. Tudo bem. Eu também não confio em elfos. Mas Kael não liga para isso."</i>'}],
    intro:'Walter está de pé, de braços cruzados, olhando para um velho humano que lê os livros do arquivo como se fosse dono deles.<br><br><i>"Um <b>humano</b> no Arquivo da Coroa. Petrick deixou. Eu não teria deixado."</i>',
    done:'Walter resmunga: <i>"Ele lutou contra um demônio por trinta anos. Eu luto contra uma memória há mais tempo que isso."</i><br><br><i>"Vá com ele. Mas se ele trair você, eu mesmo vou buscá-lo."</i>',rw:2},
-  {n:'A Estrada de Kol Kar',start:'eldoran_peace',back:'eldoran_peace',minLv:280,tasks:[{t:'kill',mon:KAEL_ABISMO,q:30,l:'Derrote 30 criaturas no Abismo Eterno'}],
-   intro:'<i>"Os Elfos Sombrios que sobraram da Cidadela estão se juntando no <b>Abismo Eterno</b>, com simbiontes e criaturas do vazio. Derrote 30 deles antes que cheguem a Kol Kar."</i>',
-   done:'<i>"Kael está juntando tudo o que tem. Quando estiver forte, vá a Kol Kar. A <b>Fenda do Selo</b> fica no cais."</i>',rw:3},
-  {n:'O Selo de Jaogg',start:'eldoran_peace',back:'selo_jaogg',minLv:350,tasks:[{t:'boss',mon:'kol_guardiao_selo',l:'Derrote o Guardião do Selo, embaixo de Kol Kar'}],
-   intro:'<i>"Jaogg deixou um guardião no selo. Ele não distingue amigos de inimigos. Entre pela <b>Fenda do Selo</b>, no cais de Kol Kar, e vença-o."</i>',
+  {n:'A Estrada do Selo',start:'eldoran_peace',back:'eldoran_peace',minLv:260,tasks:[{t:'kill',mon:['e_afogado','e_serpente_brejo','e_bruxa_brejo','e_simbionte_lodo'],q:30,l:'Derrote 30 criaturas no Pântano das Lágrimas'}],
+   intro:'<i>"Os servos de Kael estão se juntando no <b>Pântano das Lágrimas</b>, depois das Ruínas de Lúmen, a leste da Cidadela Sombria. Derrote 30 deles antes que cheguem à ilha."</i>',
+   done:'<i>"Kael está juntando tudo o que tem. Quando estiver forte, pegue um barco para a <b>Ilha do Selo Esquecido</b>. A Barqueira Naeris leva você, a partir do nível 300."</i>',rw:3},
+  {n:'O Selo de Jaogg',start:'eldoran_peace',back:'selo_jaogg',minLv:340,tasks:[{t:'boss',mon:'kol_guardiao_selo',l:'Derrote o Guardião do Selo, no templo da Ilha do Selo Esquecido'}],
+   intro:'<i>"Jaogg deixou um guardião no selo. Ele não distingue amigos de inimigos. O templo fica no alto da <b>Ilha do Selo Esquecido</b>. Vença-o."</i>',
    done:'O guardião se desfaz em luz dourada. No centro da sala, o selo de Jaogg brilha, e embaixo dele algo roxo pulsa como um coração.',rw:3},
-  {n:'A Armadilha',start:'selo_jaogg',back:'peace_walter',minLv:350,tasks:[{t:'event',id:'armadilha',l:'Toque no selo'}],trap:1,intro:'',
+  {n:'A Armadilha',start:'selo_jaogg',back:'peace_walter',minLv:340,tasks:[{t:'event',id:'armadilha',l:'Toque no selo'}],trap:1,intro:'',
    done:'Walter escuta tudo em silêncio. Quando você diz que Jaogg desceu para salvar você, ele se senta devagar.<br><br><i>"Na Guerra dos Onze, Kael também deixou os povos se matarem até alguém pedir socorro aos deuses. É sempre o mesmo truque."</i>',rw:4},
-  {n:'Depois da Queda',start:'peace_walter',back:'peace_walter',minLv:350,tasks:[{t:'talk',npc:'peace_petrick',l:'Conte ao Grande Rei Petrick How o que aconteceu',line:'Petrick ouve tudo sem interromper.<br><br><i>"Jaogg nos escolheu no início dos tempos. E agora está preso porque desceu por um de nós."</i><br><br>Ele olha para Eldoran, no fundo da sala. <i>"Se o hino diz que só os dois povos juntos derrubam Kael, então a coroa de Peace vai conversar com os homens. Pela primeira vez desde a guerra."</i>'}],
+  {n:'Depois da Queda',start:'peace_walter',back:'peace_walter',minLv:340,tasks:[{t:'talk',npc:'peace_petrick',l:'Conte ao Grande Rei Petrick How o que aconteceu',line:'Petrick ouve tudo sem interromper.<br><br><i>"Jaogg nos escolheu no início dos tempos. E agora está preso porque desceu por um de nós."</i><br><br>Ele olha para Eldoran, no fundo da sala. <i>"Se o hino diz que só os dois povos juntos derrubam Kael, então a coroa de Peace vai conversar com os homens. Pela primeira vez desde a guerra."</i>'}],
    intro:'<i>"O rei precisa ouvir isso de você, não de mim."</i>',
    done:'Walter pega a espada da Guarda da Lua.<br><br><i>"Petrick vai falar com os humanos. Eu não gosto disso. Mas Lirien gostaria."</i><br><br><b>Fim do Ato III élfico. A batalha final contra Kael chega em uma próxima atualização.</b>',rw:5}
  ]
@@ -13209,7 +13209,7 @@ function trapTalk(n){
 }
 function trapFenda(){
  const E=P&&P.fl&&P.fl.trap,C=trapOpen()&&trapCh(),idx=E?E.ch:0;
- if(!trapOpen()||idx<3||(idx===3&&!E.started)){say('Fenda do Selo','Uma rachadura no chão do cais, fechada por uma luz dourada. Ninguém em Kol Kar sabe para onde ela leva.',[['Fechar',closeAll]]);return}
+ if(!trapOpen()||idx<3||(idx===3&&!E.started)){say('Portão do Templo','Um portão dourado, selado por uma luz que não deixa ninguém passar. Gravado em cima, um nome: <b>JAOGG</b>.',[['Fechar',closeAll]]);return}
  closeAll();teleport({to:SELO,tx:13,ty:18});
 }
 /* --- O evento: ondas sem fim, Jaogg desce, Kael drena o poder --- */
@@ -13261,11 +13261,11 @@ function trapEnd(){
  storyGoal=function(){
   if(trapOpen()){const E=trapS(),C=trapCh();
    if(C){const nm=trapActName(),who=id=>({name:nm+': falar com '+elfNpcName(id),...npcAt(id)});
-    if(!E.started)return P.lvl<C.minLv?{name:nm+': chegue ao nível '+C.minLv,map:P.map,x:P.x,y:P.y,noArrow:1}:C.start==='selo_jaogg'?{name:nm+': toque no Selo de Jaogg (Fenda do Selo, cais de Kol Kar)',...npcAt('kol_fenda')}:who(C.start);
+    if(!E.started)return P.lvl<C.minLv?{name:nm+': chegue ao nível '+C.minLv,map:P.map,x:P.x,y:P.y,noArrow:1}:C.start==='selo_jaogg'?{name:nm+': toque no Selo de Jaogg (templo da Ilha do Selo Esquecido)',...npcAt('kol_fenda')}:who(C.start);
     const t=C.tasks.find(t=>!trapOk(t));if(!t)return C.back==='selo_jaogg'&&P.map!==SELO?{name:nm+': volte ao Selo de Jaogg',...npcAt('kol_fenda')}:who(C.back);
     if(t.t==='talk')return{name:nm+': '+t.l,...npcAt(t.npc)};
     if(t.t==='event')return P.map===SELO?{name:nm+': toque no selo',map:SELO,x:13,y:12}:{name:nm+': '+t.l,...npcAt('kol_fenda')};
-    if(t.t==='boss')return P.map===SELO?{name:nm+': '+t.l,map:SELO,x:13,y:6}:{name:nm+': '+t.l+' (Fenda do Selo, cais de Kol Kar)',...npcAt('kol_fenda')};
+    if(t.t==='boss')return P.map===SELO?{name:nm+': '+t.l,map:SELO,x:13,y:6}:{name:nm+': '+t.l+' (templo da Ilha do Selo Esquecido)',...npcAt('kol_fenda')};
     const mon=t.mon[0];for(const k in MAPS){const s=(MAPS[k].spawns||[]).find(x=>x[0]===mon);if(s)return{name:nm+': '+t.l,map:k,x:s[1],y:s[2]}}}}
   return goalBefore.apply(this,arguments)};
  const qBefore=pQuest;
@@ -13277,4 +13277,113 @@ function trapEnd(){
   return r};
 }
 B70_ROOTS.add(SELO);
+</script>
+<script>
+/* ===== Elfos 200 a 350: Ruínas de Lúmen, Pântano das Lágrimas e Cumes do Crepúsculo · Ilha do Selo Esquecido ===== */
+'use strict';
+const ELF3={lumen:'e_lumen',pantano:'e_pantano',cumes:'e_cumes',ilha:'ilha_selo'};
+/* --- Tiles --- */
+const lgrass=(g,r,v)=>{px(g,0,0,16,16,v%2?'#2c3858':'#30405e');for(let i=0;i<14;i++)px(g,r()*16|0,r()*16|0,1,2,r()<.5?'#8ea0c8':'#232c48');if(r()<.6)px(g,r()*15|0,r()*15|0,1,1,'#ffffff');if(r()<.25)px(g,r()*15|0,r()*15|0,1,1,'#c8d8ff')};
+elfTile('LGRASS',lgrass,false,'#30405e');
+elfTile('LTREE',(g,r,v)=>{lgrass(g,r,v);px(g,7,8,2,8,'#e8ecf8');px(g,7,8,1,8,'#c8cce0');disc(g,8,6,6,'#a8b8e0');disc(g,6,4,3,'#d0dcf8');disc(g,10,5,3,'#e8f0ff');px(g,4+(r()*8|0),2+(r()*6|0),1,1,'#ffffff')},true,'#a8b8e0');
+elfTile('LRUIN',(g,r,v)=>{px(g,0,0,16,16,'#c8ccd8');for(let y=0;y<16;y+=4)for(let x=(y/4%2)*4;x<16;x+=8){px(g,x,y,7,3,'#dadee8');px(g,x,y+3,7,1,'#9aa0b0')}px(g,2,0,2,10,'#4a7a5a');px(g,3,3,1,6,'#6aa07a');if(v%2)px(g,11,2,1,6,'#4a7a5a')},true,'#c8ccd8');
+elfTile('LPATH',(g,r,v)=>{px(g,0,0,16,16,'#9aa2bc');for(let y=0;y<16;y+=5)for(let x=(y/5%2)*3;x<16;x+=6){px(g,x,y,5,4,v%2?'#b0b8d0':'#a8b0c8');px(g,x,y+4,5,1,'#7a82a0')}if(r()<.5)px(g,r()*14|0,r()*14|0,1,1,'#e8f0ff')},false,'#a8b0c8');
+elfTile('LSTAR',(g,r,v)=>{lgrass(g,r,v);px(g,7,7,2,9,'#d8dce8');disc(g,8,5,4,'#a8d8ff');disc(g,8,5,2,'#ffffff');px(g,3,2,1,1,'#ffffff');px(g,12,3,1,1,'#ffffff')},true,'#a8d8ff');
+const mud=(g,r,v)=>{px(g,0,0,16,16,v%2?'#36382a':'#3a3c2c');for(let i=0;i<12;i++)px(g,r()*16|0,r()*16|0,2,1,r()<.5?'#2a2c20':'#4a4c38');if(r()<.4){const x=r()*12|0,y=r()*13|0;px(g,x,y,4,2,'#2a3a3a');px(g,x+1,y,1,1,'#6a8a8a')}};
+elfTile('MUD',mud,false,'#3a3c2c');
+elfTile('BOG',(g,r,v)=>{px(g,0,0,16,16,'#22322a');for(let y=2;y<16;y+=4)px(g,(y*3+v*2)%9,y,6,1,'#3a5a4a');if(r()<.6)px(g,r()*14|0,r()*14|0,2,2,'#4a6a3a')},true,'#22322a');
+elfTile('WILLOW',(g,r,v)=>{mud(g,r,v);px(g,7,6,2,10,'#3a2a1a');disc(g,8,5,6,'#3a5a2a');for(let x=2;x<15;x+=2)px(g,x,6,1,6+(x%3),'#4a7a3a');px(g,5,3,2,1,'#6a9a4a')},true,'#3a5a2a');
+elfTile('REEDS',(g,r,v)=>{mud(g,r,v);for(let i=0;i<6;i++){const x=1+i*2+(r()*2|0);px(g,x,5+(r()*4|0),1,10,'#6a7a3a');px(g,x,4+(r()*3|0),1,3,'#8a5a2a')}},false,'#5a6a3a');
+elfTile('WISP',(g,r,v)=>{mud(g,r,v);disc(g,8,7,4,'#6aff9a');disc(g,8,7,2,'#e0fff0');px(g,3,12,1,1,'#b8ffd0');px(g,12,10,1,1,'#b8ffd0')},true,'#b8ffd0');
+const arock=(g,r,v)=>{px(g,0,0,16,16,v%2?'#6a4a32':'#704e36');for(let i=0;i<12;i++)px(g,r()*16|0,r()*16|0,2,1,r()<.5?'#5a3e28':'#8a6448');if(r()<.4)px(g,r()*15|0,r()*15|0,1,1,'#ffb860')};
+elfTile('AROCK',arock,false,'#6a4a32');
+elfTile('ACLIFF',(g,r,v)=>{px(g,0,0,16,16,'#3a2a22');for(let y=0;y<16;y+=4)px(g,0,y,16,1,'#2a1e18');for(let i=0;i<3;i++)px(g,r()*14|0,r()*14|0,2,3,'#e8902a');px(g,0,0,16,2,'#8a6a5a')},true,'#3a2a22');
+elfTile('ACRYST',(g,r,v)=>{arock(g,r,v);const sh=(x,h,c1,c2)=>{g.fillStyle=c1;g.beginPath();g.moveTo(x,15);g.lineTo(x+2,15-h);g.lineTo(x+4,15);g.fill();px(g,x+1,15-h+3,1,h-4,c2)};sh(2,9,'#e88a2a','#ffd080');sh(7,13,'#f0a040','#fff0c0');sh(11,8,'#d87020','#ffc070')},true,'#f0a040');
+elfTile('APATH',(g,r,v)=>{px(g,0,0,16,16,'#8a6a4a');for(let i=0;i<10;i++)px(g,r()*16|0,r()*16|0,2,1,r()<.5?'#7a5a3a':'#a07a56')},false,'#8a6a4a');
+const sgrass=(g,r,v)=>{px(g,0,0,16,16,v%2?'#7a7a34':'#828238');for(let i=0;i<14;i++)px(g,r()*16|0,r()*16|0,1,2,r()<.5?'#b8a848':'#5a5a24');if(r()<.4)px(g,r()*15|0,r()*15|0,1,1,'#fff0a0')};
+elfTile('SGRASS',sgrass,false,'#828238');
+elfTile('SPATH',(g,r,v)=>{px(g,0,0,16,16,'#d8ccA0');for(let y=0;y<16;y+=5)for(let x=(y/5%2)*3;x<16;x+=6){px(g,x,y,5,4,v%2?'#ece0b8':'#e4d8b0');px(g,x,y+4,5,1,'#a89870')}},false,'#e4d8b0');
+elfTile('SWALL',(g,r,v)=>{px(g,0,0,16,16,'#c8b888');for(let y=0;y<16;y+=5)for(let x=(y/5%2)*4;x<16;x+=8){px(g,x,y,7,4,'#dccc9c');px(g,x,y+4,7,1,'#9a8a5a')}px(g,0,6,16,1,'#e8c060')},true,'#c8b888');
+elfTile('SPILLAR',(g,r,v)=>{sgrass(g,r,v);px(g,5,2,6,14,'#e8dcb0');px(g,5,2,1,14,'#fff4d8');px(g,4,1,8,2,'#d8b860');px(g,4,14,8,2,'#d8b860');disc(g,8,0,2,'#ffe080')},true,'#e8dcb0');
+/* --- Decorações --- */
+DK2.e_estatua_lumen=(R,W,H,t)=>{const a=.5+.4*Math.sin(t*1.4);R(10,40,28,8,'#a0a6b8');R(16,8,16,34,'#d8dce8');R(14,4,20,8,'#e8ecf6');R(18,14,12,4,'#b8c0d8');R(20,0,8,6,`rgba(200,230,255,${a.toFixed(2)})`)};
+DK2.e_salgueiro_mae=(R,W,H,t)=>{R(40,40,16,56,'#3a2a1a');R(8,10,80,40,'#2e4a24');for(let i=0;i<14;i++){const sw=Math.sin(t*1.2+i)*2;R(10+i*6+sw,40,3,22+(i%4)*6,'#4a7a3a')}for(let i=0;i<5;i++){const b=.4+.4*Math.sin(t*2+i);R(14+i*16,70+(i%2)*8,3,3,`rgba(150,255,190,${b.toFixed(2)})`)}};
+DK2.e_ninho_dragao=(R,W,H,t)=>{R(4,40,72,20,'#5a3a24');R(10,34,60,10,'#7a5232');for(let i=0;i<4;i++)R(16+i*14,28-((i%2)*4),10,10,'#e8a040');const a=.4+.4*Math.sin(t*2);R(30,20,20,6,`rgba(255,180,80,${a.toFixed(2)})`)};
+DK2.e_templo_selo=(R,W,H,t)=>{const a=.5+.4*Math.sin(t*1.8);R(0,30,128,34,'#c8b888');R(8,10,112,22,'#dccc9c');R(30,0,68,14,'#e8dcb0');R(56,40,16,24,'#3a2a1a');R(58,42,12,22,`rgba(255,220,120,${a.toFixed(2)})`);for(let x=12;x<120;x+=20)R(x,30,6,34,'#ece0b8');R(54,2,20,8,'#ffe080')};
+/* --- Monstros --- */
+function e3Mon(k,n,base,col,lo,hi,hm,am,el,o={}){if(typeof base==='object'){MSPR[k]=base}else MSPR[k]=tintSpr(MSPR[base]||MSPR.wolf,col,.5);mkMon(k,n,k,lo,hi,Object.assign({hp:hm,atk:am},o));if(el)MON[k].el=el;SPAWNED.add(k)}
+e3Mon('e_estatua_viva','Estátua Viva de Lúmen','sentinel','#d8e0f0',200,215,.75,2.6,'terra');
+e3Mon('e_lobo_estelar','Lobo Estelar','iceWolf','#a8b8ff',205,225,.7,2.8,'gelo');
+e3Mon('e_fada_corrompida','Fada Corrompida','snowSpirit','#b070e0',215,235,.6,3,'sombra');
+e3Mon('e_lanceiro_sombrio','Lanceiro Elfo Sombrio',elfPerson(EPAL('#2a1a3a','#c8c8e0')),'',225,248,.75,2.9,'sombra',{eq:'weapon'});
+e3Mon('e_guardiao_lumen','Guardião de Lúmen','sentinel','#fff0c0',250,250,30,2.2,'raio',{def:2,xp:30,x:{boss:1,big:1,resp:600},loot:[['frag_lendario',3],['essencia_celeste',1]]});
+e3Mon('e_afogado','Elfo Afogado','ghost','#6aa08a',250,262,.7,2.9,'gelo');
+e3Mon('e_serpente_brejo','Serpente do Brejo','boa','#3a5a2a',255,270,.75,3,'terra');
+e3Mon('e_bruxa_brejo','Bruxa do Brejo',elfPerson({h:'#6a6a5a',c:'#3a4a2a',d:'#2a3a1a',s:'#b8c0a0'}),'',265,285,.6,3.2,'sombra',{eq:'weapon'});MON.e_bruxa_brejo.rng=4;
+e3Mon('e_simbionte_lodo','Simbionte do Lodo','symb','#6a7a3a',275,298,.75,3.1,'sombra');
+e3Mon('e_mae_brejo','Mãe do Brejo','spiderQueen','#4a6a3a',300,300,32,2.2,'terra',{def:2,xp:32,x:{boss:1,big:1,resp:600},loot:[['frag_lendario',4],['essencia_celeste',1]]});
+e3Mon('e_wyvern','Wyvern do Crepúsculo','starDragon','#e89040',300,315,.7,3.1,'fogo');
+e3Mon('e_golem_ambar','Golem de Âmbar','lavaGolem','#f0a040',305,325,.8,3,'terra');
+e3Mon('e_celeste_caido','Celeste Caído','fallenAngel','#b07ad0',315,335,.7,3.2,'raio');
+e3Mon('e_arcanista_sombrio','Arcanista Elfo Sombrio',elfPerson(EPAL('#4a0a5a','#e8d8f0')),'',325,348,.6,3.4,'sombra',{eq:'weapon'});MON.e_arcanista_sombrio.rng=4;
+e3Mon('e_dragao_crepusculo','Dragão do Crepúsculo','iceDragonB','#e07a30',350,350,36,2.2,'fogo',{def:2,xp:36,x:{boss:1,big:1,resp:600},loot:[['frag_lendario',5],['essencia_celeste',2]]});
+e3Mon('s_sentinela_dourada','Sentinela Dourada','sentinel','#e8c040',300,320,.75,3.1,'raio');
+e3Mon('s_serpente_celeste','Serpente Celeste','jLizard','#f0e0a0',310,330,.7,3.2,'raio');
+e3Mon('s_corvo_kael','Corvo de Kael','harpy','#3a2a4a',320,340,.65,3.3,'sombra');
+e3Mon('s_cultista_kael','Cultista de Kael','cultist','#7a2a9a',325,348,.6,3.4,'sombra');MON.s_cultista_kael.rng=3;
+/* Equilíbrio com os monstros humanos de nível parecido (Abismo Eterno, Nuvens Partidas, Kol Kar) */
+for(const k of ['e_estatua_viva','e_lobo_estelar','e_fada_corrompida','e_lanceiro_sombrio','e_afogado','e_serpente_brejo','e_bruxa_brejo','e_simbionte_lodo','e_wyvern','e_golem_ambar','e_celeste_caido','e_arcanista_sombrio','s_sentinela_dourada','s_serpente_celeste','s_corvo_kael','s_cultista_kael']){MON[k].hp=Math.round(MON[k].hp*1.8);MON[k].atk=Math.round(MON[k].atk*1.6)}
+for(const k of ['e_guardiao_lumen','e_mae_brejo','e_dragao_crepusculo']){MON[k].atk=Math.round(MON[k].atk*1.3)}
+for(const k of ['e_bruxa_brejo','e_arcanista_sombrio','s_cultista_kael']){MON[k].atk=Math.round(MON[k].atk*.8)}
+/* --- Mapas élficos --- */
+function e3Map(key,name,lv,base,edge,noise,paths,pool,count,extra){
+ const m=M(90,70,base,edge),r=elf2Fill(m,base,noise);m._path=new Set();
+ for(const p of paths.list)elfPath(m,p,paths.tile);
+ elf2Camp(m,2,31,9,39,paths.tile);elf2Camp(m,80,31,87,39,paths.tile);
+ if(extra)extra(m,r);
+ setT(m,0,35,TL.STAIRS);setT(m,1,35,TL.STAIRS);setT(m,0,35,edge);
+ elfSpawns(m,pool,count,r);m.grown=1;MAPS[key]=m;MAPN[key]=name;ZLV[key]=lv;B70_ROOTS.add(key);return m;
+}
+const lumen=e3Map(ELF3.lumen,'Ruínas de Lúmen','nível 200 a 250',ELF_T.LGRASS,ELF_T.LTREE,[[.06,ELF_T.LTREE],[.075,ELF_T.LRUIN],[.085,ELF_T.LSTAR]],{tile:ELF_T.LPATH,list:[[[1,35],[20,35],[30,20],[50,18],[70,30],[88,35]],[[30,20],[34,50],[60,56]]]},
+ [{k:'e_estatua_viva',area:[10,10,50,60]},{k:'e_lobo_estelar',area:[10,2,80,40]},{k:'e_fada_corrompida',area:[40,30,80,68]},{k:'e_lanceiro_sombrio',area:[50,2,80,40]}],70,
+ (m)=>{elf2Oval(m,50,18,10,7,ELF_T.LPATH);elf2Oval(m,60,56,8,6,ELF_T.LPATH);for(const [x,y] of [[42,14],[58,14],[42,22],[58,22]])setT(m,x,y,ELF_T.LRUIN);m.spawns.push(['e_guardiao_lumen',60,56])});
+deco(ELF3.lumen,48,9,'e_estatua_lumen',3,4);
+const pantano=e3Map(ELF3.pantano,'Pântano das Lágrimas','nível 250 a 300',ELF_T.MUD,ELF_T.WILLOW,[[.06,ELF_T.WILLOW],[.12,ELF_T.REEDS],[.2,ELF_T.BOG],[.21,ELF_T.WISP]],{tile:ELF_T.LEAFPATH,list:[[[1,35],[18,32],[34,40],[50,30],[66,38],[88,35]],[[50,30],[46,12],[30,10]],[[34,40],[40,58],[62,60]]]},
+ [{k:'e_afogado',area:[8,20,46,68]},{k:'e_serpente_brejo',area:[8,2,50,40]},{k:'e_bruxa_brejo',area:[40,2,80,40]},{k:'e_simbionte_lodo',area:[40,40,80,68]}],70,
+ (m)=>{elf2Oval(m,30,10,7,5,ELF_T.MUD);elf2Oval(m,62,60,8,5,ELF_T.MUD);m.spawns.push(['e_mae_brejo',62,60])});
+deco(ELF3.pantano,26,2,'e_salgueiro_mae',6,6);
+const cumes=e3Map(ELF3.cumes,'Cumes do Crepúsculo','nível 300 a 350',ELF_T.AROCK,ELF_T.ACLIFF,[[.07,ELF_T.ACLIFF],[.1,ELF_T.ACRYST]],{tile:ELF_T.APATH,list:[[[1,35],[22,30],[36,16],[56,12],[72,24]],[[36,16],[44,40],[66,52],[76,52]],[[22,30],[20,56]]]},
+ [{k:'e_wyvern',area:[8,2,50,40]},{k:'e_golem_ambar',area:[8,30,50,68]},{k:'e_celeste_caido',area:[40,2,86,40]},{k:'e_arcanista_sombrio',area:[40,36,86,68]}],70,
+ (m)=>{elf2Oval(m,72,24,8,6,ELF_T.APATH);elf2Oval(m,20,56,7,5,ELF_T.APATH);m.spawns.push(['e_dragao_crepusculo',72,24])});
+deco(ELF3.cumes,69,15,'e_ninho_dragao',5,4);
+/* ligações: Cidadela → Lúmen → Pântano → Cumes */
+{const c=MAPS[ELF2_MAPS.cidadela];elfPath(c,[[78,35],[88,35]],ELF_T.PCARPET);setT(c,88,35,TL.STAIRS);c.portals.push({x:88,y:35,to:ELF3.lumen,tx:4,ty:35})}
+const link=(from,to)=>{const a=MAPS[from],b=MAPS[to];setT(a,88,35,TL.STAIRS);a.portals.push({x:88,y:35,to,tx:4,ty:35});setT(b,1,35,TL.STAIRS);b.portals.push({x:1,y:35,to:from,tx:85,ty:35})};
+setT(lumen,1,35,TL.STAIRS);lumen.portals.push({x:1,y:35,to:ELF2_MAPS.cidadela,tx:86,ty:35});
+link(ELF3.lumen,ELF3.pantano);link(ELF3.pantano,ELF3.cumes);
+/* --- Ilha do Selo Esquecido (300 a 350), com porto para os dois povos --- */
+{const W=100,H=80,m=M(W,H,TL.WATER,TL.WATER),r=rng(9909);
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++){const d=Math.hypot((x-50)/44,(y-40)/36)+Math.sin(x*.3)*.02+Math.sin(y*.4)*.02;if(d<.86){const q=r();setT(m,x,y,q<.05?ELF_T.SPILLAR:q<.08?TL.TREE:q<.1?TL.FLOWER:ELF_T.SGRASS)}else if(d<.95)setT(m,x,y,TL.SAND)}
+ for(let y=4;y<=12;y++)for(let x=36;x<=64;x++)setT(m,x,y,ELF_T.SWALL);elf2Oval(m,50,16,10,4,ELF_T.SPATH);
+ elfPath(m,[[50,74],[50,62],[38,50],[44,34],[56,26],[50,16]],ELF_T.SPATH);elfPath(m,[[38,50],[22,44],[18,30]],ELF_T.SPATH);elfPath(m,[[44,34],[72,40],[80,56]],ELF_T.SPATH);
+ for(let y=70;y<=77;y++)for(let x=46;x<=54;x++)setT(m,x,y,y>=76?TL.PLANK:ELF_T.SPATH);for(const [x,y] of [[46,70],[54,70]])setT(m,x,y,TL.ELAMP);m.safe.push([45,69,55,77]);
+ setT(m,50,13,ELF_T.SPATH);
+ for(const [k,area,n] of [['s_sentinela_dourada',[10,40,90,68],18],['s_serpente_celeste',[10,30,90,60],16],['s_corvo_kael',[10,14,90,40],16],['s_cultista_kael',[30,14,70,32],14]]){for(let t=0,c=0;t<4000&&c<n;t++){const x=area[0]+(r()*(area[2]-area[0])|0),y=area[1]+(r()*(area[3]-area[1])|0);if(getT(m,x,y)!==ELF_T.SGRASS&&getT(m,x,y)!==ELF_T.SPATH||inSafe(m,x,y))continue;m.spawns.push([k,x,y]);c++}}
+ m.grown=1;MAPS[ELF3.ilha]=m;MAPN[ELF3.ilha]='Ilha do Selo Esquecido';ZLV[ELF3.ilha]='nível 300 a 350';B70_ROOTS.add(ELF3.ilha);
+ deco(ELF3.ilha,42,3,'e_templo_selo',8,4);
+ PORTS[ELF3.ilha]={map:ELF3.ilha,x:50,y:73,npc:'porto_selo',n:'Ilha do Selo Esquecido (nível 300 a 350)',minLevel:300,minMsg:'Nenhum barqueiro leva alguém tão fraco até a Ilha do Selo Esquecido. Volte no nível 300.'};
+ NEWNPCS.push({id:'porto_selo',n:'Barqueiro Velho',map:ELF3.ilha,x:52,y:74,wander:false,pal:{h:'#d8d8d8',c:'#5a4a3a',d:'#3a2a1a'},lines:['Poucos sabem o caminho.'],talk:()=>travel('Barqueiro Velho',ELF3.ilha)});
+}
+/* O Selo de Jaogg agora fica no templo da ilha (antes, numa fenda em Kol Kar) */
+{const s=MAPS[SELO];const p=s.portals.find(p=>p.to===V75_KOL);if(p){p.to=ELF3.ilha;p.tx=50;p.ty=15}
+ const f=NEWNPCS.find(n=>n.id==='kol_fenda');if(f)Object.assign(f,{n:'Portão do Templo',map:ELF3.ilha,x:50,y:13})}
+/* Acampamentos para renascer e música */
+{const spawnBefore=b70Spawn;const CAMPS={e_lumen:[ELF3.lumen,5,35,'Acampamento de Lúmen'],e_pantano:[ELF3.pantano,5,35,'Acampamento do Pântano'],e_cumes:[ELF3.cumes,5,35,'Acampamento dos Cumes'],ilha_selo:[ELF3.ilha,50,72,'Cais da Ilha do Selo'],kol_selo:[ELF3.ilha,50,72,'Cais da Ilha do Selo']};
+ b70Spawn=function(map){const c=CAMPS[map];if(c){const p={map:c[0],x:c[1],y:c[2],name:c[3]},m=MAPS[p.map];const ok=(x,y)=>!SOLID.has(getT(m,x,y))&&getT(m,x,y)!==TL.WATER&&!m.portals.some(q=>q.x===x&&q.y===y)&&!NPCS.some(n=>n.map===p.map&&n.x===x&&n.y===y);if(!ok(p.x,p.y))outer:for(let r=1;r<6;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++)if(ok(p.x+dx,p.y+dy)){p.x+=dx;p.y+=dy;break outer}return p}return spawnBefore.apply(this,arguments)}}
+{const music=musZoneNow;musZoneNow=function(){if(P){if(P.map===ELF3.lumen)return 'sky';if(P.map===ELF3.pantano)return 'jungle';if(P.map===ELF3.cumes)return 'desert';if(P.map===ELF3.ilha)return 'sky'}return music()}}
+/* Monstros que nasceriam dentro de decorações vão para o lugar livre mais próximo */
+{const STARTS={e_lumen:[4,35],e_pantano:[4,35],e_cumes:[4,35],ilha_selo:[50,72]};
+ for(const [map,[sx,sy]] of Object.entries(STARTS)){const m=MAPS[map];const ok=(x,y)=>x>=0&&y>=0&&x<m.w&&y<m.h&&!SOLID.has(getT(m,x,y))&&getT(m,x,y)!==TL.WATER&&!DSOL.has(map+','+x+','+y);
+  const seen=new Set([sx+','+sy]),q=[[sx,sy]];while(q.length){const [x,y]=q.shift();for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy,k=nx+','+ny;if(!seen.has(k)&&ok(nx,ny)){seen.add(k);q.push([nx,ny])}}}
+  for(const sp of m.spawns){const p=findSpot(m,sp[1],sp[2]);if(seen.has(p[0]+','+p[1]))continue;let best=null,bd=1e9;for(const k of seen){const [x,y]=k.split(',').map(Number);if(inSafe(m,x,y))continue;const d=Math.abs(x-sp[1])+Math.abs(y-sp[2]);if(d<bd){bd=d;best=[x,y]}}if(best){sp[1]=best[0];sp[2]=best[1]}}}}
 </script>

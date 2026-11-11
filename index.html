@@ -6140,11 +6140,11 @@ NEWNPCS.push(
  {id:'elanor',n:'Herbalista Elanor',map:'e_ervas',x:7,y:3,pal:EPAL('#6a9a5a','#e0b060'),talk:()=>shop('Herbalista Elanor','Poções destiladas do orvalho da Árvore-Mãe. E compro tudo o que você caçar no bosque.',['pocao_vida','pocao_vida_g','pocao_mana','pocao_mana_g','livro_magias','amuleto_vida','amuleto_arcano','anel_forca','anel_mana']),lines:['Ervas frescas!']},
  {id:'thalion',n:'Guardião Thalion',map:'e_cofre',x:7,y:3,pal:EPAL('#3a5a7a','#d8d8e0'),talk:()=>depot(),lines:['O cofre está seguro.']},
  {id:'naeris',n:'Barqueira Naeris',map:'sylvaren',x:52,y:16,pal:EPAL('#2a6a8a','#a0d0e0'),talk:()=>naerisTalk(),lines:['O rio leva a todos os lugares.']},
- {id:'aerin',n:'Sentinela Aerin',map:'sylvaren',x:30,y:32,pal:EPAL('#3a6a3a','#e8d890'),talk:()=>say('Sentinela Aerin','Depois do riacho fica o <b>Bosque de Sylvaren</b>. Ratos e cobras perto da ponte; lobos e morcegos no fundo. Volte para a cidade se a vida ficar baixa: aqui dentro nada te ataca.'),lines:['Nenhuma sombra passa por mim.','Cuidado no bosque!']},
+ {id:'aerin',n:'Sentinela Aerin',map:'sylvaren',x:30,y:32,pal:EPAL('#3a6a3a','#e8d890'),talk:()=>say('Sentinela Aerin','Saindo da cidade pelo sul:<br>🐭 a <b>oeste</b>, a <b>Campina dos Brotos</b>, só ratinhos (nível 1 a 2), o melhor lugar para começar;<br>🐍 a <b>leste</b>, a <b>Clareira das Cobras</b> (nível 3 a 6);<br>🌲 depois da ponte, o <b>Bosque do Sul</b>: morcegos a oeste e lobos a leste (nível 4 a 9).<br><br>Volte para a cidade se a vida ficar baixa: aqui dentro nada te ataca.'),lines:['Nenhuma sombra passa por mim.','Cuidado no bosque!']},
  {id:'miri',n:'Pequena Miri',map:'sylvaren',x:35,y:21,chatty:1,pal:EPAL('#c07ab0','#f0e0a0'),talk:()=>say('Pequena Miri',pick(['Você já viu a Árvore-Mãe brilhar à noite? Os lampiões de cogumelo acendem sozinhos!','Os mestres de Peace recitam os nomes dos cativos da Guerra dos Onze. Eu já decorei os primeiros.','Dizem que a Sombra está secando as raízes lá no norte...'])),lines:['Hihi!','Pega-pega!']});
 function elfIntro(){say('Sylvaren',`Você é <b>${esc(P.name)}</b>, ${P.cls==='knight'?'jovem guerreiro elfo':'jovem xamã'} de <b>Sylvaren</b>, a cidade escondida sob a <b>Árvore-Mãe</b>.<br><br>Houve um tempo em que <b>onze raças</b> viviam em Endertell. Na <b>Guerra dos Onze</b>, elas se destruíram até restarem apenas elfos e homens, e algumas raras árvores vivas. Nessa guerra, antepassados dos homens escravizaram elfos, e os dois povos nunca mais tiveram paz. De <b>Peace</b>, a antiga capital, o Grande Rei <b>Petrick How</b> prepara a conquista das terras humanas.<br><br>Há semanas as folhas da Árvore estão escurecendo. A Anciã Ilmara diz que uma <b>Sombra</b> vinda das terras dos humanos está envenenando as raízes do mundo.<br><br>Fale com a <b>Anciã Ilmara</b>, logo à frente, ao pé da Árvore-Mãe.`,[['Ir até a Anciã',closeAll]]);log('Fale com a Anciã Ilmara, ao pé da Árvore-Mãe.','q')}
 function lyriaTalk(){P.fl=P.fl||{};if(!P.fl.ekit){P.fl.ekit=1;P.fl.kit=1;for(const id of['gibao_aprendiz','capuz_aprendiz','calca_aprendiz','botas_aprendiz'])if(IT[id])addItem(id);addItem('pocao_vida',5);if(P.cls==='mage')addItem('pocao_mana',3);P.gold+=40;sfx('coin');save(true);
-  say('Anciã Ilmara',`Então você despertou, ${esc(P.name)}. A Árvore-Mãe te escolheu.<br><br>Tome estas <b>vestes de aprendiz</b>, poções e <b>40 de ouro</b>. Abra a <b>bolsa</b> e toque em cada peça para vestir.<br><br>Treine no <b>Bosque de Sylvaren</b>, depois do riacho ao sul. Depois, fale comigo de novo: a Árvore-Mãe tem algo a pedir a você.`,[['Obrigado, Anciã',closeAll]]);return}
+  say('Anciã Ilmara',`Então você despertou, ${esc(P.name)}. A Árvore-Mãe te escolheu.<br><br>Tome estas <b>vestes de aprendiz</b>, poções e <b>40 de ouro</b>. Abra a <b>bolsa</b> e toque em cada peça para vestir.<br><br>Comece pela <b>Campina dos Brotos</b>, a oeste da saída sul da cidade: lá só há ratinhos. Depois, fale comigo de novo: a Árvore-Mãe tem algo a pedir a você.`,[['Obrigado, Anciã',closeAll]]);return}
  const t=P.lvl<8?'Ainda é cedo. Fique forte no <b>Bosque de Sylvaren</b>, ao sul. A Sacerdotisa Aelin, no Templo da Lua, cura seus ferimentos.':'Você está pronto. Procure a <b>Barqueira Naeris</b> no cais a leste. Os homens de Vussumi são nossos inimigos de guerra e não confiam em nós. Investigue a Sombra nas terras inimigas. Faça o que for necessário para voltar com respostas.';
  say('Anciã Ilmara',t+'<br><br><small>Na cidade: 🌙 Templo da Lua (cura) · 🏹 Forja Élfica (equipamentos) · 🌿 Ervas de Elanor (poções) · 💎 Cofre (depósito)</small>',[['Até mais',closeAll]])}
 function aelinTalk(){const st=stats();const ok=P.hp<st.maxHp||P.mp<st.maxMp;say('Sacerdotisa Aelin',ok?'Deixe a luz da Lua fechar suas feridas.':'Você está inteiro, filho da floresta. Se cair em Sylvaren, a Lua te trará de volta a este templo. Nas outras ilhas, você retorna ao templo local ou ao porto.',ok?[['🌙 Curar (grátis)',()=>{restRecovery();ring(P,1.4,'#b8d8ff');text(P,'CURADO','#b8d8ff',1200);sfx('skill');closeAll()}],['Até mais',closeAll]]:[['Até mais',closeAll]])}
@@ -12610,8 +12610,8 @@ for(const [k,txt] of [['e_lobo_marcado','Floresta de Cristal · marcado por Vora
 /* ===== Lado élfico · Ato I: As Raízes Escurecem (história) ===== */
 'use strict';
 const ELF_ACT=[
- {n:'O Despertar',back:'lyria',minLv:1,tasks:[{t:'level',lv:10,l:'Chegue ao nível 10 no Bosque de Sylvaren'}],
-  intro:'As folhas da Árvore-Mãe escurecem a cada noite. Fique forte no Bosque de Sylvaren, ao sul do riacho. Quando chegar ao <b>nível 10</b>, volte a falar comigo.',
+ {n:'O Despertar',back:'lyria',minLv:1,tasks:[{t:'level',lv:10,l:'Chegue ao nível 10 (Campina dos Brotos → Clareira das Cobras → Bosque do Sul)'}],
+  intro:'As folhas da Árvore-Mãe escurecem a cada noite. Fique forte antes de partir: comece pela <b>Campina dos Brotos</b>, a oeste da saída sul (só ratinhos), siga para a <b>Clareira das Cobras</b>, a leste, e depois para o <b>Bosque do Sul</b>, depois da ponte. Quando chegar ao <b>nível 10</b>, volte a falar comigo.',
   done:'Você está pronto. Siga a trilha que atravessa o bosque até o fim, ao sul: ela leva à <b>Floresta de Cristal</b>. A Batedora Elowen vigia a entrada. Ela viu algo nos animais que precisa mostrar a você.',rw:1},
  {n:'Olhos Vermelhos',back:'elowen',minLv:10,tasks:[{t:'kill',mon:['e_lobo_marcado'],q:12,l:'Derrote 12 Lobos de Olhos Vermelhos'}],
   intro:'Que bom que a Anciã mandou alguém. Os lobos da floresta enlouqueceram: os olhos ficaram <b>vermelhos</b>, e eles atacam até os próprios filhotes. Derrote 12 deles e veja com seus próprios olhos.',
@@ -12801,4 +12801,26 @@ for(const [k,q] of Object.entries(PROFESSIONS)){const human={place:q.place,map:q
   }}catch(e){console.error(e)}
   return r};
 }
+</script>
+
+<script>
+/* ===== Sylvaren: áreas de caça separadas por nível (sem misturar monstros) ===== */
+'use strict';
+{
+ const m=MAPS.sylvaren,r=rng(4343);
+ m.spawns=m.spawns.filter(s=>!['rato','cobra','morcego','lobo'].includes(s[0]));
+ const place=(type,area,count)=>{for(let t=0,n=0;t<4000&&n<count;t++){const x=area[0]+(r()*(area[2]-area[0]+1)|0),y=area[1]+(r()*(area[3]-area[1]+1)|0);
+  if(SOLID.has(getT(m,x,y))||getT(m,x,y)===TL.WATER||inSafe(m,x,y)||m.spawns.some(s=>Math.abs(s[1]-x)+Math.abs(s[2]-y)<3))continue;m.spawns.push([type,x,y]);n++}};
+ MSPR.e_ratinho=tintSpr(MSPR.rat,'#b89a6a',.35);mkMon('e_ratinho','Ratinho do Campo','e_ratinho',1,2,{hp:.85,atk:.75,loot:[['pele_lobo',.15]]});SPAWNED.add('e_ratinho');REG.e_ratinho='Campina dos Brotos, Sylvaren';
+ place('e_ratinho',[3,5,12,32],16);  // Campina dos Brotos (oeste): nível 1 a 2
+ place('cobra',[52,25,59,35],9);    // Clareira das Cobras (leste): nível 3 a 6
+ place('morcego',[3,40,28,51],10);  // Bosque do Sul, lado oeste: nível 4 a 8
+ place('lobo',[37,40,60,51],10);    // Bosque do Sul, lado leste: nível 5 a 9
+ for(let i=0;i<40;i++){const x=3+(r()*10|0),y=5+(r()*28|0);if(getT(m,x,y)===TL.GRASS)setT(m,x,y,TL.FLOWER)}
+}
+NEWNPCS.push(
+ {id:'placa_brotos',n:'Placa: Campina dos Brotos',map:'sylvaren',x:12,y:34,sign:1,wander:false,talk:()=>say('Placa','<b>← Campina dos Brotos</b><br>nível 1 a 2 · só ratinhos<br><small>O melhor lugar para começar.</small>',[['Fechar',closeAll]])},
+ {id:'placa_cobras',n:'Placa: Clareira das Cobras',map:'sylvaren',x:52,y:34,sign:1,wander:false,talk:()=>say('Placa','<b>Clareira das Cobras →</b><br>nível 3 a 6 · só cobras',[['Fechar',closeAll]])},
+ {id:'placa_bosque_sul',n:'Placa: Bosque do Sul',map:'sylvaren',x:30,y:36,sign:1,wander:false,talk:()=>say('Placa','<b>↓ Bosque do Sul</b> (depois da ponte)<br>Oeste: morcegos, nível 4 a 8<br>Leste: lobos, nível 5 a 9<br>No fim da trilha: Floresta de Cristal (nível 10+)',[['Fechar',closeAll]])}
+);
 </script>

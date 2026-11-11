@@ -13424,7 +13424,7 @@ REG.kael_final='Trono Divino, Terras Divinas';REG.d_arauto_kael='Portão do Tron
 {const a=M(31,25,ELF_T.GOLDT,ELF_T.SKYGAP);box(a,0,0,30,24,ELF_T.SKYGAP,ELF_T.GOLDT);
  for(let y=1;y<24;y++)for(let x=1;x<30;x++){const d=Math.hypot((x-15)/13,(y-12)/10.5);if(d>1)setT(a,x,y,ELF_T.SKYGAP);else if(d>.9)setT(a,x,y,ELF_T.CORRUPT)}
  for(const [x,y] of [[6,6],[24,6],[6,18],[24,18]])setT(a,x,y,ELF_T.DIVPIL);
- a.spawns.push(['kael_final',15,9]);a.safe.push([13,20,17,23]);a.grown=1;
+ a.spawns.push(['kael_final',15,7]);a.safe.push([13,20,17,23]);a.grown=1;
  MAPS[TRONO]=a;MAPN[TRONO]='Trono Divino';ZLV[TRONO]='chefe final · nível 400';deco(TRONO,13,1,'e_trono_kael',5,4);}
 /* --- Personagens --- */
 const SEAL_ALLY_IMG={humano:bigPerson(EPAL('#5a5a6a','#c8d0d8')),elfo:bigPerson({h:'#e8e8f0',c:'#2a2a6a',d:'#1a1a4a'})};
@@ -13433,7 +13433,7 @@ NEWNPCS.push(
  {id:'fim_walter',n:'Mestre Walter',map:TD,x:53,y:72,wander:false,pal:peacePal('#f0f0f4','#5a5a7a'),lines:['Por Lirien.'],talk:()=>say('Mestre Walter','Ele não olha para Ezequiel nenhuma vez.<br><br><i>"Lutar ao lado de humanos. Lirien riria de mim."</i>',[['Até mais',closeAll]])},
  {id:'fim_ezequiel',n:'Ezequiel',map:TD,x:50,y:75,wander:false,pal:EPAL('#5a5a6a','#c8d0d8'),lines:['...'],talk:()=>say('Ezequiel','<i>"Walter não fala comigo. Está certo. Só preciso que ele chegue vivo ao trono."</i>',[['Até mais',closeAll]])},
  {id:'portal_retorno_td',n:'Passagem para a Ilha do Selo',map:TD,x:50,y:77,sign:1,wander:false,talk:()=>say('Passagem','Um caminho de luz desce até o templo da Ilha do Selo Esquecido.',[['Descer',()=>{closeAll();teleport({to:ELF3.ilha,tx:50,ty:15})}],['Ficar',closeAll]])},
- {id:'jaogg_preso',n:'Jaogg, acorrentado',map:TRONO,x:15,y:5,still:1,wander:false,img0:JAOGG_IMG,lines:['...'],talk:()=>say('Jaogg','Correntes roxas prendem o velho deus ao trono. A aura dourada mal brilha.<br><br><i>"Homens e elfos... lado a lado..."</i>',[['Fechar',closeAll]])},
+ {id:'jaogg_preso',n:'Jaogg, acorrentado',map:TRONO,x:15,y:13,still:1,wander:false,img0:JAOGG_IMG,lines:['...'],talk:()=>say('Jaogg','Correntes roxas prendem o velho deus ao trono. A aura dourada mal brilha.<br><br><i>"Homens e elfos... lado a lado..."</i>',[['Fechar',closeAll]])},
  {id:'aliado_trono',n:'Aliado',map:TRONO,x:13,y:19,still:1,wander:false,img0:SEAL_ALLY_IMG.humano,lines:['O Hino!'],talk:()=>say(fimAllyName(),'<i>"Quando eu cantar o Hino de Jaogg, o escudo dele cai. Ataque nessa hora!"</i>',[['Certo',closeAll]])}
 );
 function fimAllyName(){return P&&P.fac==='elfo'?'Mago Eldoran':'Ezequiel'}
@@ -13479,7 +13479,7 @@ function fimStart(){const E=fimS(),C=fimCh();E.started=1;E.base={};E.talked={};f
 function fimN(t){const E=fimS();if(t.t==='talk')return E.talked[t.npc]?1:0;const ms=t.t==='kill'?t.mon:[t.mon];return ms.reduce((s,m)=>s+Math.max(0,(P.kills[m]||0)-(E.base[m]||0)),0)}
 function fimOk(t){return fimN(t)>=(t.t==='kill'?t.q:1)}
 function fimProg(C){return C.tasks.map(t=>(fimOk(t)?'✅ ':'⬜ ')+t.l+(t.t==='kill'?` (${Math.min(fimN(t),t.q)}/${t.q})`:'')).join('<br>')||'⬜ Fale com <b>'+esc(elfNpcName(C.back))+'</b>'}
-function fimComplete(n){const E=fimS(),C=fimCh(),xp=Math.round(need(P.lvl)*C.rw),gold=P.lvl*200*C.rw;P.gold+=gold;gainXp(xp);
+function fimComplete(n){const E=fimS(),C=fimCh(),xp=Math.round(need(P.lvl)*C.rw),gold=P.lvl*20*C.rw;P.gold+=gold;gainXp(xp);
  let txt=C.done;if(C.walter){txt=WALTER_DEATH;P.fl.walterMorto=1}if(C.epi)txt=fimEpilogue();if(C.n==='Kael')txt=KAEL_END;
  E.ch++;E.started=0;E.base={};E.talked={};sfx('ach');save(true);
  const N=fimCh(),cont=N&&N.start===n.id?[['Continuar',()=>fimTalk(n)]]:[];
@@ -13495,7 +13495,7 @@ function fimTalk(n){
  if(n.id==='selo_jaogg'&&E.ch>=1){say('Selo de Jaogg','A escada de luz continua aberta.',[['✨ Subir às Terras Divinas',()=>{closeAll();teleport({to:TD,tx:50,ty:73})}],['Fechar',closeAll]]);return true}
  return false;
 }
-NEWNPCS.push({id:'jaogg_livre',n:'Jaogg',map:'oculto',x:15,y:6,still:1,wander:false,img0:JAOGG_IMG,lines:['...'],talk:()=>say('Jaogg','<i>"Obrigado, pequeno."</i>',[['Até mais',closeAll]])});
+NEWNPCS.push({id:'jaogg_livre',n:'Jaogg',map:'oculto',x:15,y:13,still:1,wander:false,img0:JAOGG_IMG,lines:['...'],talk:()=>say('Jaogg','<i>"Obrigado, pequeno."</i>',[['Até mais',closeAll]])});
 /* --- Batalha contra Kael: escudo que só cai com os dois povos --- */
 let KAEL={shield:true,next:0};
 /* No online: o escudo cai quando há heróis dos dois povos no trono. Até lá, o aliado do outro povo canta o Hino. */
@@ -13520,7 +13520,7 @@ function kaelBothPeoples(){const ally=NPCS.find(n=>n.id==='aliado_trono');return
    else KAEL.shield=true;
    // Jaogg: acorrentado até Kael cair; depois, livre
    const jp=NPCS.find(n=>n.id==='jaogg_preso'),jl=NPCS.find(n=>n.id==='jaogg_livre'),freed=E&&(E.ch>4||(E.ch===4&&E.started&&fimN({t:'boss',mon:'kael_final'})>=1));
-   if(jp){const w=freed?'oculto':TRONO;if(jp.map!==w)jp.map=w}if(jl){const w=freed&&E.ch<=5?TRONO:'oculto';if(jl.map!==w)jl.map=w}
+   if(jp){const w=freed?'oculto':TRONO;if(jp.map!==w)jp.map=w}if(jl){const w=freed?TRONO:'oculto';if(jl.map!==w)jl.map=w}
    if(freed&&jl&&jl.map===TRONO&&P.map===TRONO)ring(jl,1.8,'#ffe080');
    // Walter morre para quem viveu o capítulo
    const dead=P.fl&&P.fl.walterMorto;for(const id of ['fim_walter','peace_walter','walter_clareira']){const n=NPCS.find(o=>o.id===id);if(n&&dead&&n.map!=='oculto'){n._map=n.map;n.map='oculto'}}
@@ -13538,7 +13538,7 @@ NEWNPCS.push({id:'tumulo_walter',n:'Memorial de Walter',map:'oculto',x:14,y:15,s
    if(C){const who=id=>({name:'Ato Final: falar com '+elfNpcName(id),...npcAt(id)});
     if(!E.started)return P.lvl<C.minLv?{name:'Ato Final: chegue ao nível '+C.minLv,map:P.map,x:P.x,y:P.y,noArrow:1}:C.start==='selo_jaogg'&&P.map!==SELO?{name:'Ato Final: toque no Selo de Jaogg (templo da Ilha do Selo Esquecido)',...npcAt('kol_fenda')}:who(C.start);
     const t=C.tasks.find(t=>!fimOk(t));if(!t)return who(C.back);
-    const mon=t.t==='kill'?t.mon[0]:t.mon;if(mon==='kael_final')return P.map===TRONO?{name:'Ato Final: derrote Kael',map:TRONO,x:15,y:9}:{name:'Ato Final: entre no Trono Divino, ao norte das Terras Divinas',map:TD,x:50,y:7};
+    const mon=t.t==='kill'?t.mon[0]:t.mon;if(mon==='kael_final')return P.map===TRONO?{name:'Ato Final: derrote Kael',map:TRONO,x:15,y:7}:{name:'Ato Final: entre no Trono Divino, ao norte das Terras Divinas',map:TD,x:50,y:7};
     for(const k in MAPS){const s=(MAPS[k].spawns||[]).find(x=>x[0]===mon);if(s)return{name:'Ato Final: '+t.l,map:k,x:s[1],y:s[2]}}}}
   return goalBefore.apply(this,arguments)};
  const qBefore=pQuest;
@@ -13556,4 +13556,84 @@ NEWNPCS.push({id:'tumulo_walter',n:'Memorial de Walter',map:'oculto',x:14,y:15,s
 {const m=MAPS[TD],sx=50,sy=73;const ok=(x,y)=>x>=0&&y>=0&&x<m.w&&y<m.h&&!SOLID.has(getT(m,x,y))&&!DSOL.has(TD+','+x+','+y);
  const seen=new Set([sx+','+sy]),q=[[sx,sy]];while(q.length){const [x,y]=q.shift();for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy,k=nx+','+ny;if(!seen.has(k)&&ok(nx,ny)){seen.add(k);q.push([nx,ny])}}}
  for(const sp of m.spawns){const p=findSpot(m,sp[1],sp[2]);if(seen.has(p[0]+','+p[1]))continue;let best=null,bd=1e9;for(const k of seen){const [x,y]=k.split(',').map(Number);if(inSafe(m,x,y))continue;const d=Math.abs(x-sp[1])+Math.abs(y-sp[2]);if(d<bd){bd=d;best=[x,y]}}if(best){sp[1]=best[0];sp[2]=best[1]}}}
+</script>
+<script>
+/* ===== Kael: Aura de Jaogg, Onda de Poder, Fragmentos Divinos e GOD ARMOR ===== */
+'use strict';
+/* --- Itens --- */
+IT.frag_divino={n:'Fragmento Divino',price:0,ic:'frag',c:'#ffe080',loot:1};
+const GOD_SET=[['armadura','Armadura','armor','armor',{def:150,hp:1000},22],['elmo','Elmo','helmet','helmet',{def:70,hp:450},17],['calca','Calça','legs','legs',{def:60,hp:380},17],['botas','Botas','boots','boots',{def:60,hp:320},17],['amuleto','Amuleto','amulet','amulet',{atk:40,hp:600,mp:600},17]];
+const GOD_RES=13;/* 5 peças × 13% = 65% de proteção contra todos os elementos */
+for(const [k,n,slot,ic,st] of GOD_SET)IT['god_'+k]=Object.assign({n:'GOD ARMOR · '+n,lv:300,slot,ic,c:'#ffe080',price:0,noDrop:1,reserved:1,godSet:1,resAll:GOD_RES},st);
+/* --- Kael: só fragmentos (sem ouro, sem arma) e renasce em 24 h --- */
+Object.assign(MON.kael_final,{loot:[],gold:[0,0],resp:86400});EQTYPE.kael_final='nenhum';
+const KAEL_WAVE_STEP=.15,KAEL_WAVE_WARN=5000,KAEL_AURA_R=2;
+for(const fac of ['humano','elfo'])FIM_ACT[fac][4].intro+='<br><br><i>"E cuidado com a <b>Onda de Poder</b>. Sempre que Kael perder uma parte da força, ele vai varrer o trono inteiro. Jaogg, mesmo acorrentado, vai erguer uma aura dourada no centro da sala. Corra para dentro dela."</i>';
+function kaelJaogg(){return NPCS.find(n=>(n.id==='jaogg_preso'||n.id==='jaogg_livre')&&n.map===TRONO)}
+function kaelInAura(a){const j=kaelJaogg();return !!(j&&a&&a.map===TRONO&&cheb(a,j)<=KAEL_AURA_R)}
+{
+ const bmBefore=BM.kael_final;
+ BM.kael_final=function(mo){
+  bmBefore.apply(this,arguments);
+  const lost=Math.floor((1-mo.hp/mo.mhp)/KAEL_WAVE_STEP+1e-9);mo.waveDone=mo.waveDone||0;
+  if(lost>mo.waveDone&&!mo.waveAt){mo.waveDone++;mo.waveAt=nowT+KAEL_WAVE_WARN;
+   const j=kaelJaogg(),m=MAPS[TRONO],tiles=[];
+   for(let y=0;y<m.h;y++)for(let x=0;x<m.w;x++)if(!SOLID.has(getT(m,x,y))&&!(j&&Math.max(Math.abs(x-j.x),Math.abs(y-j.y))<=KAEL_AURA_R))tiles.push([x,y]);
+   text(mo,'ONDA DE PODER!','#ff4aff',2200);shake(3,300);sfx('lvl');
+   if(j)text(j,'Para dentro da aura!','#ffe080',2200);
+   log('Kael vai soltar uma Onda de Poder! Corra para a aura dourada de Jaogg, no centro da sala.','bad');
+   hazard({map:TRONO,tiles,warn:KAEL_WAVE_WARN,pct:0,col:'200,60,255',name:'Onda de Poder',fn:()=>{mo.waveAt=0;kaelWaveHit()}});
+  }
+  if(mo.waveAt&&nowT>mo.waveAt+400)mo.waveAt=0;
+ };
+}
+function kaelWaveHit(){
+ shake(8,500);const j=kaelJaogg();if(j)ring(j,KAEL_AURA_R+.5,'#ffe080');
+ if(!P||P.dead||P.map!==TRONO)return;
+ if(kaelInAura(P)){text(P,'protegido pela aura','#ffe080',1400);log('A aura de Jaogg te protegeu da Onda de Poder.','q');return}
+ if(P.buffs.divino>nowT){text(P,'imune','#ffe070');return}
+ const mh=stats().maxHp,v=Math.round(mh*.8);pauseNaturalRegen(P);P.lastHit=nowT;
+ if(P.hp<mh*.8){P.hp=0;text(P,'-'+v,'#ff4aff',1200);log('Você estava fora da aura com menos de 80% de vida. A Onda de Poder te destruiu.','bad');die('Onda de Poder de Kael');return}
+ P.hp-=v;text(P,'-'+v,'#ff4aff',1200);log('A Onda de Poder te atingiu fora da aura: -80% da vida.','bad');if(P.hp<=0)die('Onda de Poder de Kael');
+}
+/* --- Drops, baú e renascimento --- */
+let KAELK=null,KAEL_LAST_MAP=null,auraT=0;
+{
+ const updBefore=update;
+ update=function(){const r=updBefore.apply(this,arguments);if(!P)return r;
+  const k=P.kills.kael_final||0;if(KAELK===null)KAELK=k;
+  if(k>KAELK){const n=k-KAELK;KAELK=k;const mo=(MONBY[TRONO]||[]).find(o=>o.type==='kael_final');
+   addItem('frag_divino',2*n);toast(itemIcon('frag_divino'),'+'+2*n+' Fragmentos Divinos!');log('Kael deixou '+2*n+' Fragmentos Divinos. Um baú apareceu no trono.','lv');
+   const m=MAPS[TRONO];if(m.kaelChest){setT(m,m.kaelChest[0],m.kaelChest[1],m.kaelChest[2]);m.kaelChest=null}
+   const s=findSpot(m,mo?mo.x:15,(mo?mo.y:7)+1);m.kaelChest=[s[0],s[1],getT(m,s[0],s[1])];setT(m,s[0],s[1],TL.CHEST);miniKey='';save(true)}
+  // offline: ao sair e entrar da sala, Kael volta
+  if(P.map!==KAEL_LAST_MAP){if(P.map===TRONO&&KAEL_LAST_MAP!==null){const mo=(MONBY[TRONO]||[]).find(o=>o.type==='kael_final');if(mo&&mo.dead){mo.respawnAt=nowT+800;log('Kael se ergue de novo no trono.','bad')}}KAEL_LAST_MAP=P.map}
+  // aura dourada visível durante o aviso
+  if(P.map===TRONO&&nowT>=auraT){auraT=nowT+350;const mo=(MONBY[TRONO]||[]).find(o=>o.type==='kael_final'&&!o.dead);const j=kaelJaogg();if(j&&mo&&mo.waveAt)ring(j,KAEL_AURA_R+.5,'#ffe080')}
+  return r};
+ const chestBefore=openChest;
+ openChest=function(map,x,y){const m=MAPS[map];if(map===TRONO&&m.kaelChest&&m.kaelChest[0]===x&&m.kaelChest[1]===y&&getT(m,x,y)===TL.CHEST){setT(m,x,y,m.kaelChest[2]);m.kaelChest=null;miniKey='';addItem('frag_divino',1);sfx('ach');toast(itemIcon('frag_divino'),'+1 Fragmento Divino!');log('Baú de Kael: 1 Fragmento Divino.','lv');P.chase=false;save(true);return}return chestBefore.apply(this,arguments)};
+}
+/* --- Forja Divina: só Jaogg forja a GOD ARMOR --- */
+function godOwned(id){const is=x=>x&&IT[x]&&(x===id||IT[x].base===id);return (P.bag||[]).concat(P.inv||[]).some(e=>is(e.id))||Object.values(P.eq||{}).some(is)}
+{const dropsBefore=bossDrops;bossDrops=function(mo){if(mo&&mo.type==='kael_final')return;return dropsBefore.apply(this,arguments)}}
+function godForge(){
+ const have=countItem('frag_divino');
+ const rows=GOD_SET.map(([k,n,,,,cost])=>{const id='god_'+k,owned=godOwned(id);return [`${owned?'✅':'⚒️'} ${n} · ${cost} fragmentos`,()=>godForgePiece(k,cost)]});
+ say('Jaogg · Forja Divina',`<i>"Os fragmentos da espada de Kael guardam o meu poder. Traga-os, e eu forjo a armadura dos deuses."</i><br><br><b>GOD ARMOR</b> (nível 300): cada peça dá <b>-${GOD_RES}% de dano de todos os elementos</b>. As 5 peças juntas chegam a <b>65%</b>, o máximo do jogo.<br>Nenhuma profissão consegue forjar este set.<br><br>Você tem <b>${have}</b> Fragmento${have===1?'':'s'} Divino${have===1?'':'s'}. Cada vitória sobre Kael dá 3 (2 dele e 1 do baú): são 30 vitórias para o set inteiro.`,rows.concat([['Até mais',closeAll]]))}
+function godForgePiece(k,cost){const id='god_'+k,have=countItem('frag_divino');
+ if(P.lvl<300){say('Jaogg','<i>"Este metal queimaria você. Volte no nível 300."</i>',[['Voltar',godForge]]);return}
+ if(have<cost){say('Jaogg',`<i>"Ainda faltam ${cost-have} fragmentos."</i>`,[['Voltar',godForge]]);return}
+ if(!addItem(id)){say('Jaogg','Sua mochila está cheia.',[['Voltar',godForge]]);return}
+ removeItem('frag_divino',cost);sfx('ach');toast(itemIcon(id),IT[id].n+'!');log('Jaogg forjou '+IT[id].n+'.','lv');save(true);godForge()}
+for(const j of [NPCS.find(n=>n.id==='jaogg_livre'),NEWNPCS.find(n=>n.id==='jaogg_livre')])if(j){j.talk=()=>say('Jaogg','<i>"Obrigado, pequeno. Kael é meu irmão: o que sobra dele ainda volta a este trono. Enquanto voltar, eu estarei aqui."</i>',[['⚒️ Forja Divina',godForge],['Até mais',closeAll]])}
+/* --- Status: proteção de cada elemento --- */
+{
+ const heroBefore=pHero;
+ pHero=function(b){const r=heroBefore.apply(this,arguments);
+  try{const rows=ELS.map(e=>{const v=Math.round(elemRes(e)*100);return `<dt><span style="color:${ELC[e]}">${ELI[e]} ${ELN[e]}</span></dt><dd>${v}%<span style="display:inline-block;vertical-align:middle;margin-left:8px;width:60px;height:6px;border-radius:3px;background:rgba(127,127,127,.25)"><span style="display:block;height:100%;width:${Math.round(v/65*100)}%;border-radius:3px;background:${ELC[e]}"></span></span></dd>`}).join('');
+   const box=el(`<div><div class="sect">Proteção elemental <span>máximo 65%</span></div><dl class="kv">${rows}</dl><p style="margin:-4px 0 12px;color:var(--muted);font-size:12px">Quanto menos dano você leva de cada elemento. Vem dos sets elementais, da GOD ARMOR, do seu elemento e de elixires.</p></div>`);
+   const at=[...b.querySelectorAll('.sect')].find(x=>x.textContent.startsWith('Atributos'));const nodes=[...box.childNodes];if(at)at.before(...nodes);else b.append(...nodes)}catch(e){console.error(e)}
+  return r};
+}
 </script>

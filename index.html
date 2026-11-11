@@ -2677,10 +2677,10 @@ function drawArrow(g,t,col,camX,camY){
  const dx=t.x-P.x,dy=t.y-P.y,dist=Math.round(Math.hypot(dx,dy));const lbl=g.name+(t.via?` · ${t.ship?'pegue o barco para':t.npcGate?'fale com '+t.npcGate+' para ir a':'vá para'}: ${MAPN[t.via]||t.via}`:` · ${dist} m`);
  ctx.font=`bold ${Math.round(5*Z)}px Verdana,Tahoma,Arial,sans-serif`;ctx.textAlign='center';ctx.lineWidth=Z*1.4;ctx.strokeStyle='#000';
  const tx=t.x*S-camX+S/2,ty=t.y*S-camY+S/2,onScreen=tx>S&&ty>S&&tx<cv.width-S&&ty<cv.height-S,bob=Math.sin(nowT/180)*Z*2;
- if(onScreen){const ax=tx,ay=ty-S*.9+bob;ctx.fillStyle=col;ctx.beginPath();ctx.moveTo(ax-S*.3,ay-S*.35);ctx.lineTo(ax+S*.3,ay-S*.35);ctx.lineTo(ax,ay+S*.05);ctx.closePath();ctx.fill();ctx.stroke();ctx.strokeText(lbl,ax,ay-S*.5);ctx.fillStyle='#ffffff';ctx.fillText(lbl,ax,ay-S*.5);return}
+ if(onScreen){const ax=tx,ay=ty-S*.9+bob;ctx.fillStyle=col;ctx.beginPath();ctx.moveTo(ax-S*.3,ay-S*.35);ctx.lineTo(ax+S*.3,ay-S*.35);ctx.lineTo(ax,ay+S*.05);ctx.closePath();ctx.fill();ctx.stroke();return}
  const cx=cv.width/2,cy=cv.height/2,ang=Math.atan2(dy,dx),r=Math.min(cv.width,cv.height)*.36,ax=cx+Math.cos(ang)*r,ay=cy+Math.sin(ang)*r+bob;
  ctx.save();ctx.translate(ax,ay);ctx.rotate(ang);ctx.fillStyle=col;ctx.beginPath();ctx.moveTo(S*.45,0);ctx.lineTo(-S*.25,-S*.3);ctx.lineTo(-S*.1,0);ctx.lineTo(-S*.25,S*.3);ctx.closePath();ctx.fill();ctx.lineWidth=Z*.8;ctx.stroke();ctx.restore();
- ctx.lineWidth=Z*1.4;ctx.strokeText(lbl,ax,ay+S*.7);ctx.fillStyle='#ffffff';ctx.fillText(lbl,ax,ay+S*.7)}
+ ctx.lineWidth=Z*1.4;ctx.strokeText(t.via?'→ '+(MAPN[t.via]||t.via):dist+' m',ax,ay+S*.7);ctx.fillStyle='#ffffff';ctx.fillText(t.via?'→ '+(MAPN[t.via]||t.via):dist+' m',ax,ay+S*.7)}
 function drawQuest(camX,camY){
  if(P.track==='profession'&&P.profession&&typeof WORKSHOPS!=='undefined'&&WORKSHOPS[P.profession]){
   const w=WORKSHOPS[P.profession],g={name:'⚒ Oficina: '+w.name,map:'over',x:w.entry[0],y:w.entry[1]};
@@ -2695,10 +2695,10 @@ function drawQuest(camX,camY){
  ctx.font=`bold ${Math.round(5*Z)}px Verdana,Tahoma,Arial,sans-serif`;ctx.textAlign='center';ctx.lineWidth=Z*1.4;ctx.strokeStyle='#000';
  const tx=t.x*S-camX+S/2,ty=t.y*S-camY+S/2,onScreen=tx>S&&ty>S&&tx<cv.width-S&&ty<cv.height-S;
  const bob=Math.sin(nowT/180)*Z*2;
- if(onScreen){const ax=tx,ay=ty-S*.9+bob;ctx.fillStyle='#ffd040';ctx.beginPath();ctx.moveTo(ax-S*.3,ay-S*.35);ctx.lineTo(ax+S*.3,ay-S*.35);ctx.lineTo(ax,ay+S*.05);ctx.closePath();ctx.fill();ctx.stroke();ctx.strokeText(lbl,ax,ay-S*.5);ctx.fillStyle='#fff3cf';ctx.fillText(lbl,ax,ay-S*.5);return}
+ if(onScreen){const ax=tx,ay=ty-S*.9+bob;ctx.fillStyle='#ffd040';ctx.beginPath();ctx.moveTo(ax-S*.3,ay-S*.35);ctx.lineTo(ax+S*.3,ay-S*.35);ctx.lineTo(ax,ay+S*.05);ctx.closePath();ctx.fill();ctx.stroke();return}
  const cx=cv.width/2,cy=cv.height/2,ang=Math.atan2(dy,dx),r=Math.min(cv.width,cv.height)*.36;const ax=cx+Math.cos(ang)*r,ay=cy+Math.sin(ang)*r+bob;
  ctx.save();ctx.translate(ax,ay);ctx.rotate(ang);ctx.fillStyle='#ffd040';ctx.beginPath();ctx.moveTo(S*.45,0);ctx.lineTo(-S*.25,-S*.3);ctx.lineTo(-S*.1,0);ctx.lineTo(-S*.25,S*.3);ctx.closePath();ctx.fill();ctx.lineWidth=Z*.8;ctx.stroke();ctx.restore();
- ctx.lineWidth=Z;ctx.strokeText(lbl,ax,ay+S*.7);ctx.fillStyle='#fff3cf';ctx.fillText(lbl,ax,ay+S*.7)}
+ ctx.lineWidth=Z;ctx.strokeText(t.via?'→ '+(MAPN[t.via]||t.via):dist+' m',ax,ay+S*.7);ctx.fillStyle='#fff3cf';ctx.fillText(t.via?'→ '+(MAPN[t.via]||t.via):dist+' m',ax,ay+S*.7)}
 function drawMini(){
  if(!P)return;
  if(miniOwner!==P){MINI_CACHE.clear();miniOwner=P;miniKey='';miniNextFrame=0}
@@ -14282,4 +14282,88 @@ function bossCdTxt(ms){const m=Math.ceil(ms/60000);return m>=60?Math.floor(m/60)
     for(const p of L){const x=p.x*S-camX+S/2,y=p.y*S-camY-S*.25;if(x<-S*3||y<-S||x>cv.width+S*3||y>cv.height+S)continue;const left=bossCdLeft(p.room),nm=MON[BOSS_ROOM[p.room][0]].n,t2=left>0?'⏳ volta em '+bossCdTxt(left):'⚔ chefe pronto';
      ctx.strokeText(nm,x,y-Z*5);ctx.fillStyle='#ffe9a8';ctx.fillText(nm,x,y-Z*5);ctx.strokeText(t2,x,y);ctx.fillStyle=left>0?'#ff9a80':'#9af09a';ctx.fillText(t2,x,y)}ctx.restore()}}catch(e){}
   return r};}
+</script>
+
+<style>
+/* Barra de baixo: equipamentos · missão rastreada · bolsa */
+#tutBox{display:none!important}
+#ctrl{align-items:stretch}
+#eqq{display:grid;grid-template-columns:repeat(3,var(--b));grid-template-rows:repeat(3,var(--b));gap:3px;flex:none}
+#eqq button{position:relative;padding:2px;background:#11141a;display:flex;align-items:center;justify-content:center;font-size:calc(var(--b)*.42)}
+#eqq button img{width:82%;height:82%;image-rendering:pixelated}
+#eqq button .ph{opacity:.28;filter:grayscale(1)}
+#eqq button.bagBtn{background:#3a2f14;border-color:var(--gold,#e9b949)}
+#eqq[hidden],#pad[hidden]{display:none}
+#midCol{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+#mqBox{flex:1;min-height:0;position:relative;background:#d8ccae;color:#2a2418;border:2px solid #8a7a52;border-radius:6px;padding:4px 6px;font-size:11px;line-height:1.25;overflow:hidden;cursor:pointer;text-align:center;display:flex;flex-direction:column;justify-content:center;box-shadow:inset 0 0 0 1px #efe6cc}
+#mqBox b{display:block;font-size:10px;letter-spacing:.3px;color:#6a4a12;margin-bottom:2px}
+#mqBox .tx{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+#mqBox .hint{display:block;margin-top:2px;font-size:10px;color:#4a5a2a;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#mqBox .tg{position:absolute;right:2px;bottom:2px;width:22px;height:20px;padding:0;font-size:11px;line-height:1;background:#efe6cc;color:#2a2418;border:1px solid #8a7a52;border-radius:4px}
+#mqBox .xt{position:absolute;right:2px;top:2px;width:20px;height:18px;padding:0;font-size:11px;line-height:1;background:#efe6cc;color:#7a2a1a;border:1px solid #8a7a52;border-radius:4px}
+#midCol #hot{flex:none;flex-direction:row;max-width:none;min-width:0;gap:4px}
+#midCol #hot .sk{height:var(--b);flex:1;min-width:0}
+#zone{left:50%;right:auto;transform:translateX(-50%);max-width:86%;padding:3px 10px;border-radius:6px;background:rgba(8,10,14,.6)}
+#chatBox{background:rgba(8,10,14,.35);border-radius:4px;padding:1px 4px}
+</style>
+<script>
+/* ===== Barra de baixo: equipamentos à esquerda (com a mochila), missão rastreada no meio, bolsa à direita ===== */
+'use strict';
+{
+ const ctrl=document.getElementById('ctrl'),pad=document.getElementById('pad'),hot=document.getElementById('hot');
+ const eqq=document.createElement('div');eqq.id='eqq';eqq.setAttribute('aria-label','Equipamentos');
+ const CELLS=[['helmet','⛑'],['amulet','📿'],['ring','💍'],['weapon','⚔'],['armor','🥋'],['shield','🛡'],['legs','👖'],['bag','🎒'],['boots','🥾']];
+ for(const [s,ph] of CELLS){const b=document.createElement('button');b.dataset.s=s;b.dataset.ph=ph;if(s==='bag'){b.className='bagBtn';b.setAttribute('aria-label','Abrir a mochila');b.textContent=ph;b.onclick=()=>openPanel('bag')}else{b.setAttribute('aria-label','Equipamento');b.onclick=()=>openPanel('equip')}eqq.append(b)}
+ ctrl.insertBefore(eqq,pad);
+ const mid=document.createElement('div');mid.id='midCol';const box=document.createElement('div');box.id='mqBox';box.setAttribute('role','button');box.setAttribute('aria-label','Missão rastreada');
+ ctrl.insertBefore(mid,hot);mid.append(box,hot);
+ const LS='endertell_left';let mode='eq';try{mode=localStorage.getItem(LS)||'eq'}catch(e){}
+ const apply=()=>{eqq.hidden=mode!=='eq';pad.hidden=mode==='eq'};apply();
+ box.onclick=ev=>{const t=ev.target;if(t.classList.contains('tg')){mode=mode==='eq'?'pad':'eq';try{localStorage.setItem(LS,mode)}catch(e){}apply();last='';return}
+  if(t.classList.contains('xt')){const x=document.querySelector('#tutBox button');if(x)x.click();last='';return}
+  const q=document.getElementById('mQuest');if(q)q.click()};
+ let last='',eqSig='';
+ const esc2=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+ const tick=()=>{try{if(typeof P==='undefined'||!P)return;
+   /* equipamentos */
+   const sig=CELLS.map(([s])=>s==='bag'?'':(P.eq&&P.eq[s])||'').join('|');
+   if(sig!==eqSig){eqSig=sig;for(const b of eqq.children){const s=b.dataset.s;if(s==='bag')continue;const id=P.eq&&P.eq[s];b.innerHTML=id&&IT[id]?`<img src="${itemIcon(id)}" alt="${esc2(IT[id].n)}">`:`<span class="ph">${b.dataset.ph}</span>`;b.title=id&&IT[id]?IT[id].n:(SLOTN[s]||'')+' (vazio)'}}
+   /* missão rastreada */
+   const tb=document.getElementById('tutBox');let title='',txt='',hint='',x='';
+   if(tb&&!tb.hidden&&tb.textContent.trim()){const c=tb.cloneNode(true);c.querySelectorAll('button').forEach(b=>b.remove());const parts=c.textContent.replace(/\s+/g,' ').trim();const m=/^(📘?\s*Tutorial\s*\d+\/\d+)\s*(.*)$/.exec(parts);title=m?m[1]:'📘 Tutorial';txt=m?m[2]:parts;if(tb.querySelector('button'))x='<button class="xt" aria-label="Parar de rastrear o tutorial">×</button>'}
+   else{let g=null;try{g=questGoal()}catch(e){}const k=String(P.track||'');title=/^mqb?:/.test(k)?'📋 Missão diária':k==='story'||k==='story2'?'📜 História':k==='treasure'?'🗺 Tesouro':'🎯 Missão';
+    if(g){txt=g.name;if(!g.noArrow){let t=null;try{t=routeTo(g)}catch(e){}if(t&&t.via)hint=(t.ship?'⛵ pegue o barco para ':t.npcGate?'💬 fale com '+t.npcGate+' para ir a ':'➜ vá para ')+(MAPN[t.via]||t.via);else if(t){const d=Math.round(Math.hypot(t.x-P.x,t.y-P.y));hint=d<=1?'📍 você chegou':'📍 '+d+' m '+dirWord(t.x-P.x,t.y-P.y)}}}
+    else{title='📜 Missões';txt='Nenhuma missão rastreada.';hint='Toque aqui para escolher'}}
+   const html=`<b>${esc2(title)}</b><span class="tx">${esc2(txt)}</span>${hint?`<span class="hint">${esc2(hint)}</span>`:''}${x}<button class="tg" aria-label="${mode==='eq'?'Mostrar setas de direção':'Mostrar equipamentos'}">${mode==='eq'?'✥':'🛡'}</button>`;
+   if(html!==last){last=html;box.innerHTML=html}
+   /* textos de cima não se atravessam: alvo e chat ficam logo abaixo do painel do jogador */
+   const hud=document.getElementById('hud'),tg=document.getElementById('targetBox'),ch=document.getElementById('chatBox');
+   if(hud){let y=hud.offsetTop+hud.offsetHeight+4;if(tg){tg.style.top=y+'px';if(!tg.hidden)y+=tg.offsetHeight+4}if(ch)ch.style.top=y+'px'}
+  }catch(e){}};
+ setInterval(tick,400);
+}
+</script>
+
+<style>
+/* avisos e itens coletados não cobrem mais o painel do jogador nem o chat */
+#view>#toast{position:absolute!important;left:156px!important;right:92px!important;top:8px!important;transform:none!important;width:auto!important;min-width:0;padding:4px 7px!important;gap:5px}
+#view>#toast b,#view>#toast span{font-size:11px!important;line-height:1.2}
+#view>#toast img{width:20px!important;height:20px!important}
+#pickCard{top:auto!important;bottom:92px!important;width:min(86%,300px)!important}
+#mqBox{padding-right:26px;padding-left:8px}
+#mqBox .tx{-webkit-line-clamp:3}
+#mqBox .hint{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+</style>
+<script>
+'use strict';
+{const t=document.getElementById('toast'),v=document.getElementById('view');if(t&&v)v.append(t)}
+</script>
+
+<style>
+#zone{top:38%!important}
+#pickCard{left:8px!important;transform:none!important;width:min(72%,280px)!important}
+</style>
+<script>
+'use strict';
+setInterval(()=>{try{const p=document.getElementById('pickCard'),l=document.getElementById('log');if(p&&l)p.style.setProperty('bottom',(l.offsetHeight+14)+'px','important')}catch(e){}},300);
 </script>

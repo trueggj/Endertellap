@@ -13906,3 +13906,53 @@ function ctGoal(i){const S=ctState(),c=S&&S.list[i];if(!c||c.done)return null;co
   b.querySelectorAll('[data-ct]').forEach(bt=>bt.onclick=()=>{trackMission('contrato:'+bt.dataset.ct);renderPanel()})}}catch(e){console.error(e)}
  return r}}
 </script>
+<script>
+/* ===== Contratos de Região: cada ilha e área tem tarefas diárias para explorar o mapa inteiro ===== */
+'use strict';
+const RG_EXCL=/^(arena|dg|torre|selo\d|ship|kol_selo|trono_divino|ilha230|e_santuario_lua|e_trono_sombrio|e_clareira_lua)/;
+const RG_TASK=.12,RG_BONUS=.25,RG_KILLS=.3,RG_PTS={};
+function rgInfo(map){const ms=(MONBY[map]||[]).filter(o=>!o.tmp&&MON[o.type]&&!MON[o.type].boss);if(ms.length<5)return null;const lv=ms.map(o=>o.lv||MON[o.type].lv[0]);const cnt={};for(const o of ms)cnt[o.type]=(cnt[o.type]||0)+1;
+ const types=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]);const boss=(MONBY[map]||[]).find(o=>!o.tmp&&MON[o.type]&&MON[o.type].boss&&!/kael_final|kraken/.test(o.type));
+ return{map,lo:Math.min(...lv),hi:Math.max(...lv),types,boss:boss&&boss.type,elf:map==='sylvaren'||/^e_/.test(map)}}
+function rgList(){const out=[];for(const k in MONBY){if(HOUSES.has(k)||RG_EXCL.test(k)||!MAPS[k])continue;const i=rgInfo(k);if(!i)continue;if(P.lvl<i.lo-3||P.lvl>i.hi+8)continue;out.push(i)}
+ const mine=P.fac==='elfo';return out.sort((a,b)=>((b.map===P.map)-(a.map===P.map))||((b.elf===mine)-(a.elf===mine))||(Math.abs((a.lo+a.hi)/2-P.lvl)-Math.abs((b.lo+b.hi)/2-P.lvl)))}
+function rgPoints(map){if(RG_PTS[map])return RG_PTS[map];const m=MAPS[map];const ok=(x,y)=>x>0&&y>0&&x<m.w-1&&y<m.h-1&&!SOLID.has(getT(m,x,y))&&getT(m,x,y)!==TL.WATER&&!DSOL.has(map+','+x+','+y);
+ let s=null;const cands=(m.portals||[]).map(p=>[p.x,p.y]).concat((MONBY[map]||[]).slice(0,3).map(o=>[o.sx||o.x,o.sy||o.y]));
+ for(const [px,py] of cands){for(const [dx,dy] of [[0,0],[1,0],[-1,0],[0,1],[0,-1]])if(ok(px+dx,py+dy)){s=[px+dx,py+dy];break}if(s)break}if(!s)return RG_PTS[map]=[];
+ const seen=new Map([[s[0]+','+s[1],0]]),q=[s];while(q.length){const [x,y]=q.shift(),d=seen.get(x+','+y);for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy,k=nx+','+ny;if(!seen.has(k)&&ok(nx,ny)){seen.set(k,d+1);q.push([nx,ny])}}}
+ const tiles=[...seen.keys()].map(k=>k.split(',').map(Number)).filter(([x,y])=>!inSafe(m,x,y));if(tiles.length<30)return RG_PTS[map]=[];
+ const pts=[s];for(let n=0;n<3;n++){let best=null,bd=-1;for(let i=0;i<tiles.length;i+=3){const [x,y]=tiles[i];const d=Math.min(...pts.map(p=>Math.abs(p[0]-x)+Math.abs(p[1]-y)));if(d>bd){bd=d;best=[x,y]}}if(best)pts.push(best)}
+ const cx=m.w/2,cy=m.h/2,used={};return RG_PTS[map]=pts.slice(1).map(([x,y])=>{const w=dirWord(x-cx,y-cy);let d=w==='aqui'?'central':w.replace(/^(a|ao) /,'');used[d]=(used[d]||0)+1;if(used[d]>1)d+=' '+used[d];return{x,y,n:'Explore a parte '+d}})}
+function rgDay(){if(!P.rg||P.rg.d!==today())P.rg={d:today(),k0:Object.assign({},P.kills),m:{}};return P.rg}
+function rgTasks(i){const D=rgDay(),S=D.m[i.map]||(D.m[i.map]={vis:[],done:{},bonus:0});const lvMid=Math.round((i.lo+i.hi)/2),n=Math.max(8,Math.round(killsPL(lvMid)*RG_KILLS));
+ const T=[];const h=i.types.slice(0,2);for(const t of h)T.push({k:'h_'+t,l:'Derrote '+n+'× '+MON[t].n,type:t,need:n});
+ const pts=rgPoints(i.map);if(pts.length)T.push({k:'exp',l:'Explore a região: '+pts.map(p=>p.n.replace('Explore a parte ','')).join(', '),pts});
+ if(i.boss)T.push({k:'boss',l:'Derrote o chefe '+MON[i.boss].n,type:i.boss,need:1});
+ for(const t of T){t.prog=t.k==='exp'?t.pts.filter((p,j)=>S.vis[j]).length:Math.min(t.need,(P.kills[t.type]||0)-(D.k0[t.type]||0));t.max=t.k==='exp'?t.pts.length:t.need;t.ok=t.prog>=t.max;t.done=!!S.done[t.k]}
+ return{S,T}}
+const rgXp=()=>dailyXP(Math.round(need(P.lvl)*RG_TASK)),rgBonusXp=()=>dailyXP(Math.round(need(P.lvl)*RG_BONUS));
+function rgGoal(map,k){const i=rgInfo(map);if(!i)return null;const {S,T}=rgTasks(i),t=T.find(t=>t.k===k);if(!t||t.done||t.ok)return null;const nm=(MAPN[map]||map)+': ';
+ if(t.k==='exp'){const j=t.pts.findIndex((p,j)=>!S.vis[j]);const p=t.pts[j];return p&&{name:'Região · '+nm+p.n,map,x:p.x,y:p.y}}
+ const o=(MONBY[map]||[]).find(o=>o.type===t.type&&!o.dead)||(MONBY[map]||[]).find(o=>o.type===t.type);return o&&{name:'Região · '+nm+MON[t.type].n+' ('+t.prog+'/'+t.need+')',map,x:o.sx||o.x,y:o.sy||o.y}}
+{const qb=questGoal;questGoal=function(){if(P&&typeof P.track==='string'&&P.track.startsWith('regiao:')){const [,map,k]=P.track.split(':');try{return rgGoal(map,k)}catch(e){return null}}return qb.apply(this,arguments)}}
+function rgChest(i){const lv=Math.min(P.lvl,i.hi+2),got=[];const id=pickEquip(lv,null);if(id&&addItem(id))got.push(IT[arConv(id)]?IT[arConv(id)].n:IT[id].n);const pot=P.lvl>=40?'pocao_vida_g':'pocao_vida';if(addItem(pot,5))got.push('5 '+IT[pot].n);
+ if(i.map==='e_ravina'&&addItem('espinho_vivo',8))got.push('8 Espinhos Vivos');if(i.map==='e_ambar'&&addItem('ambar_antigo',8))got.push('8 Âmbar Antigo');return got}
+{let tk=0,lastMap=null;const upd=update;update=function(){const r=upd.apply(this,arguments);
+  if(P&&!P.dead&&nowT>=tk){tk=nowT+800;try{const D=rgDay();
+   if(P.map!==lastMap){lastMap=P.map;const i=rgInfo(P.map);if(i&&!HOUSES.has(P.map)&&!RG_EXCL.test(P.map)&&P.lvl>=i.lo-3&&P.lvl<=i.hi+8){const {T}=rgTasks(i),d=T.filter(t=>t.done).length;if(d<T.length)log(`🗺️ ${MAPN[P.map]||P.map} tem Contratos de Região (${d}/${T.length}). Veja em Missões → Diárias.`,'q')}}
+   const i=rgInfo(P.map);if(i&&!RG_EXCL.test(P.map)&&P.lvl>=i.lo-3&&P.lvl<=i.hi+8){const {S,T}=rgTasks(i);
+    const ex=T.find(t=>t.k==='exp');if(ex)ex.pts.forEach((p,j)=>{if(!S.vis[j]&&Math.abs(P.x-p.x)+Math.abs(P.y-p.y)<=3){S.vis[j]=1;text(P,'📍 '+p.n.replace('Explore a parte ','')+' explorada','#7fe0ff',1600);sfx('lvl');save(true)}});
+    for(const t of rgTasks(i).T){if(t.ok&&!t.done){S.done[t.k]=1;const xp=rgXp(),g=P.lvl*10;P.gold+=g;gainXp(xp);sfx('ach');toast(null,`🗺️ ${MAPN[i.map]||i.map}: ${t.k==='exp'?'exploração concluída':t.l} · +${xp.toLocaleString('pt-BR')} XP`);
+      if(P.track==='regiao:'+i.map+':'+t.k){const nx=rgTasks(i).T.find(x=>!x.done&&!x.ok);P.track=nx?'regiao:'+i.map+':'+nx.k:'story'}save(true)}}
+    const all=rgTasks(i);if(!S.bonus&&all.T.length&&all.T.every(t=>t.done)){S.bonus=1;const xp=rgBonusXp();gainXp(xp);const got=rgChest(i);sfx('lvl');toast(null,`🗺️ ${MAPN[i.map]||i.map} completa! +${xp.toLocaleString('pt-BR')} XP`);log(`Baú da região ${MAPN[i.map]||i.map}: ${got.join(', ')}.`,'lv');save(true)}}
+  }catch(e){console.error(e)}}
+  return r}}
+/* aba Missões → Diárias */
+{const qb=pQuest;pQuest=function(b){const r=qb.apply(this,arguments);
+ try{if(typeof QTAB!=='undefined'&&QTAB==='dia'){const L=rgList().slice(0,8),mine=P.fac==='elfo';
+  const cards=L.map(i=>{const {S,T}=rgTasks(i),d=T.filter(t=>t.done).length;return `<div class="quest ${S.bonus?'done':''}"><h4>${i.elf===mine?(mine?'🌿':'🏰'):'⛵'} ${esc(MAPN[i.map]||i.map)} <small style="color:var(--muted)">· nível ${i.lo}–${i.hi}</small> <span style="float:right;font-size:12px">${d}/${T.length}</span></h4><p style="margin:0">${T.map(t=>`${t.done?'✅':'⬜'} ${esc(t.k==='exp'?'Explore: '+t.pts.map(p=>p.n.replace('Explore a parte ','')).join(', '):t.l)} ${t.done?'':`<small>(${t.prog}/${t.max})</small> <button data-rg="${i.map}:${t.k}" style="font-size:11px;padding:1px 6px" class="${P.track==='regiao:'+i.map+':'+t.k?'gold':''}">${P.track==='regiao:'+i.map+':'+t.k?'Rastreando':'Rastrear'}</button>`}`).join('<br>')}</p></div>`}).join('')||'<div class="quest"><p>Nenhuma região no seu nível agora.</p></div>';
+  const box=el(`<div><div class="sect">🗺️ Contratos de Região</div><p style="color:var(--muted);font-size:12px;margin:0 0 8px">Cada ilha e área tem tarefas próprias, que renovam todo dia: caçar, explorar cada canto do mapa e derrubar o chefe. Cada tarefa dá <b>+${rgXp().toLocaleString('pt-BR')} XP</b>; completar a região dá <b>+${rgBonusXp().toLocaleString('pt-BR')} XP</b> e um baú com equipamento.</p>${cards}</div>`);
+  const anchor=[...b.querySelectorAll('.sect')].find(x=>x.textContent.startsWith('📅'));let after=anchor;if(anchor){let n=anchor.nextElementSibling;while(n&&!n.classList.contains('sect'))n=(after=n).nextElementSibling;after.after(...box.childNodes)}else b.append(...box.childNodes);
+  b.querySelectorAll('[data-rg]').forEach(bt=>bt.onclick=()=>{trackMission('regiao:'+bt.dataset.rg);renderPanel()})}}catch(e){console.error(e)}
+ return r}}
+</script>

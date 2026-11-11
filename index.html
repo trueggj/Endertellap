@@ -12819,9 +12819,9 @@ for(const [k,q] of Object.entries(PROFESSIONS)){const human={place:q.place,map:q
  for(let i=0;i<40;i++){const x=3+(r()*10|0),y=5+(r()*28|0);if(getT(m,x,y)===TL.GRASS)setT(m,x,y,TL.FLOWER)}
 }
 NEWNPCS.push(
- {id:'placa_brotos',n:'Placa: Campina dos Brotos',map:'sylvaren',x:12,y:34,sign:1,wander:false,talk:()=>say('Placa','<b>← Campina dos Brotos</b><br>nível 1 a 2 · só ratinhos<br><small>O melhor lugar para começar.</small>',[['Fechar',closeAll]])},
- {id:'placa_cobras',n:'Placa: Clareira das Cobras',map:'sylvaren',x:52,y:34,sign:1,wander:false,talk:()=>say('Placa','<b>Clareira das Cobras →</b><br>nível 3 a 6 · só cobras',[['Fechar',closeAll]])},
- {id:'placa_bosque_sul',n:'Placa: Bosque do Sul',map:'sylvaren',x:30,y:36,sign:1,wander:false,talk:()=>say('Placa','<b>↓ Bosque do Sul</b> (depois da ponte)<br>Oeste: morcegos, nível 4 a 8<br>Leste: lobos, nível 5 a 9<br>No fim da trilha: Floresta de Cristal (nível 10+)',[['Fechar',closeAll]])}
+ {id:'placa_brotos',n:'Placa: Campina dos Brotos',map:'sylvaren',x:5,y:35,sign:1,wander:false,talk:()=>say('Placa','<b>← Campina dos Brotos</b><br>nível 1 a 2 · só ratinhos<br><small>O melhor lugar para começar.</small>',[['Fechar',closeAll]])},
+ {id:'placa_cobras',n:'Placa: Clareira das Cobras',map:'sylvaren',x:58,y:34,sign:1,wander:false,talk:()=>say('Placa','<b>Clareira das Cobras →</b><br>nível 3 a 6 · só cobras',[['Fechar',closeAll]])},
+ {id:'placa_bosque_sul',n:'Placa: Bosque do Sul',map:'sylvaren',x:30,y:42,sign:1,wander:false,talk:()=>say('Placa','<b>↓ Bosque do Sul</b> (depois da ponte)<br>Oeste: morcegos, nível 4 a 8<br>Leste: lobos, nível 5 a 9<br>No fim da trilha: Floresta de Cristal (nível 10+)',[['Fechar',closeAll]])}
 );
 </script>
 <script>
@@ -13091,4 +13091,14 @@ for(const o of MONS||[])if(['e_ratinho','rato','cobra','morcego','lobo'].include
   try{if(P&&P.lvl>lv&&P.pts>0&&P.lvl<=40)setTimeout(()=>toast(null,`⭐ Você tem ${P.pts} pontos de atributo! Toque no 👤 Herói para distribuir. Vitalidade aumenta a vida.`),700)}catch(e){}
   return r};
 }
+</script>
+
+<script>
+/* ===== Correções do início élfico: escadas duplicadas e barraca de poções ===== */
+'use strict';
+// remove degraus de escada sem passagem nas saídas das áreas élficas (ficavam dois degraus lado a lado)
+for(const k of ['sylvaren','e_cristal','e_fronteira','e_bosque','e_vale_branco','e_raizes','e_cidadela']){const m=MAPS[k];if(!m)continue;
+ for(let y=0;y<m.h;y++)for(let x=0;x<m.w;x++){const t=getT(m,x,y);if((t===TL.STAIRS||t===TL.CAVE)&&!m.portals.some(p=>p.x===x&&p.y===y))setT(m,x,y,k==='sylvaren'?TL.TREE:m.edge)}}
+NEWNPCS.push({id:'barraca_pocoes',n:'Barraca de Poções · Lírel',map:'sylvaren',x:35,y:31,wander:false,pal:EPAL('#8a5aa8','#f0c870'),lines:['Poções frescas!','Para a Campina dos Brotos!'],
+ talk:()=>shop('Barraca de Poções · Lírel','Vai sair da cidade? Leve poções! Também compro o que você caçar. Mais opções na loja da Herbalista Elanor, na casa <b>Ervas de Elanor</b>.',['pocao_vida','pocao_mana','pocao_vida_g','pocao_mana_g'])});
 </script>

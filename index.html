@@ -4404,7 +4404,7 @@ function magmaEncounterTick(mo){
   const tick=Math.floor((nowT-state.burnEnd+MAGMA_BURN_MS)/1000);
   if(tick>state.burnTicks){
    state.burnTicks=Math.min(10,tick);
-   if(tick<=10)for(const actor of [P,...BOTS])bossArenaDamage(mo,actor,.03,'Queima do Vulcão');
+   if(tick<=10)for(const actor of [P,...BOTS])bossArenaDamage(mo,actor,.005,'Queima do Vulcão');
   }
  }
  if(state.charge&&nowT>=state.charge.end){
@@ -5841,12 +5841,12 @@ for(const q in QUESTS){const Q=QUESTS[q],bn=Q.need,br=Q.rew;Q.baseNeed=bn;Q.base
  Object.defineProperty(Q,'need',{get(){const s=P&&P.quests&&P.quests[q];return s&&s.need||bn},configurable:true});
  Object.defineProperty(Q,'rew',{get(){const s=P&&P.quests&&P.quests[q];const m=(s&&s.need?s.need/bn:1)*(s&&s.rep?.5:1),mi=Math.min(3,Math.max(1,m));return{xp:Math.round(br.xp*m),gold:Math.round(br.gold*m),items:br.items.map(([i,c])=>[i,Math.max(1,Math.round(c*mi))])}},configurable:true})}
 function qAccept(qid,n,giver=QT[qid]?.giver){const old=P.quests[qid];P.quests[qid]={c:0,done:false,need:n,giver,rep:old&&old.done?1:0};offerTracking(qid);log(`Nova missão: ${QUESTS[qid].n} (${n})`,'q');sfx('click');save(true)}
-function qAmtOpts(qid,after){return QAMT.map(n=>{const s={need:n};const m=n/QUESTS[qid].baseNeed;return[`Aceitar: ${n} · ~${Math.round(QUESTS[qid].baseRew.xp*m*((P.quests[qid]&&P.quests[qid].done)?.5:1)).toLocaleString('pt-BR')} XP`,()=>{qAccept(qid,n);after()}]})}
+function qAmtOpts(qid,after){return [];return QAMT.map(n=>{const s={need:n};const m=n/QUESTS[qid].baseNeed;return[`Aceitar: ${n} · ~${Math.round(QUESTS[qid].baseRew.xp*m*((P.quests[qid]&&P.quests[qid].done)?.5:1)).toLocaleString('pt-BR')} XP`,()=>{qAccept(qid,n);after()}]})}
 function questTalk(name,qid,intro,doneTxt){const Q=QUESTS[qid],st=P.quests[qid];
- if(!st||st.done)say(name,`${st&&st.done?'Quer caçar mais? A recompensa da repetição é metade.':intro}<br><br><b style="color:var(--gold)">${Q.n}</b>: ${Q.desc.replace(/\d+/,'X')}<br><small>Escolha quantos monstros: 10, 50 ou 100. Mais monstros, mais recompensa.</small>`,[...qAmtOpts(qid,closeAll),['Agora não',closeAll]]);
+ if(!st||st.done)say(name,`${st&&st.done?'Quer caçar mais? A recompensa da repetição é metade.':intro}<br><br><b style="color:var(--gold)">${Q.n}</b>: ${Q.desc.replace(/\d+/,'X')}<br><small>As caçadas agora ficam no <b>📋 Mural de Missões</b> da ilha: lá você pega a <b>Grande Caçada de 100</b>.</small>`,[['🧭 Mostrar o Mural',()=>{closeAll();mqShowNearest()}],['Agora não',closeAll]]);
  else if(st.c>=Q.need)say(name,'Excelente trabalho! Aqui está sua recompensa.',[['Receber recompensa',()=>{reward(qid);closeAll()}]]);else say(name,`Você derrotou ${st.c} de ${Q.need}. Volte quando terminar.`,[['Voltar à caçada',closeAll]])}
 function missionBoard(){const ids=Object.keys(QUESTS).filter(q=>QUESTS[q].mon&&MON[QUESTS[q].mon]&&questLvOk(q)).sort((a,b)=>MON[QUESTS[a].mon].lv[0]-MON[QUESTS[b].mon].lv[0]);
- say('📜 Quadro de Missões','Pegue e entregue aqui as missões de caça do reino. Escolha 10, 50 ou 100 monstros. As caçadas diárias ficam com a Caçadora Bruna, aqui no Salão.',[['Fechar',closeAll]]);const body=$('#dlgBody');
+ say('📜 Quadro de Missões','Pegue e entregue aqui as missões de caça do reino. Novas caçadas agora são pegas no 📋 Mural de Missões de cada ilha (Grande Caçada de 100). Aqui você só entrega as que já tinha.',[['Fechar',closeAll]]);const body=$('#dlgBody');
  if(!ids.length)body.append(el('<p style="color:var(--muted)">Nenhuma missão para o seu nível.</p>'));
  for(const q of ids){const Q=QUESTS[q],st=P.quests[q],d=MON[Q.mon];const state=!st?'nova':st.done?'feita':st.c>=Q.need?'pronta':'andando';
   const r=el(`<div class="row" style="flex-wrap:wrap"><span style="flex:1"><b>${state==='pronta'?'🎁':state==='andando'?'🎯':state==='feita'?'✅':'📜'} ${Q.n}</b> <small>${d.n} · nv ${d.lv[0]}</small><em>${state==='andando'?`${st.c}/${Q.need} derrotados`:state==='pronta'?'Pronta para entregar!':state==='feita'?'Concluída · pode repetir (metade da recompensa)':Q.where}</em></span></div>`).firstElementChild;
@@ -13902,7 +13902,7 @@ for(const [map,boss,lore,title] of [
 /* ===== Quadros de Missões: cada ilha tem um quadro com missões diárias (caça, entrega, exploração e chefe) ===== */
 'use strict';
 const MQ_EXCL=/^(arena|dg|torre|selo\d|ship|kol_selo|trono_divino|ilha230|e_santuario_lua|e_trono_sombrio|e_clareira_lua)/;
-const MQ_RW={kill:.15,item:.15,exp:.12,boss:.2},MQ_BONUS=.25,MQ_PTS={},MQ_BOARDS={};
+const MQ_RW={kill:.15,item:.15,exp:.12,boss:.2,big:.5},MQ_BONUS=.25,MQ_PTS={},MQ_BOARDS={};
 function mqScan(map){const m=MAPS[map];const sp=(m.spawns||[]).filter(s=>MON[s[0]]),reg=sp.filter(s=>!MON[s[0]].boss);if(reg.length<5)return null;
  const cnt={};for(const s of reg)cnt[s[0]]=(cnt[s[0]]||0)+1;const types=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]);
  const b=sp.find(s=>MON[s[0]].boss&&!/kael_final|kraken/.test(s[0]));
@@ -13929,17 +13929,18 @@ function mqMissions(map){const B=MQ_BOARDS[map];if(!B)return[];const lvMid=Math.
  Object.values(items).sort((a,b)=>b.per-a.per).slice(0,2).forEach(it=>{const q=Math.max(3,Math.min(15,Math.round(K*it.per)));L.push({k:'i_'+it.id,kind:'item',item:it.id,from:it.from,need:q,l:`Entrega: traga ${q}× ${IT[it.id].n}`})});
  if(mqPoints(map).length)L.push({k:'exp',kind:'exp',need:mqPoints(map).length,l:'Exploração: visite '+mqPoints(map).map(p=>p.n).join(', ')});
  if(B.boss)L.push({k:'boss',kind:'boss',type:B.boss,need:1,l:`Chefe: derrote ${MON[B.boss].n}`});
+ L.push({k:'g100',kind:'big',type:B.types[0],need:100,l:`Grande Caçada: derrote 100× ${MON[B.types[0]].n}`});
  return L}
 function mqDay(){if(!P.mq||P.mq.d!==today())P.mq={d:today(),a:{},bonus:{},told:{}};return P.mq}
 function mqSt(map,k){return(mqDay().a[map]||{})[k]}
 function mqProg(map,M){const s=mqSt(map,M.k);if(!s)return 0;if(M.kind==='item')return Math.min(M.need,countItem(M.item));if(M.kind==='exp')return(s.vis||[]).filter(Boolean).length;return Math.min(M.need,Math.max(0,(P.kills[M.type]||0)-s.base))}
-const mqCan=B=>P.lvl>=B.lo-5&&P.lvl<=B.hi+15;
-const mqXp=kind=>dailyXP(Math.round(need(P.lvl)*MQ_RW[kind]));
+const mqCan=B=>true;
+const mqLv=map=>{const B=MQ_BOARDS[map];return Math.max(1,Math.min(P.lvl,B?B.hi+5:P.lvl))};const mqXp=(kind,map)=>dailyXP(Math.round(need(mqLv(map))*MQ_RW[kind]));
 function mqAccept(map,M){const D=mqDay();const A=D.a[map]||(D.a[map]={});if(A[M.k])return;A[M.k]={st:'on',base:M.type?(P.kills[M.type]||0):0,vis:[]};sfx('lvl');save(true)}
 function mqClaim(map,M){const s=mqSt(map,M.k);if(!s||s.st!=='on'||mqProg(map,M)<M.need)return false;if(M.kind==='item'&&!removeItem(M.item,M.need))return false;
- s.st='done';const xp=mqXp(M.kind),g=P.lvl*10;P.gold+=g;gainXp(xp);sfx('ach');toast(null,`📋 Missão entregue: +${xp.toLocaleString('pt-BR')} XP · +${g.toLocaleString('pt-BR')} ouro`);
+ s.st='done';const xp=mqXp(M.kind,map),g=mqLv(map)*10;P.gold+=g;gainXp(xp);sfx('ach');toast(null,`📋 Missão entregue: +${xp.toLocaleString('pt-BR')} XP · +${g.toLocaleString('pt-BR')} ouro`);
  if(P.track==='mq:'+map+':'+M.k)P.track='story';
- const D=mqDay(),L=mqMissions(map);if(!D.bonus[map]&&L.every(m=>(mqSt(map,m.k)||{}).st==='done')){D.bonus[map]=1;const B=MQ_BOARDS[map],bx=dailyXP(Math.round(need(P.lvl)*MQ_BONUS));gainXp(bx);const got=[];const id=pickEquip(Math.min(P.lvl,B.hi+2),null);if(id&&addItem(id))got.push((IT[arConv(id)]||IT[id]).n);const pot=P.lvl>=40?'pocao_vida_g':'pocao_vida';if(addItem(pot,5))got.push('5× '+IT[pot].n);
+ const D=mqDay(),L=mqMissions(map);if(!D.bonus[map]&&L.filter(m=>m.kind!=='big').every(m=>(mqSt(map,m.k)||{}).st==='done')){D.bonus[map]=1;const B=MQ_BOARDS[map],bx=dailyXP(Math.round(need(mqLv(map))*MQ_BONUS));gainXp(bx);const got=[];const id=pickEquip(Math.min(P.lvl,B.hi+2),null);if(id&&addItem(id))got.push((IT[arConv(id)]||IT[id]).n);const pot=P.lvl>=40?'pocao_vida_g':'pocao_vida';if(addItem(pot,5))got.push('5× '+IT[pot].n);
   if(map==='e_ravina'&&addItem('espinho_vivo',8))got.push('8× Espinho Vivo');if(map==='e_ambar'&&addItem('ambar_antigo',8))got.push('8× Âmbar Antigo');
   say('📋 '+(MAPN[map]||map)+' completa!',`Você cumpriu todas as missões do quadro hoje.<br><br><b>Baú da ilha:</b> +${bx.toLocaleString('pt-BR')} XP · ${got.join(', ')}`,[['Ótimo',()=>mqBoard(map)]]);save(true);return 'bonus'}
  save(true);return true}
@@ -13952,8 +13953,8 @@ function mqBoard(map){const B=MQ_BOARDS[map];if(!B)return;const L=mqMissions(map
  opts.push(['Fechar',closeAll]);
  say('📋 Quadro de Missões · '+nm,`<small>Missões diárias desta ilha (nível ${B.lo}–${B.hi}). Pegue as que quiser, cumpra e volte aqui para entregar. Cumprindo todas, você ganha o <b>baú da ilha</b>.</small><br><br>${rows}`,opts)}
 /* seta */
-function mqGoal(key){const [kind,map,k]=key.split(':');const B=MQ_BOARDS[map];if(!B)return null;const board={name:'📋 Quadro de Missões · '+(MAPN[map]||map),map,x:B.x,y:B.y};if(kind==='mqb')return board;
- const M=mqMissions(map).find(m=>m.k===k),s=M&&mqSt(map,k);if(!M||!s||s.st==='done')return null;if(mqProg(map,M)>=M.need)return{...board,name:'Missão pronta: entregue no Quadro · '+(MAPN[map]||map)};
+function mqGoal(key){const [kind,map,k]=key.split(':');const B=MQ_BOARDS[map];if(!B)return null;const mm=(typeof MQ_GROUP!=='undefined'&&MQ_GROUP[map])||map,MB=MQ_BOARDS[mm]||B;const board={name:'📋 Mural de Missões · '+(MAPN[mm]||mm),map:mm,x:MB.x,y:MB.y};if(kind==='mqb')return board;
+ const M=mqMissions(map).find(m=>m.k===k),s=M&&mqSt(map,k);if(!M||!s||s.st==='done')return null;if(mqProg(map,M)>=M.need)return{...board,name:'Missão pronta: entregue no Mural · '+(MAPN[mm]||mm)};
  if(M.kind==='exp'){const pts=mqPoints(map),j=pts.findIndex((p,j)=>!(s.vis||[])[j]);const p=pts[j];return p&&{name:`Explore: ${p.n} (${mqProg(map,M)}/${M.need})`,map,x:p.x,y:p.y}}
  const t=M.kind==='item'?M.from:M.type;const o=(MONBY[map]||[]).find(o=>o.type===t&&!o.dead)||(MONBY[map]||[]).find(o=>o.type===t)||((MAPS[map].spawns||[]).filter(s=>s[0]===t).map(s=>({x:s[1],y:s[2]}))[0]);
  return o&&{name:(M.kind==='item'?`${IT[M.item].n} (${mqProg(map,M)}/${M.need}) · de ${MON[t].n}`:`${MON[t].n} (${mqProg(map,M)}/${M.need})`),map,x:o.sx||o.x,y:o.sy||o.y}}
@@ -13961,19 +13962,19 @@ function mqGoal(key){const [kind,map,k]=key.split(':');const B=MQ_BOARDS[map];if
 /* progresso: exploração, aviso de missão pronta e de quadro na ilha */
 {let tk=0,last=null;const upd=update;update=function(){const r=upd.apply(this,arguments);
  if(P&&!P.dead&&nowT>=tk){tk=nowT+800;try{const D=mqDay(),B=MQ_BOARDS[P.map];
-  if(P.map!==last){last=P.map;if(B&&mqCan(B)&&!D.told[P.map]){D.told[P.map]=1;const n=mqMissions(P.map).filter(M=>!mqSt(P.map,M.k)).length;if(n)log(`📋 ${MAPN[P.map]||P.map} tem um Quadro de Missões com ${n} missões para hoje.`,'q')}}
+  if(P.map!==last){last=P.map;if(B&&mqCan(B)&&!D.told[P.map]){D.told[P.map]=1;const n=mqMissions(P.map).filter(M=>!mqSt(P.map,M.k)).length;if(n)log(`📋 Há ${n} missões de ${MAPN[P.map]||P.map} para hoje no Mural de Missões da ilha.`,'q')}}
   if(B){const A=D.a[P.map]||{},ex=A.exp;if(ex&&ex.st==='on')mqPoints(P.map).forEach((p,j)=>{if(!ex.vis[j]&&Math.abs(P.x-p.x)+Math.abs(P.y-p.y)<=3){ex.vis[j]=1;text(P,'📍 '+p.n+' explorado','#7fe0ff',1600);sfx('lvl');save(true)}})}
-  for(const map in D.a)for(const M of mqMissions(map)){const s=D.a[map][M.k];if(s&&s.st==='on'&&!s.rd&&mqProg(map,M)>=M.need){s.rd=1;toast(null,`📋 Missão pronta: entregue no Quadro de ${MAPN[map]||map}`);if(P.track==='mq:'+map+':'+M.k)P.track='mq:'+map+':'+M.k}}
+  for(const map in D.a)for(const M of mqMissions(map)){const s=D.a[map][M.k];if(s&&s.st==='on'&&!s.rd&&mqProg(map,M)>=M.need){s.rd=1;toast(null,`📋 Missão pronta: entregue no Mural de Missões`);if(P.track==='mq:'+map+':'+M.k)P.track='mq:'+map+':'+M.k}}
  }catch(e){console.error(e)}}
  return r}}
 /* aba Missões → Diárias: só as missões que o jogador pegou + onde ficam os quadros */
 {const qb=pQuest;pQuest=function(b){const r=qb.apply(this,arguments);
  try{if(typeof QTAB!=='undefined'&&QTAB==='dia'){const D=mqDay();const acc=[];for(const map in D.a)for(const M of mqMissions(map)){const s=D.a[map][M.k];if(s&&s.st==='on')acc.push([map,M])}
   const tb=(key)=>`<button data-mq="${key}" style="font-size:11px;padding:1px 6px" class="${P.track===key?'gold':''}">${P.track===key?'Rastreando':'Rastrear'}</button>`;
-  const accH=acc.length?acc.map(([map,M])=>{const p=mqProg(map,M),rd=p>=M.need;return `<div class="quest"><h4>${rd?'🟢':'⏳'} ${esc(M.l)}</h4><p style="margin:0"><small>${esc(MAPN[map]||map)} · ${rd?'pronta: entregue no Quadro de Missões':p+'/'+M.need}</small> ${tb('mq:'+map+':'+M.k)}</p></div>`}).join(''):'<div class="quest"><p style="margin:0">Você não pegou nenhuma missão hoje. Vá a um <b>📋 Quadro de Missões</b> e escolha as que quiser.</p></div>';
-  const mine=P.fac==='elfo';const Bs=Object.values(MQ_BOARDS).filter(B=>mqCan(B)&&P.lvl>=B.lo-3&&P.lvl<=B.hi+8).sort((a,b)=>((b.map===P.map)-(a.map===P.map))||((b.elf===mine)-(a.elf===mine))||(Math.abs((a.lo+a.hi)/2-P.lvl)-Math.abs((b.lo+b.hi)/2-P.lvl))).slice(0,8);
-  const bH=Bs.map(B=>{const L=mqMissions(B.map),dn=L.filter(M=>(mqSt(B.map,M.k)||{}).st==='done').length;return `<div class="quest ${D.bonus[B.map]?'done':''}"><h4>${B.elf===mine?(mine?'🌿':'🏰'):'⛵'} ${esc(MAPN[B.map]||B.map)} <small style="color:var(--muted)">· nível ${B.lo}–${B.hi} · ${dn}/${L.length} entregues</small></h4><p style="margin:0"><small>${L.length} missões no quadro</small> ${tb('mqb:'+B.map)}</p></div>`}).join('')||'<div class="quest"><p style="margin:0">Nenhum quadro no seu nível.</p></div>';
-  const box=el(`<div><div class="sect">📋 Missões aceitas <span>${acc.length}</span></div>${accH}<div class="sect">🗺️ Quadros de Missões do seu nível</div><p style="color:var(--muted);font-size:12px;margin:0 0 8px">Cada ilha tem um quadro com missões de caça, entrega, exploração e chefe, que renovam todo dia. Toque em Rastrear para a seta levar até o quadro.</p>${bH}</div>`);
+  const accH=acc.length?acc.map(([map,M])=>{const p=mqProg(map,M),rd=p>=M.need;return `<div class="quest"><h4>${rd?'🟢':'⏳'} ${esc(M.l)}</h4><p style="margin:0"><small>${esc(MAPN[map]||map)} · ${rd?'pronta: entregue no Mural de Missões':p+'/'+M.need}</small> ${tb('mq:'+map+':'+M.k)}</p></div>`}).join(''):'<div class="quest"><p style="margin:0">Você não pegou nenhuma missão hoje. Vá ao <b>📋 Mural de Missões</b> de uma ilha e escolha as que quiser.</p></div>';
+  const mine=P.fac==='elfo';const Bs=mqMainBoards().filter(B=>P.lvl>=B.lo-3).sort((a,b)=>((b.map===P.map)-(a.map===P.map))||((b.elf===mine)-(a.elf===mine))||(Math.abs((a.lo+a.hi)/2-P.lvl)-Math.abs((b.lo+b.hi)/2-P.lvl))).slice(0,8);
+  const bH=Bs.map(B=>{const L=mqGroupAll(B.map),dn=L.filter(([m,M])=>(mqSt(m,M.k)||{}).st==='done').length;return `<div class="quest ${D.bonus[B.map]?'done':''}"><h4>${B.elf===mine?(mine?'🌿':'🏰'):'⛵'} ${esc(MAPN[B.map]||B.map)} <small style="color:var(--muted)">· nível ${B.lo}–${B.hi} · ${dn}/${L.length} entregues</small></h4><p style="margin:0"><small>${L.length} missões no mural</small> ${tb('mqb:'+B.map)}</p></div>`}).join('')||'<div class="quest"><p style="margin:0">Nenhum quadro no seu nível.</p></div>';
+  const box=el(`<div><div class="sect">📋 Missões aceitas <span>${acc.length}</span></div>${accH}<div class="sect">🗺️ Murais de Missões</div><p style="color:var(--muted);font-size:12px;margin:0 0 8px">Cada ilha tem um único Mural, com todas as diárias dela: caça, entrega, exploração, chefe e a Grande Caçada de 100. Toque em Rastrear para a seta levar até o mural.</p>${bH}</div>`);
   const first=b.querySelector('.sect');const nodes=[...box.childNodes];if(first)first.before(...nodes);else b.append(...nodes);
   b.querySelectorAll('[data-mq]').forEach(bt=>bt.onclick=()=>{trackMission(bt.dataset.mq);renderPanel()})}}catch(e){console.error(e)}
  return r}}
@@ -14047,8 +14048,8 @@ function islSlots(){const m=P&&P.cls==='mage';return ['armadura','elmo','calca',
 /* 3) drops: chefe → fragmentos; monstros da ilha → peça comum (rara) */
 {const killB=kill;kill=function(mo){const alive=mo&&!mo.dead;const r=killB.apply(this,arguments);
   try{if(alive&&mo.dead&&!mo.e4sum){const B=ISL_BOSS[mo.type];
-   if(B&&ISL_MAP[mo.map]===B){const n=2+(R()<.5?1:0),id='frag_isl_'+B.key;if(addItem(id,n)){text(mo,'+'+n+' '+IT[id].n,ELC[B.el],1800);toast(itemIcon(id),`+${n} ${IT[id].n}`);log(`${MON[mo.type].n} deixou ${n} ${IT[id].n}. Leve à forja de ${B.ilha}.`,'lv')}}
-   else{const I=ISL_MAP[mo.map];if(I&&!MON[mo.type].boss&&!mo.tmp&&R()<.012*(1+buffV('drop'))){const sk=islSlots()[(R()*7)|0],id=I.weak[sk];if(id&&addItem(id)){const it=IT[arConv(id)]||IT[id];text(mo,it.n,'#c0c0c0',1600);log('Peça comum de '+I.ilha+': '+it.n+'.','loot')}}}}}catch(e){console.error(e)}
+   if(B&&ISL_MAP[mo.map]===B){const n=2+(R()<.5?1:0),id='frag_isl_'+B.key;if(islDrop(mo,id,n)){text(mo,'+'+n+' '+IT[id].n,ELC[B.el],1800);log(`${MON[mo.type].n} deixou ${n} ${IT[id].n} no corpo. Leve à forja de ${B.ilha}.`,'lv')}}
+   else{const I=ISL_MAP[mo.map];if(I&&!MON[mo.type].boss&&!mo.tmp&&R()<.012*(1+buffV('drop'))){const sk=islSlots()[(R()*7)|0],id=I.weak[sk];if(id&&islDrop(mo,id,1)){const it=IT[arConv(id)]||IT[id];text(mo,it.n,'#c0c0c0',1600);log('Peça comum de '+I.ilha+' no corpo: '+it.n+'.','loot')}}}}}catch(e){console.error(e)}
   return r}}
 /* o Set dos Espinhos e o de Âmbar seguem a mesma regra: sem peças prontas dos monstros e do chefe */
 for(const k of Object.keys(E4_DROP))delete E4_DROP[k];
@@ -14135,4 +14136,75 @@ function islForge(key,who){const I=ISL_BY[key],fid='frag_isl_'+key,have=countIte
    if(once(mo,'f1',.3)){say2(mo,'O ABISMO OLHA DE VOLTA','#ff6aff');call(mo,'espectro_abismo',2,mo.lv-8)}}
  });
 }
+</script>
+
+<script>
+/* ===== Mural de Missões e Forja da Ilha: um de cada por ilha, em locais próprios; forja com vitrine; regras gerais ===== */
+'use strict';
+function islDrop(mo,id,q){const CP=[...CORPSE].reverse().find(c=>c.map===mo.map&&c.name===MON[mo.type].n);if(!CP)return addItem(id,q);CP.loot=CP.loot||[];const e=!IT[id].slot&&CP.loot.find(o=>o.id===id);if(e)e.q+=q;else CP.loot.push({id,q});CP.keep=nowT+120000;return true}
+/* --- grupos: todas as áreas de uma ilha usam o mesmo mural --- */
+var MQ_GROUP={},MQ_MAIN={};
+{const set=(map,main)=>{if(MQ_BOARDS[map]&&MQ_BOARDS[main])MQ_GROUP[map]=main};
+ for(const I of Object.values(ISL_BY))for(const m of I.maps)set(m,I.forge);
+ for(const [m,main] of [['esgoto','over'],['hunt_over','over'],['hunt_sylvaren','sylvaren'],['hunt_e_peace','sylvaren'],['hell','cripta'],['hunt_ilha_selos','ilha_selos'],['kol_castelo','kol_kar'],['hunt_kol_kar','kol_kar']])if(!MQ_GROUP[m])set(m,main);
+ for(const m in MQ_BOARDS){if(!MQ_GROUP[m]){const h=/^hunt_(.+)$/.exec(m);MQ_GROUP[m]=h&&MQ_BOARDS[h[1]]?(MQ_GROUP[h[1]]||h[1]):m}}
+ for(const m in MQ_GROUP)(MQ_MAIN[MQ_GROUP[m]]=MQ_MAIN[MQ_GROUP[m]]||[]).push(m);
+ for(const main in MQ_MAIN)MQ_MAIN[main].sort((a,b)=>(b===main)-(a===main)||MQ_BOARDS[a].lo-MQ_BOARDS[b].lo)}
+function mqGroupAll(main){const o=[];for(const m of MQ_MAIN[main]||[main])for(const M of mqMissions(m))o.push([m,M]);return o}
+function mqMainBoards(){return Object.keys(MQ_MAIN).map(main=>{const A=MQ_MAIN[main].map(m=>MQ_BOARDS[m]);return{map:main,lo:Math.min(...A.map(b=>b.lo)),hi:Math.max(...A.map(b=>b.hi)),elf:MQ_BOARDS[main].elf}})}
+function mqShowNearest(){const main=MQ_GROUP[P.map]||(P.fac==='elfo'&&!(P.fl&&P.fl.eleft)?'sylvaren':'over');P.track='mqb:'+main;P.guide=null;toast(null,'🧭 Seguindo para o Mural de Missões · '+(MAPN[main]||main));save(true)}
+/* --- visual: sprites e piso próprios --- */
+const mkSpr=draw=>{const c=document.createElement('canvas');c.width=c.height=32;const g=c.getContext('2d');draw((x,y,w,h,col)=>{g.fillStyle=col;g.fillRect(x*2,y*2,w*2,h*2)});return c};
+const MURAL_IMG=mkSpr(R=>{R(1,3,2,13,'#5a3a1e');R(13,3,2,13,'#5a3a1e');R(0,1,16,3,'#8a5a2a');R(0,1,16,1,'#b07a3a');R(2,4,12,9,'#a87840');R(2,4,12,1,'#c89858');R(3,5,4,4,'#f0e6c8');R(8,5,5,3,'#f8f0d8');R(8,9,3,3,'#f0e6c8');R(4,10,3,2,'#e8dcb8');R(4,6,2,1,'#8a7a5a');R(9,6,3,1,'#8a7a5a');R(5,5,1,1,'#d04040');R(10,5,1,1,'#d04040');R(9,9,1,1,'#4080d0');R(12,10,1,2,'#e9b949')});
+const FORJA_IMG=mkSpr(R=>{R(1,2,6,12,'#5a5a66');R(1,2,6,1,'#7a7a88');R(2,0,3,2,'#4a4a56');R(2,7,4,5,'#1a1210');R(3,8,2,4,'#ff8a20');R(3,10,2,2,'#ffe060');R(8,9,7,2,'#3a3a44');R(8,9,7,1,'#6a6a78');R(14,9,2,1,'#3a3a44');R(10,11,3,2,'#2a2a32');R(9,13,5,2,'#3a3a44');R(11,6,1,3,'#8a5a2a');R(10,5,3,2,'#9a9aa8')});
+elfTile('MQFLOOR',(g,r,v)=>{px(g,0,0,16,16,'#9a7446');for(let y=0;y<16;y+=4){px(g,0,y,16,1,'#6a4a28');px(g,(y*3+v*5)%14,y+1,1,3,'#7a5a34')}px(g,0,0,16,1,'#b89060')},false,'#9a7446');
+elfTile('FORGEFLOOR',(g,r,v)=>{px(g,0,0,16,16,'#4a4a54');for(let y=0;y<16;y+=8)for(let x=(y/8%2)*4;x<16;x+=8){px(g,x,y,7,7,v%2?'#5a5a66':'#54545e');px(g,x,y+7,7,1,'#2e2e36')}if(r()<.3)px(g,r()*14|0,r()*14|0,1,1,'#ff9a40')},false,'#4a4a54');
+{const taken=(map,x,y,self)=>NEWNPCS.some(n=>n!==self&&n.map===map&&Math.abs(n.x-x)<=1&&Math.abs(n.y-y)<=1);
+ const plain=(m,map,x,y)=>x>1&&y>1&&x<m.w-2&&y<m.h-2&&!SOLID.has(getT(m,x,y))&&getT(m,x,y)!==TL.WATER&&!DSOL.has(map+','+x+','+y)&&!(m.portals||[]).some(p=>Math.abs(p.x-x)<=1&&Math.abs(p.y-y)<=1)&&![TL.STAIRS,TL.EXIT,TL.PORTAL,TL.BRIDGE,TL.PLANK,TL.CHEST].includes(getT(m,x,y));
+ const walk=(m,map,x,y)=>x>0&&y>0&&x<m.w-1&&y<m.h-1&&!SOLID.has(getT(m,x,y))&&getT(m,x,y)!==TL.WATER&&!DSOL.has(map+','+x+','+y);
+ const pad=(m,map,x,y,tile)=>{const base=getT(m,x,y);for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(plain(m,map,x+dx,y+dy)&&(getT(m,x+dx,y+dy)===base||(dx===0&&dy===0)))setT(m,x+dx,y+dy,tile)};
+ const free3=(m,map,x,y,self)=>{for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(!plain(m,map,x+dx,y+dy))return false;return !taken(map,x,y,self)};
+ const spot=(m,map,sx,sy,dmin,dmax,self)=>{const seen=new Map([[sx+','+sy,0]]),q=[[sx,sy]];let best=null,bs=1e9;while(q.length){const [x,y]=q.shift(),d=seen.get(x+','+y);if(d>dmax)continue;if(d>=dmin&&free3(m,map,x,y,self)){const sc=d+(inSafe(m,x,y)?0:20);if(sc<bs){bs=sc;best=[x,y]}}for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const k=(x+dx)+','+(y+dy);if(!seen.has(k)&&walk(m,map,x+dx,y+dy)){seen.set(k,d+1);q.push([x+dx,y+dy])}}}return best};
+ /* murais: só o da área principal de cada ilha fica no mapa */
+ for(let i=NEWNPCS.length-1;i>=0;i--){const n=NEWNPCS[i];if(/^mq_/.test(n.id)&&MQ_GROUP[n.map]!==n.map)NEWNPCS.splice(i,1)}
+ for(const main in MQ_MAIN){const n=NEWNPCS.find(o=>o.id==='mq_'+main),m=MAPS[main],B=MQ_BOARDS[main];if(!n)continue;
+  const anchor=main==='over'?NEWNPCS.find(o=>o.id==='sSalao'):main==='sylvaren'?{x:30,y:19}:null;
+  const p=anchor?spot(m,main,anchor.x,anchor.y,2,12,n):(free3(m,main,n.x,n.y,n)?[n.x,n.y]:spot(m,main,n.x,n.y,1,10,n));
+  if(p){n.x=p[0];n.y=p[1];B.x=p[0];B.y=p[1];delete MQ_PTS[main]}
+  pad(m,main,n.x,n.y,ELF_T.MQFLOOR);delete n.sign;Object.assign(n,{n:'Mural de Missões',still:1,img0:MURAL_IMG,lines:['Missões do dia!']})}
+ /* forjas: longe do mural, com piso de pedra e bigorna */
+ for(const I of Object.values(ISL_BY)){const n=NEWNPCS.find(o=>o.id==='forja_'+I.key);if(!n)continue;const m=MAPS[I.forge],B=MQ_BOARDS[MQ_GROUP[I.forge]||I.forge]||{x:n.x,y:n.y};
+  const one=(dmin,dmax)=>{const seen=new Map([[B.x+','+B.y,0]]),q=[[B.x,B.y]];while(q.length){const [x,y]=q.shift(),d=seen.get(x+','+y);if(d>=dmin&&plain(m,I.forge,x,y)&&!taken(I.forge,x,y,n))return[x,y];if(d>dmax)continue;for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const k=(x+dx)+','+(y+dy);if(!seen.has(k)&&walk(m,I.forge,x+dx,y+dy)){seen.set(k,d+1);q.push([x+dx,y+dy])}}}return null};const p=spot(m,I.forge,B.x,B.y,5,14,n)||spot(m,I.forge,B.x,B.y,4,24,n)||one(5,30);if(p){n.x=p[0];n.y=p[1];I.fx=p[0];I.fy=p[1]}
+  pad(m,I.forge,n.x,n.y,ELF_T.FORGEFLOOR);delete n.sign;Object.assign(n,{n:'Forja da Ilha',still:1,img0:FORJA_IMG,lines:['Set '+I.nome]})}}
+/* --- mural: escolha a área da ilha, depois as missões --- */
+function mqHead(main){const I=ISL_MAP[main];return I?`<div style="margin:0 0 8px;padding:6px 8px;border-radius:6px;background:rgba(127,127,127,.12)">${ELI[I.el]} <b>Elemento da ilha: ${ELN[I.el]}</b><br><small>Chefe: ${I.bosses.map(b=>MON[b].n).join(', ')} · dropa fragmentos do <b>Set ${I.nome}</b> (nível ${I.lv}), forjado na <b>Forja da Ilha</b>.</small></div>`:''}
+function mqArea(map){const B=MQ_BOARDS[map];if(!B)return;const main=MQ_GROUP[map]||map,L=mqMissions(map),nm=MAPN[map]||map;
+ const rows=L.map(M=>{const s=mqSt(map,M.k),p=mqProg(map,M);const st=!s?'⬜ disponível':s.st==='done'?'✅ entregue hoje':p>=M.need?'🟢 pronta para entregar':`⏳ ${p}/${M.need}`;return `<b>${esc(M.l)}</b><br><small>${st} · ${mqXp(M.kind,map).toLocaleString('pt-BR')} XP</small>`}).join('<br><br>');
+ const short=M=>M.l.split(':')[0]+(M.type?' · '+MON[M.type].n:M.item?' · '+IT[M.item].n:'');const opts=[];const free=L.filter(M=>!mqSt(map,M.k));
+ if(free.length>1)opts.push(['✋ Pegar todas',()=>{for(const M of free)mqAccept(map,M);toast(null,'📋 Missões aceitas: '+free.length);mqArea(map)}]);
+ for(const M of L){const s=mqSt(map,M.k);if(!s)opts.push(['✋ Pegar: '+short(M),()=>{mqAccept(map,M);if(!String(P.track||'').startsWith('mq:'))P.track='mq:'+map+':'+M.k;mqArea(map)}]);else if(s.st==='on'&&mqProg(map,M)>=M.need)opts.push(['✅ Entregar: '+short(M),()=>{const r=mqClaim(map,M);if(r!=='bonus')mqArea(map)}])}
+ if((MQ_MAIN[main]||[]).length>1||main==='over')opts.push(['‹ Outras áreas da ilha',()=>mqBoard(main)]);opts.push(['Fechar',closeAll]);
+ say('📋 Mural de Missões · '+nm,`<small>Diárias de ${esc(nm)} (nível ${B.lo}–${B.hi})${P.lvl>B.hi+5?' · você está acima do nível: o XP é calculado pelo nível da ilha':''}. Pegue, cumpra e volte ao mural para entregar. Cumprindo todas (menos a Grande Caçada), você ganha o <b>baú da área</b>.</small><br><br>${rows}`,opts)}
+mqBoard=function(map){const main=MQ_GROUP[map]||map,A=MQ_MAIN[main]||[main];
+ if(A.length<2&&main!=='over')return mqArea(main);
+ const opts=A.map(m=>{const L=mqMissions(m),dn=L.filter(M=>(mqSt(m,M.k)||{}).st==='done').length,rd=L.filter(M=>{const s=mqSt(m,M.k);return s&&s.st==='on'&&mqProg(m,M)>=M.need}).length;return [`${rd?'🟢 ':''}${MAPN[m]||m} · nível ${MQ_BOARDS[m].lo}–${MQ_BOARDS[m].hi} · ${dn}/${L.length}`,()=>mqArea(m)]});
+ if(main==='over'&&P.fac!=='elfo')opts.push(['🎯 Caçadas do reino (Caçadora Bruna)',()=>dqBoard('Caçadora Bruna')],['📦 Entregas de materiais (Clara)',()=>deliveries()],['⛏ Caçada na Mina (Gorin)',()=>gorinTalk()],['🐈 Encontrar o gato Bigode',()=>gatoBoard()],['🍞 Pão aos guardas',()=>paoBoard()]);
+ opts.push(['Fechar',closeAll]);
+ say('📋 Mural de Missões · '+(ISL_MAP[main]?ISL_MAP[main].ilha:MAPN[main]||main),mqHead(main)+'Todas as missões diárias desta ilha ficam aqui. Escolha uma área:',opts)};
+/* --- forja com vitrine: desenho e descrição de cada peça, como nos mercados --- */
+islForge=function(key,who){const I=ISL_BY[key],fid='frag_isl_'+key,have=countItem(fid);who=who||'⚒️ Forja da Ilha · '+I.ilha;
+ say(who,`<b>Set ${I.nome}</b> · nível ${I.lv} · ${ELI[I.el]} ${ELN[I.el]}<br><small>Os fragmentos caem do chefe da ilha (${I.bosses.map(b=>MON[b].n).join(', ')}): 2 ou 3 por vitória. Os monstros deixam no corpo, às vezes, a versão comum (mais fraca e sem bônus de set).</small><br>Você tem <b>${have}</b> ${IT[fid].n} e <b>${P.gold.toLocaleString('pt-BR')}</b> de ouro.`,[['Fechar',closeAll]]);
+ const body=$('#dlgBody');for(const sk of islSlots()){const id=I.pieces[sk],sid=arConv(id),cost=ISL_COST[IT[id].slot],gold=I.lv*100,ok=have>=cost&&P.gold>=gold;
+  body.append(forgeRow(IT[sid]?sid:id,`<b class="st leg">${cost} fragmentos</b><b class="st atk">${gold.toLocaleString('pt-BR')} ouro</b>`,'Forjar',ok,()=>{if(countItem(fid)<cost||P.gold<gold)return;if(!addItem(id)){toast(null,'Bolsa cheia!');return}removeItem(fid,cost);P.gold-=gold;sfx('ach');toast(itemIcon(IT[sid]?sid:id),'Forjado: '+(IT[sid]||IT[id]).n+'!');log('Forjado: '+(IT[sid]||IT[id]).n+'.','lv');save(true);islForge(key,who)}))}};
+godForge=function(){const have=countItem('frag_divino');
+ say('Jaogg · Forja Divina',`<i>"Os fragmentos da espada de Kael guardam o meu poder."</i><br><br><b>GOD ARMOR</b> (nível 300): as 5 peças juntas dão <b>65%</b> de proteção contra todos os elementos. Nenhuma profissão consegue forjar este set.<br>Você tem <b>${have}</b> Fragmento${have===1?'':'s'} Divino${have===1?'':'s'} (3 por vitória sobre Kael).`,[['Fechar',closeAll]]);
+ const body=$('#dlgBody');for(const [k,n,,,,cost] of GOD_SET){const id='god_'+k,own=godOwned(id);body.append(forgeRow(id,`<b class="st leg">${cost} Fragmentos Divinos</b>${own?'<b class="st">✅ você já tem</b>':''}`,'Forjar',have>=cost&&P.lvl>=300,()=>godForgePiece(k,cost)))}};
+/* --- status: XP do nível e XP total (o mesmo número do ranking) --- */
+{const hb=pHero;pHero=function(b){const r=hb.apply(this,arguments);try{const p=[...b.querySelectorAll('.heroTop p')].find(x=>x.textContent.startsWith('Experiência'));if(p){const tot=totXp(P.lvl,P.xp).toLocaleString('pt-BR');p.innerHTML=P.lvl>=MAXLV?`<b>Nível máximo</b> · XP total: ${tot}`:`XP neste nível: ${P.xp.toLocaleString('pt-BR')} / ${need(P.lvl).toLocaleString('pt-BR')}<br>XP total: ${tot}`}}catch(e){}return r}}
+/* --- colisão: em zona PvP um jogador não atravessa o outro; em PvE, atravessa --- */
+function pvpZone(map,x,y){if(map!==NUVEM)return false;const inR=r=>x>=r[0]&&y>=r[1]&&x<=r[2]&&y<=r[3];return !(inR(NUVEM_DOCK.humano.safe)||inR(NUVEM_DOCK.elfo.safe)||inR(NUVEM_SANCT))}
+{const ob=occupied;occupied=function(map,x,y,self){if(ob.apply(this,arguments))return true;if(self===P&&pvpZone(map,x,y))for(const b of BOTS)if(!b.dead&&b.map===map&&b.placed===map&&b.x===x&&b.y===y)return true;return false}}
+/* --- entrada da Mata Corrompida bem marcada --- */
+{const m=MAPS.amazon;if(m&&typeof AMZ68!=='undefined'){for(const [x,y] of [[25,76],[25,78]])if(!SOLID.has(getT(m,x,y)))setT(m,x,y,TL.LAMP);setT(m,24,77,TL.PORTAL);
+  NEWNPCS.push({id:'amz68_entrada',n:'Entrada: Mata Corrompida',map:'amazon',x:27,y:76,sign:1,wander:false,talk:()=>say('Entrada da Mata Corrompida','<b>← MATA CORROMPIDA</b> (nível 42 a 50)<br><br>Passe pelo <b>portal roxo</b> entre os dois lampiões, a oeste desta placa.<br><small>Lá dentro: a casa abandonada e o ritual da Árvore Corrompida.</small>',[['Fechar',closeAll]])})}}
 </script>

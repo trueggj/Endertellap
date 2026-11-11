@@ -13387,3 +13387,173 @@ link(ELF3.lumen,ELF3.pantano);link(ELF3.pantano,ELF3.cumes);
   const seen=new Set([sx+','+sy]),q=[[sx,sy]];while(q.length){const [x,y]=q.shift();for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy,k=nx+','+ny;if(!seen.has(k)&&ok(nx,ny)){seen.add(k);q.push([nx,ny])}}}
   for(const sp of m.spawns){const p=findSpot(m,sp[1],sp[2]);if(seen.has(p[0]+','+p[1]))continue;let best=null,bd=1e9;for(const k of seen){const [x,y]=k.split(',').map(Number);if(inSafe(m,x,y))continue;const d=Math.abs(x-sp[1])+Math.abs(y-sp[2]);if(d<bd){bd=d;best=[x,y]}}if(best){sp[1]=best[0];sp[2]=best[1]}}}}
 </script>
+<script>
+/* ===== Ato Final: As Terras Divinas (humanos e elfos) ===== */
+'use strict';
+const TD='terras_divinas',TRONO='trono_divino';
+/* --- Tiles celestiais corrompidos --- */
+const cloudf=(g,r,v)=>{px(g,0,0,16,16,v%2?'#eef0f8':'#f2f4fa');for(let i=0;i<10;i++)px(g,r()*16|0,r()*16|0,3,1,r()<.5?'#dde2f0':'#ffffff');if(r()<.4)px(g,r()*15|0,r()*15|0,1,1,'#ffe8a0')};
+elfTile('CLOUDF',cloudf,false,'#eef0f8');
+elfTile('GOLDT',(g,r,v)=>{px(g,0,0,16,16,'#e8d08a');px(g,0,7,16,1,'#c8a850');px(g,7,0,1,16,'#c8a850');px(g,1,1,5,5,'#f4e2a8');px(g,9,9,5,5,'#f4e2a8');if(r()<.5)px(g,r()*14|0,r()*14|0,1,1,'#ffffff')},false,'#e8d08a');
+elfTile('CORRUPT',(g,r,v)=>{cloudf(g,r,v);px(g,0,6+(v%3),16,2,'#7a3aa0');px(g,4,0,2,16,'#7a3aa0');px(g,11,3,1,10,'#9a5ac0');px(g,4,7,2,2,'#d08aff')},false,'#a070c8');
+elfTile('DIVPIL',(g,r,v)=>{cloudf(g,r,v);px(g,5,1,6,15,'#ffffff');px(g,5,1,1,15,'#e0e4f0');px(g,4,0,8,2,'#e8c060');px(g,4,14,8,2,'#e8c060');px(g,6,6,4,1,'#9a5ac0');px(g,7,7,2,4,'#7a3aa0')},true,'#ffffff');
+elfTile('SKYGAP',(g,r,v)=>{px(g,0,0,16,16,'#1a2048');for(let i=0;i<5;i++)px(g,r()*16|0,r()*16|0,1,1,r()<.5?'#ffffff':'#a8b8ff');if(v%2)px(g,3,10,6,1,'#2a3060')},true,'#1a2048');
+DK2.e_trono_kael=(R,W,H,t)=>{const a=.5+.4*Math.sin(t*2.4);R(14,24,52,40,'#e8d08a');R(20,8,40,20,'#f4e2a8');R(26,30,28,24,'#5a1a7a');R(36,0,8,10,`rgba(200,120,255,${a.toFixed(2)})`);R(10,40,8,24,'#c8a850');R(62,40,8,24,'#c8a850')};
+DK2.e_corrente=(R,W,H,t)=>{const s=Math.sin(t*3)*1.5;for(let y=0;y<H;y+=6)R(6+s,y,4,4,'#3a2a4a');R(4,H-6,8,6,'#7a3aa0')};
+/* --- Monstros --- */
+e3Mon('d_anjo_marcado','Anjo Marcado','fallenAngel','#b07ad8',360,380,1.3,5,'sombra');
+e3Mon('d_servo_divino','Servo Divino Corrompido','titan','#c8a8e8',365,385,1.4,4.8,'raio');
+e3Mon('d_guardiao_caido','Guardião Caído','sentinel','#9a6ac0',370,390,1.4,5,'terra');
+e3Mon('d_simbionte_divino','Simbionte Divino','symb','#d8a8ff',375,395,1.3,5.2,'sombra');
+e3Mon('d_pilar_correntes','Pilar de Correntes','iceGolem','#5a2a7a',385,385,28,2.2,'sombra',{def:2,xp:25,x:{boss:1,big:1,resp:900},loot:[['essencia_celeste',1]]});
+e3Mon('d_arauto_kael','Arauto de Kael','fallenKnight','#7a2ab0',395,395,50,2.6,'sombra',{def:2.2,xp:40,x:{boss:1,big:1,resp:1200},loot:[['frag_lendario',6],['essencia_celeste',2]]});
+MSPR.kael_final=bigPerson({h:'#1a0a20',c:'#5a1a7a',d:'#2a0a3a',s:'#e0d0d8'});mkMon('kael_final','Kael, o Deus Banido','kael_final',400,400,{hp:70,atk:2.4,def:2.4,xp:60,x:{boss:1,big:1,resp:1800},eq:'weapon',loot:[['frag_lendario',15],['essencia_celeste',5]]});MON.kael_final.el='sombra';MON.kael_final.rng=3;SPAWNED.add('kael_final');
+REG.kael_final='Trono Divino, Terras Divinas';REG.d_arauto_kael='Portão do Trono, Terras Divinas';REG.d_pilar_correntes='Terras Divinas';
+/* --- Terras Divinas (360 a 400) --- */
+{const W=100,H=80,m=M(W,H,ELF_T.CLOUDF,ELF_T.SKYGAP),r=rng(4040);
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++){const d=Math.hypot((x-50)/46,(y-40)/38)+Math.sin(x*.35+y*.2)*.03;let v=ELF_T.CLOUDF;const q=r();if(d>.92)v=ELF_T.SKYGAP;else if(q<.04)v=ELF_T.DIVPIL;else if(q<.12)v=ELF_T.CORRUPT;else if(q<.13)v=ELF_T.SKYGAP;setT(m,x,y,v)}
+ const P2=(pts)=>elfPath(m,pts,ELF_T.GOLDT);P2([[50,74],[50,58],[30,46],[20,40]]);P2([[50,58],[70,46],[80,40]]);P2([[30,46],[30,22]]);P2([[70,46],[70,22]]);P2([[30,22],[50,18],[70,22]]);P2([[50,18],[50,8]]);
+ for(const [cx,cy] of [[20,40],[80,40],[30,22],[70,22]])elf2Oval(m,cx,cy,5,4,ELF_T.GOLDT);elf2Oval(m,50,14,7,5,ELF_T.GOLDT);
+ for(let y=70;y<=77;y++)for(let x=44;x<=56;x++)setT(m,x,y,ELF_T.GOLDT);for(const [x,y] of [[44,70],[56,70],[44,77],[56,77]])setT(m,x,y,ELF_T.DIVPIL);m.safe.push([44,69,56,77]);
+ setT(m,50,6,TL.PORTAL);m.portals.push({x:50,y:6,to:TRONO,tx:15,ty:21});
+ for(const [x,y] of [[20,40],[80,40],[30,22],[70,22]])m.spawns.push(['d_pilar_correntes',x,y]);m.spawns.push(['d_arauto_kael',50,12]);
+ elfSpawns(m,[{k:'d_anjo_marcado',area:[6,30,94,68]},{k:'d_servo_divino',area:[6,30,94,68]},{k:'d_guardiao_caido',area:[10,10,90,40]},{k:'d_simbionte_divino',area:[10,10,90,40]}],70,r);
+ m.grown=1;MAPS[TD]=m;MAPN[TD]='Terras Divinas';ZLV[TD]='nível 360 a 400';B70_ROOTS.add(TD);
+ for(const [x,y] of [[18,36],[78,36],[28,18],[68,18]])deco(TD,x,y,'e_corrente',1,4,false);}
+/* --- Trono Divino (Kael) --- */
+{const a=M(31,25,ELF_T.GOLDT,ELF_T.SKYGAP);box(a,0,0,30,24,ELF_T.SKYGAP,ELF_T.GOLDT);
+ for(let y=1;y<24;y++)for(let x=1;x<30;x++){const d=Math.hypot((x-15)/13,(y-12)/10.5);if(d>1)setT(a,x,y,ELF_T.SKYGAP);else if(d>.9)setT(a,x,y,ELF_T.CORRUPT)}
+ for(const [x,y] of [[6,6],[24,6],[6,18],[24,18]])setT(a,x,y,ELF_T.DIVPIL);
+ a.spawns.push(['kael_final',15,9]);a.safe.push([13,20,17,23]);a.grown=1;
+ MAPS[TRONO]=a;MAPN[TRONO]='Trono Divino';ZLV[TRONO]='chefe final · nível 400';deco(TRONO,13,1,'e_trono_kael',5,4);}
+/* --- Personagens --- */
+const SEAL_ALLY_IMG={humano:bigPerson(EPAL('#5a5a6a','#c8d0d8')),elfo:bigPerson({h:'#e8e8f0',c:'#2a2a6a',d:'#1a1a4a'})};
+NEWNPCS.push(
+ {id:'fim_eldoran',n:'Mago Eldoran',map:TD,x:47,y:72,wander:false,pal:{h:'#e8e8f0',c:'#2a2a6a',d:'#1a1a4a'},lines:['Os deuses também sangram.'],talk:()=>say('Mago Eldoran','<i>"Nunca imaginei pisar no reino dos deuses. Muito menos com elfos ao meu lado."</i>',[['Até mais',closeAll]])},
+ {id:'fim_walter',n:'Mestre Walter',map:TD,x:53,y:72,wander:false,pal:peacePal('#f0f0f4','#5a5a7a'),lines:['Por Lirien.'],talk:()=>say('Mestre Walter','Ele não olha para Ezequiel nenhuma vez.<br><br><i>"Lutar ao lado de humanos. Lirien riria de mim."</i>',[['Até mais',closeAll]])},
+ {id:'fim_ezequiel',n:'Ezequiel',map:TD,x:50,y:75,wander:false,pal:EPAL('#5a5a6a','#c8d0d8'),lines:['...'],talk:()=>say('Ezequiel','<i>"Walter não fala comigo. Está certo. Só preciso que ele chegue vivo ao trono."</i>',[['Até mais',closeAll]])},
+ {id:'portal_retorno_td',n:'Passagem para a Ilha do Selo',map:TD,x:50,y:77,sign:1,wander:false,talk:()=>say('Passagem','Um caminho de luz desce até o templo da Ilha do Selo Esquecido.',[['Descer',()=>{closeAll();teleport({to:ELF3.ilha,tx:50,ty:15})}],['Ficar',closeAll]])},
+ {id:'jaogg_preso',n:'Jaogg, acorrentado',map:TRONO,x:15,y:5,still:1,wander:false,img0:JAOGG_IMG,lines:['...'],talk:()=>say('Jaogg','Correntes roxas prendem o velho deus ao trono. A aura dourada mal brilha.<br><br><i>"Homens e elfos... lado a lado..."</i>',[['Fechar',closeAll]])},
+ {id:'aliado_trono',n:'Aliado',map:TRONO,x:13,y:19,still:1,wander:false,img0:SEAL_ALLY_IMG.humano,lines:['O Hino!'],talk:()=>say(fimAllyName(),'<i>"Quando eu cantar o Hino de Jaogg, o escudo dele cai. Ataque nessa hora!"</i>',[['Certo',closeAll]])}
+);
+function fimAllyName(){return P&&P.fac==='elfo'?'Mago Eldoran':'Ezequiel'}
+/* --- Capítulos --- */
+const FIM_PILLARS=['d_pilar_correntes'],FIM_MONS=['d_anjo_marcado','d_servo_divino','d_guardiao_caido','d_simbionte_divino'];
+const fimHome={humano:'eldoran',elfo:'peace_walter'},fimCamp={humano:'fim_eldoran',elfo:'fim_walter'};
+const FIM_ACT={
+ humano:[
+  {n:'O Conselho das Nuvens',start:'eldoran',back:'dave_oraculo',minLv:350,tasks:[],
+   intro:'<i>"Dave chamou os dois povos para o Santuário das Nuvens Partidas. Pela primeira vez desde a Guerra dos Onze, humanos e elfos vão se sentar no mesmo lugar sem espadas. Vá na frente."</i>',
+   done:'No Santuário, pela primeira vez, humanos e elfos estão lado a lado. Eldoran, a Regente Ilsa, o Rei Petrick, Walter e Ezequiel.<br><br>Dave fala para todos: <i>"Kael levou Jaogg para as <b>Terras Divinas</b> e se sentou no trono do irmão. O selo da ilha agora é uma porta. Quem atravessar, atravessa junto."</i><br><br>Walter e Eldoran apertam as mãos, sem sorrir. É uma trégua para uma batalha só.',rw:3},
+  {n:'O Caminho dos Deuses',start:'selo_jaogg',back:'fim_eldoran',minLv:360,go:1,tasks:[{t:'kill',mon:FIM_MONS,q:40,l:'Derrote 40 servos de Kael nas Terras Divinas'}],
+   intro:'O selo quebrado agora brilha em roxo e dourado. Atrás dele, uma escada de luz sobe até as <b>Terras Divinas</b>.',
+   done:'<i>"O reino dos deuses está podre de marca roxa"</i>, diz Eldoran. <i>"Jaogg está preso por quatro <b>Pilares de Correntes</b>. Enquanto eles estiverem de pé, nem um exército o solta."</i>',rw:3},
+  {n:'As Correntes de Jaogg',start:'fim_eldoran',back:'fim_eldoran',minLv:370,tasks:[{t:'kill',mon:FIM_PILLARS,q:4,l:'Derrube os 4 Pilares de Correntes'}],
+   intro:'<i>"Dois pilares a leste, dois a oeste. Derrube os quatro."</i>',
+   done:'O último pilar cai, e um tremor atravessa as nuvens. Ao norte, diante do trono, alguém espera: o <b>Arauto de Kael</b>.',rw:3},
+  {n:'O Último Juramento',start:'fim_eldoran',back:'fim_walter',minLv:380,tasks:[{t:'boss',mon:'d_arauto_kael',l:'Derrote o Arauto de Kael, diante do trono'}],
+   intro:'<i>"O Arauto guarda a porta do trono. Walter e Ezequiel vão com você."</i>',
+   done:'',walter:1,rw:4},
+  {n:'Kael',start:'fim_ezequiel',back:'jaogg_livre',minLv:390,tasks:[{t:'boss',mon:'kael_final',l:'Derrote Kael no Trono Divino'}],
+   intro:'Ezequiel está com a espada de Walter na mão.<br><br><i>"Ele morreu me perdoando. Agora eu preciso merecer isso."</i><br><br><i>"Kael tem um escudo feito do poder de Jaogg. Só o <b>Hino</b> quebra esse escudo, e o Hino precisa de um elfo e de um humano. Eu canto. Você ataca quando o escudo cair."</i>',
+   done:'',rw:6},
+  {n:'A Trégua',start:'jaogg_livre',back:'eldoran',minLv:390,tasks:[],
+   intro:'<i>"Vão para casa, pequenos. Vocês já fizeram o que nenhum deus conseguiu."</i>',
+   done:'',epi:1,rw:6}
+ ]
+};
+FIM_ACT.elfo=FIM_ACT.humano.map(c=>Object.assign({},c));
+Object.assign(FIM_ACT.elfo[0],{start:'peace_walter',intro:'<i>"Dave chamou os dois povos para o Santuário das Nuvens Partidas. Petrick vai. Eu vou. Que Jaogg tenha piedade de mim: vou me sentar ao lado de humanos e de Ezequiel."</i>'});
+Object.assign(FIM_ACT.elfo[1],{back:'fim_walter',done:'<i>"O reino dos deuses, podre de marca roxa"</i>, diz Walter. <i>"Jaogg está preso por quatro <b>Pilares de Correntes</b>. Derrube-os."</i>'});
+Object.assign(FIM_ACT.elfo[2],{start:'fim_walter',back:'fim_walter',intro:'<i>"Dois pilares a leste, dois a oeste. Derrube os quatro."</i>'});
+Object.assign(FIM_ACT.elfo[3],{start:'fim_walter',intro:'<i>"O Arauto guarda a porta do trono. Eu vou com você. Ezequiel também, já que insiste."</i>'});
+Object.assign(FIM_ACT.elfo[4],{intro:'Ezequiel está com a espada de Walter na mão.<br><br><i>"Ele morreu me perdoando. Agora eu preciso merecer isso."</i><br><br><i>"Kael tem um escudo feito do poder de Jaogg. Só o <b>Hino</b> quebra esse escudo, e o Hino precisa de um elfo e de um humano. Eldoran canta comigo. Você ataca quando o escudo cair."</i>'});
+Object.assign(FIM_ACT.elfo[5],{back:'peace_petrick'});
+const WALTER_DEATH='O Arauto cai. Mas, no último golpe, a lança dele atravessou o peito de <b>Walter</b>, que entrou na frente de Ezequiel.<br><br>Walter está deitado nas nuvens. Ezequiel se ajoelha ao lado dele, sem saber o que fazer com as mãos.<br><br><i>"Eu passei séculos te odiando"</i>, diz Walter, com a voz fraca. <i>"Era mais fácil do que sentir falta de você."</i><br><br>Ele segura a mão esquerda de Ezequiel, a da cicatriz.<br><br><i>"<b>Eu te perdoo</b>, irmão. Lirien já tinha perdoado. Eu é que demorei."</i><br><br><i>"Leve minha espada até ela. No Vale Branco."</i><br><br>E Walter, da Guarda da Lua, fecha os olhos.';
+const KAEL_END='Kael cai de joelhos no meio do trono, e a Espada Abissal racha. O poder roubado escapa como luz dourada e volta para Jaogg. As correntes roxas viram pó.<br><br>Jaogg se levanta, e a aura dele enche o céu.<br><br><i>"Irmão. Você colocou os povos uns contra os outros por eras. E os dois últimos se uniram para te derrubar."</i><br><br>Kael ri, mesmo vencido: <i>"Eles vão voltar a se odiar. Você sabe disso."</i><br><br><i>"Talvez. Mas você não vai estar lá para ver."</i><br><br>Jaogg ergue a mão, e um selo dourado se fecha em volta de Kael, desta vez <b>para sempre</b>, no fundo das Terras Divinas.';
+function fimEpilogue(){const elf=trapFac()==='elfo';return (elf?'O Rei Petrick How':'A Regente Ilsa')+' e '+(elf?'a Regente Ilsa':'o Rei Petrick How')+' assinam uma <b>trégua</b> no Santuário de Dave. Ninguém sorri. Ninguém confia de verdade.<br><br>Nas Nuvens Partidas, humanos e elfos ainda se enfrentam. A Guerra dos Onze não se apaga com uma batalha. Mas, pela primeira vez em eras, existe uma mesa onde os dois povos se sentam.<br><br>No Vale Branco, ao lado do portão em ruínas, Ezequiel crava no chão a espada de Walter, com o emblema da Guarda da Lua. A neve, dizem, nunca mais caiu sobre ela.<br><br>E nas Terras Divinas, Jaogg guarda o selo do irmão, olhando para os dois povos lá embaixo.<br><br><b>FIM.</b><br><small>Obrigado por jogar Endertell.</small>'}
+function fimS(){P.fl=P.fl||{};return P.fl.fim||(P.fl.fim={ch:0,started:0,base:{},talked:{},ev:{}})}
+function fimOpen(){return !!(P&&P.fl&&P.fl.trap&&P.fl.trap.ch>=TRAP_ACT[trapFac()].length)}
+function fimCh(){return FIM_ACT[trapFac()][fimS().ch]}
+function fimStart(){const E=fimS(),C=fimCh();E.started=1;E.base={};E.talked={};for(const t of C.tasks){const ms=t.t==='kill'?t.mon:t.t==='boss'?[t.mon]:[];for(const m of ms)E.base[m]=P.kills[m]||0}save(true);offerTracking('story')}
+function fimN(t){const E=fimS();if(t.t==='talk')return E.talked[t.npc]?1:0;const ms=t.t==='kill'?t.mon:[t.mon];return ms.reduce((s,m)=>s+Math.max(0,(P.kills[m]||0)-(E.base[m]||0)),0)}
+function fimOk(t){return fimN(t)>=(t.t==='kill'?t.q:1)}
+function fimProg(C){return C.tasks.map(t=>(fimOk(t)?'✅ ':'⬜ ')+t.l+(t.t==='kill'?` (${Math.min(fimN(t),t.q)}/${t.q})`:'')).join('<br>')||'⬜ Fale com <b>'+esc(elfNpcName(C.back))+'</b>'}
+function fimComplete(n){const E=fimS(),C=fimCh(),xp=Math.round(need(P.lvl)*C.rw),gold=P.lvl*200*C.rw;P.gold+=gold;gainXp(xp);
+ let txt=C.done;if(C.walter){txt=WALTER_DEATH;P.fl.walterMorto=1}if(C.epi)txt=fimEpilogue();if(C.n==='Kael')txt=KAEL_END;
+ E.ch++;E.started=0;E.base={};E.talked={};sfx('ach');save(true);
+ const N=fimCh(),cont=N&&N.start===n.id?[['Continuar',()=>fimTalk(n)]]:[];
+ say(n.n+' · Ato Final · '+C.n,txt+'<br><br><b>Recompensa:</b> '+xp.toLocaleString('pt-BR')+' XP · '+gold.toLocaleString('pt-BR')+' ouro'+(N&&N.start!==n.id?'<br><br><small>Próximo: fale com <b>'+esc(elfNpcName(N.start))+'</b>.</small>':''),cont.concat([['Até mais',closeAll]]))}
+function fimTalk(n){
+ if(!fimOpen()||!n)return false;const E=fimS(),C=fimCh();if(!C)return false;const head=n.n+' · Ato Final · '+C.n;
+ const go=C.go&&n.id==='selo_jaogg'?[['✨ Subir às Terras Divinas',()=>{closeAll();teleport({to:TD,tx:50,ty:73})}]]:[];
+ if(n.id===C.start&&!E.started){if(P.lvl<C.minLv){say(n.n,'Ainda é cedo. Volte quando chegar ao <b>nível '+C.minLv+'</b>.',[['Certo',closeAll]]);return true}
+  fimStart();sfx('lvl');if(!C.tasks.length&&C.back===n.id){say(head,C.intro,[['Continuar',()=>fimComplete(n)]]);return true}
+  say(head,C.intro+'<br><br>'+fimProg(C),go.concat([['Aceitar',closeAll]]));return true}
+ if(n.id===C.back&&E.started){if(!C.tasks.every(fimOk)){say(head,fimProg(C),[['Até mais',closeAll]]);return true}fimComplete(n);return true}
+ if(n.id===C.start&&E.started){say(head,fimProg(C),go.concat([['Até mais',closeAll]]));return true}
+ if(n.id==='selo_jaogg'&&E.ch>=1){say('Selo de Jaogg','A escada de luz continua aberta.',[['✨ Subir às Terras Divinas',()=>{closeAll();teleport({to:TD,tx:50,ty:73})}],['Fechar',closeAll]]);return true}
+ return false;
+}
+NEWNPCS.push({id:'jaogg_livre',n:'Jaogg',map:'oculto',x:15,y:6,still:1,wander:false,img0:JAOGG_IMG,lines:['...'],talk:()=>say('Jaogg','<i>"Obrigado, pequeno."</i>',[['Até mais',closeAll]])});
+/* --- Batalha contra Kael: escudo que só cai com os dois povos --- */
+let KAEL={shield:true,next:0};
+/* No online: o escudo cai quando há heróis dos dois povos no trono. Até lá, o aliado do outro povo canta o Hino. */
+function kaelBothPeoples(){const ally=NPCS.find(n=>n.id==='aliado_trono');return !!(ally&&ally.map===TRONO&&P&&P.map===TRONO)}
+{
+ const hitBefore=hit;
+ hit=function(mo,base){if(mo&&mo.type==='kael_final'&&KAEL.shield){mo.flash=nowT+120;text(mo,'ESCUDO','#d08aff',600);return 0}return hitBefore.apply(this,arguments)};
+ BM.kael_final=function(mo){
+  if(nowT>=(mo.kA||(mo.kA=nowT+4000))){mo.kA=nowT+(mo.fury?5500:8000);text(mo,'ESPADA ABISSAL!','#c06aff',1200);hazard({map:mo.map,tiles:area(P.x,P.y,1),warn:1600,pct:.22,col:'160,60,220',name:'Espada Abissal'})}
+  if(nowT>=(mo.kS||(mo.kS=nowT+12000))){mo.kS=nowT+21000;text(mo,'Servos, a mim!','#c06aff',1200);for(let i=0;i<3;i++){const o=addMon('kael_sombra',mo.map,mo.x+(i-1)*3,mo.y+2,390);if(o){o.aggro=true;o.noResp=1}}}
+  if(mo.hp<mo.mhp*.3&&!mo.fury){mo.fury=1;text(mo,'EU SOU UM DEUS!','#ff6aff',1800);log('Kael desperta todo o poder roubado de Jaogg!','bad')}
+ };
+ let tk=0;const updateBefore=update;
+ update=function(){const r=updateBefore.apply(this,arguments);
+  if(P&&nowT>=tk){tk=nowT+500;
+   const E=P.fl&&P.fl.fim,ch=E?E.ch:0,fac=trapFac(),alive=(MONBY[TRONO]||[]).find(o=>o.type==='kael_final'&&!o.dead);
+   // aliado certo no trono
+   const al=NPCS.find(n=>n.id==='aliado_trono');if(al){al.img=al.img0=SEAL_ALLY_IMG[fac];al.n=fimAllyName()}
+   // escudo: 7 s erguido, 7 s quebrado enquanto o aliado canta
+   if(P.map===TRONO&&alive){if(nowT>=KAEL.next){KAEL.shield=!KAEL.shield||!kaelBothPeoples();KAEL.next=nowT+7000;
+     if(!KAEL.shield){text(al||P,'♪ Hino de Jaogg!','#ffe080',1600);ring(alive,2,'#ffe080');log((al?al.n:'O aliado')+' canta o Hino de Jaogg: o escudo de Kael caiu!','q')}else{ring(alive,2,'#c06aff');text(alive,'escudo erguido','#d08aff',1000)}}}
+   else KAEL.shield=true;
+   // Jaogg: acorrentado até Kael cair; depois, livre
+   const jp=NPCS.find(n=>n.id==='jaogg_preso'),jl=NPCS.find(n=>n.id==='jaogg_livre'),freed=E&&(E.ch>4||(E.ch===4&&E.started&&fimN({t:'boss',mon:'kael_final'})>=1));
+   if(jp){const w=freed?'oculto':TRONO;if(jp.map!==w)jp.map=w}if(jl){const w=freed&&E.ch<=5?TRONO:'oculto';if(jl.map!==w)jl.map=w}
+   if(freed&&jl&&jl.map===TRONO&&P.map===TRONO)ring(jl,1.8,'#ffe080');
+   // Walter morre para quem viveu o capítulo
+   const dead=P.fl&&P.fl.walterMorto;for(const id of ['fim_walter','peace_walter','walter_clareira']){const n=NPCS.find(o=>o.id===id);if(n&&dead&&n.map!=='oculto'){n._map=n.map;n.map='oculto'}}
+   const tomb=NPCS.find(n=>n.id==='tumulo_walter');if(tomb){const w=dead?'e_peace_arquivo':'oculto';if(tomb.map!==w)tomb.map=w}
+  }
+  return r};
+}
+NEWNPCS.push({id:'tumulo_walter',n:'Memorial de Walter',map:'oculto',x:14,y:15,sign:1,wander:false,talk:()=>say('Memorial de Walter','<b>WALTER</b><br>da Guarda da Lua<br><br><i>"A memória é a única coisa que não envelhece aqui."</i>',[['Fechar',closeAll]])});
+{
+ const talkBefore=talk;
+ talk=function(n){if(n&&fimTalk(n))return;return talkBefore.apply(this,arguments)};
+ const goalBefore=storyGoal;
+ storyGoal=function(){
+  if(fimOpen()){const E=fimS(),C=fimCh();
+   if(C){const who=id=>({name:'Ato Final: falar com '+elfNpcName(id),...npcAt(id)});
+    if(!E.started)return P.lvl<C.minLv?{name:'Ato Final: chegue ao nível '+C.minLv,map:P.map,x:P.x,y:P.y,noArrow:1}:C.start==='selo_jaogg'&&P.map!==SELO?{name:'Ato Final: toque no Selo de Jaogg (templo da Ilha do Selo Esquecido)',...npcAt('kol_fenda')}:who(C.start);
+    const t=C.tasks.find(t=>!fimOk(t));if(!t)return who(C.back);
+    const mon=t.t==='kill'?t.mon[0]:t.mon;if(mon==='kael_final')return P.map===TRONO?{name:'Ato Final: derrote Kael',map:TRONO,x:15,y:9}:{name:'Ato Final: entre no Trono Divino, ao norte das Terras Divinas',map:TD,x:50,y:7};
+    for(const k in MAPS){const s=(MAPS[k].spawns||[]).find(x=>x[0]===mon);if(s)return{name:'Ato Final: '+t.l,map:k,x:s[1],y:s[2]}}}}
+  return goalBefore.apply(this,arguments)};
+ const qBefore=pQuest;
+ pQuest=function(b){const r=qBefore.apply(this,arguments);
+  try{if(fimOpen()&&typeof QTAB!=='undefined'&&QTAB==='hist'){const E=fimS(),A=FIM_ACT[trapFac()],C=A[E.ch];
+   const box=el(`<div><div class="sect">⚔️ Ato Final · As Terras Divinas <span>${Math.min(E.ch,A.length)}/${A.length}</span></div><div class="quest ${C?'':'done'}"><h4>${C?'Capítulo '+(E.ch+1)+': '+esc(C.n):'Concluído ✓'}${C?` <button id="fimTrk" style="float:right;font-size:11px;padding:2px 8px" class="${P.track==='story'?'gold':''}">${P.track==='story'?'Rastreando':'Rastrear'}</button>`:''}</h4><p>${C?(E.started?fimProg(C):P.lvl<C.minLv?'Chegue ao nível '+C.minLv+'.':'Fale com <b>'+esc(elfNpcName(C.start))+'</b>.'):'Kael foi selado para sempre. Humanos e elfos assinaram uma trégua frágil.'}</p></div></div>`);
+   const first=b.querySelector('.sect');const nodes=[...box.childNodes];if(first)first.before(...nodes);else b.append(...nodes);
+   const bt=b.querySelector('#fimTrk');if(bt)bt.onclick=()=>{trackMission('story');renderPanel()}}}catch(e){console.error(e)}
+  return r};
+ const spawnBefore=b70Spawn;
+ b70Spawn=function(map){if(map===TD||map===TRONO){const m=MAPS[TD];let p={map:TD,x:50,y:73,name:'Acampamento das Terras Divinas'};if(NPCS.some(n=>n.map===TD&&n.x===p.x&&n.y===p.y))p.x=49;return p}return spawnBefore.apply(this,arguments)};
+ const music=musZoneNow;musZoneNow=function(){if(P&&(P.map===TD))return 'sky';if(P&&P.map===TRONO)return 'void';return music()};
+}
+/* Monstros presos em decorações vão para o lugar livre mais próximo */
+{const m=MAPS[TD],sx=50,sy=73;const ok=(x,y)=>x>=0&&y>=0&&x<m.w&&y<m.h&&!SOLID.has(getT(m,x,y))&&!DSOL.has(TD+','+x+','+y);
+ const seen=new Set([sx+','+sy]),q=[[sx,sy]];while(q.length){const [x,y]=q.shift();for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy,k=nx+','+ny;if(!seen.has(k)&&ok(nx,ny)){seen.add(k);q.push([nx,ny])}}}
+ for(const sp of m.spawns){const p=findSpot(m,sp[1],sp[2]);if(seen.has(p[0]+','+p[1]))continue;let best=null,bd=1e9;for(const k of seen){const [x,y]=k.split(',').map(Number);if(inSafe(m,x,y))continue;const d=Math.abs(x-sp[1])+Math.abs(y-sp[2]);if(d<bd){bd=d;best=[x,y]}}if(best){sp[1]=best[0];sp[2]=best[1]}}}
+</script>

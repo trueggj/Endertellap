@@ -13454,7 +13454,7 @@ const FIM_ACT={
   {n:'O Último Juramento',start:'fim_eldoran',back:'fim_walter',minLv:380,tasks:[{t:'boss',mon:'d_arauto_kael',l:'Derrote o Arauto de Kael, diante do trono'}],
    intro:'<i>"O Arauto guarda a porta do trono. Walter e Ezequiel vão com você."</i>',
    done:'',walter:1,rw:4},
-  {n:'Kael',start:'fim_ezequiel',back:'jaogg_livre',minLv:390,tasks:[{t:'boss',mon:'kael_final',l:'Derrote Kael no Trono Divino'}],
+  {n:'Kael',gold:2000,start:'fim_ezequiel',back:'jaogg_livre',minLv:390,tasks:[{t:'boss',mon:'kael_final',l:'Derrote Kael no Trono Divino'}],
    intro:'Ezequiel está com a espada de Walter na mão.<br><br><i>"Ele morreu me perdoando. Agora eu preciso merecer isso."</i><br><br><i>"Kael tem um escudo feito do poder de Jaogg. Só o <b>Hino</b> quebra esse escudo, e o Hino precisa de um elfo e de um humano. Eu canto. Você ataca quando o escudo cair."</i>',
    done:'',rw:6},
   {n:'A Trégua',start:'jaogg_livre',back:'eldoran',minLv:390,tasks:[],
@@ -13479,7 +13479,7 @@ function fimStart(){const E=fimS(),C=fimCh();E.started=1;E.base={};E.talked={};f
 function fimN(t){const E=fimS();if(t.t==='talk')return E.talked[t.npc]?1:0;const ms=t.t==='kill'?t.mon:[t.mon];return ms.reduce((s,m)=>s+Math.max(0,(P.kills[m]||0)-(E.base[m]||0)),0)}
 function fimOk(t){return fimN(t)>=(t.t==='kill'?t.q:1)}
 function fimProg(C){return C.tasks.map(t=>(fimOk(t)?'✅ ':'⬜ ')+t.l+(t.t==='kill'?` (${Math.min(fimN(t),t.q)}/${t.q})`:'')).join('<br>')||'⬜ Fale com <b>'+esc(elfNpcName(C.back))+'</b>'}
-function fimComplete(n){const E=fimS(),C=fimCh(),xp=Math.round(need(P.lvl)*C.rw),gold=P.lvl*20*C.rw;P.gold+=gold;gainXp(xp);
+function fimComplete(n){const E=fimS(),C=fimCh(),xp=Math.round(need(P.lvl)*C.rw),gold=C.gold!=null?C.gold:P.lvl*20*C.rw;P.gold+=gold;gainXp(xp);
  let txt=C.done;if(C.walter){txt=WALTER_DEATH;P.fl.walterMorto=1}if(C.epi)txt=fimEpilogue();if(C.n==='Kael')txt=KAEL_END;
  E.ch++;E.started=0;E.base={};E.talked={};sfx('ach');save(true);
  const N=fimCh(),cont=N&&N.start===n.id?[['Continuar',()=>fimTalk(n)]]:[];

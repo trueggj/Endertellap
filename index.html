@@ -13116,3 +13116,165 @@ for(const k of ['sylvaren','e_cristal','e_fronteira','e_bosque','e_vale_branco',
  }
 }
 </script>
+<script>
+/* ===== Ato da Armadilha (humanos: Ato IV · elfos: Ato III) — o Selo de Jaogg em Kol Kar ===== */
+'use strict';
+const SELO='kol_selo';
+/* --- Mapa do Selo --- */
+DK2.e_selo_jaogg=(R,W,H,t,d)=>{const a=.5+.4*Math.sin(t*2),open=P&&P.fl&&P.fl.trapOpen;R(4,20,56,24,'#6a5a3a');R(8,16,48,32,'#c8a850');R(12,20,40,24,'#e8d080');R(16,24,32,16,open?`rgba(160,60,220,${a.toFixed(2)})`:'#8a7040');R(28,28,8,8,open?`rgba(255,200,255,${a.toFixed(2)})`:`rgba(255,240,170,${a.toFixed(2)})`);
+ for(let i=0;i<6;i++){const ang=t*.8+i*1.05;R(30+Math.cos(ang)*22,30+Math.sin(ang)*10,3,3,'rgba(255,230,140,.8)')}};
+{const m=M(27,21,TL.MARBLE,ELF_T.OBSWALL);box(m,0,0,26,20,ELF_T.OBSWALL,TL.MARBLE);
+ for(let y=1;y<20;y++)for(let x=1;x<26;x++){const d=Math.hypot((x-13)/11,(y-10)/8.5);if(d>1)setT(m,x,y,ELF_T.OBS);else if(d>.88)setT(m,x,y,ELF_T.PCARPET)}
+ for(const [x,y] of [[4,4],[22,4],[4,16],[22,16]])setT(m,x,y,ELF_T.OBSPIL);
+ setT(m,13,20,TL.EXIT);m.portals.push({x:13,y:20,to:V75_KOL,tx:26,ty:30});m.spawns.push(['kol_guardiao_selo',13,6]);m.grown=1;
+ MAPS[SELO]=m;MAPN[SELO]='Selo de Jaogg';ZLV[SELO]='nível 350+';deco(SELO,11,8,'e_selo_jaogg',4,3);}
+const bigPerson=pal=>{const c=document.createElement('canvas');c.width=c.height=32;const g=c.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(human(pal),0,0,32,32);return c};
+MSPR.kol_guardiao_selo=tintSpr(MSPR.sentinel||MSPR.wolf,'#e8c060',.45);mkMon('kol_guardiao_selo','Guardião do Selo','kol_guardiao_selo',360,360,{hp:40,atk:2,def:2,xp:40,x:{boss:1,big:1,resp:600},loot:[['frag_lendario',5],['essencia_celeste',2]]});MON.kol_guardiao_selo.el='raio';SPAWNED.add('kol_guardiao_selo');REG.kol_guardiao_selo='Selo de Jaogg, Kol Kar';
+MSPR.kael_sombra=bigPerson({h:'#140a1a',c:'#4a1a6a',d:'#2a0a3a',s:'#d8c8d0'});mkMon('kael_sombra','Servo de Kael','kael_sombra',355,365,{hp:2.5,atk:2.2});MON.kael_sombra.el='sombra';
+const JAOGG_IMG=bigPerson({h:'#f8f8f8',c:'#f0e0a0',d:'#c8a850',s:'#f0d8c0'}),KAEL_IMG=bigPerson({h:'#1a0a20',c:'#5a1a7a',d:'#2a0a3a',s:'#e0d0d8'});
+NEWNPCS.push(
+ {id:'kol_fenda',n:'Fenda do Selo',map:V75_KOL,x:26,y:29,sign:1,wander:false,talk:()=>trapFenda()},
+ {id:'selo_jaogg',n:'Selo de Jaogg',map:SELO,x:14,y:11,still:1,wander:false,img0:(()=>{const c=document.createElement('canvas');c.width=c.height=16;return c})(),lines:['...'],talk:()=>say('Selo de Jaogg','Um círculo dourado gravado no chão, mais antigo que Kol Kar. Algo roxo pulsa embaixo dele.',[['Fechar',closeAll]])},
+ {id:'jaogg',n:'Jaogg',map:'oculto',x:13,y:11,still:1,wander:false,img0:JAOGG_IMG,lines:['...'],talk:()=>{}},
+ {id:'kael',n:'Kael',map:'oculto',x:13,y:4,still:1,wander:false,img0:KAEL_IMG,lines:['...'],talk:()=>{}},
+ {id:'ezequiel_vus',n:'Ezequiel',map:'oculto',x:11,y:5,wander:false,pal:EPAL('#5a5a6a','#c8d0d8'),lines:['...'],talk:()=>say('Ezequiel','Um elfo de capa cinza, com uma luva na mão esquerda. Ele observa os humanos da torre com cuidado.<br><br><i>"Não vim lutar. Vim avisar."</i>',[['Até mais',closeAll]])},
+ {id:'eldoran_peace',n:'Mago Eldoran',map:'oculto',x:18,y:15,wander:false,pal:{h:'#e8e8f0',c:'#2a2a6a',d:'#1a1a4a'},lines:['...'],talk:()=>say('Mago Eldoran','Um velho mago humano, sozinho no meio dos elfos de Peace, cercado de olhares desconfiados.<br><br><i>"Já fui mais bem recebido em cavernas de demônio."</i>',[['Até mais',closeAll]])}
+);
+/* --- Capítulos (cada povo vive o mesmo acontecimento pela sua história) --- */
+const KAEL_ABISMO=['cao_abissal','espectro_abismo','harpia_vazio','colosso_abissal','simbionte_errante'];
+const TRAP_ACT={
+ humano:[
+  {n:'O Que Dave Sabe',start:'dave_oraculo',back:'dave_oraculo',minLv:250,tasks:[],
+   intro:'<i>"Você voltou. Então escute com atenção."</i><br><br><i>"Quando Jaogg prendeu o poder do irmão, escondeu o selo no lugar mais fundo de Endertell: debaixo de <b>Kol Kar</b>, a cidade dos Az Abel. Por isso Kael espalha a marca roxa pelos dois povos: ele precisa de mãos para abrir o que não consegue tocar."</i>',
+   done:'<i>"Se o selo for aberto por quem quer protegê-lo, o poder pode ser destruído para sempre. Mas você não vai conseguir sozinho. Volte a Vussumi. Alguém que você não espera está esperando por você na Torre Arcana."</i>',rw:2},
+  {n:'O Enviado',start:'eldoran',back:'eldoran',minLv:250,tasks:[{t:'talk',npc:'ezequiel_vus',l:'Fale com o elfo que chegou à Torre Arcana',
+    line:'<i>"Meu nome é Ezequiel. Sou elfo, e sei o que isso significa para vocês. Também sei o que é carregar a marca roxa: eu a carreguei por muito tempo."</i><br><br>Ele tira a luva e mostra a cicatriz de queimadura.<br><br><i>"Kael está preparando algo em Kol Kar. Os Humanos Sombrios estão se juntando no Abismo Eterno. Eu vou com vocês, se aceitarem."</i>'}],
+   intro:'Eldoran está tenso. Lyra, ao lado dele, não tira os olhos de alguém no canto da torre.<br><br><i>"Um <b>elfo</b> entrou em Vussumi pedindo para falar com você. Os guardas quase o prenderam. Ele diz que Dave o mandou."</i><br><br>Lyra cruza os braços: <i>"Eu não confio nele. Ele tem o mesmo cheiro que o simbionte tinha."</i>',
+   done:'<i>"Ele mostrou a cicatriz"</i>, diz Eldoran. <i>"Um homem não inventa uma dor dessas. Vamos confiar nele, mas de olhos abertos."</i><br><br>Lyra não responde.',rw:2},
+  {n:'A Estrada de Kol Kar',start:'ezequiel_vus',back:'ezequiel_vus',minLv:280,tasks:[{t:'kill',mon:KAEL_ABISMO,q:30,l:'Derrote 30 criaturas no Abismo Eterno'}],
+   intro:'<i>"Antes de Kol Kar, precisamos enfraquecer o exército que Kael reúne no <b>Abismo Eterno</b>. Derrote 30 deles."</i>',
+   done:'<i>"Viu as marcas? Humanos Sombrios, simbiontes, criaturas do vazio, todos com a marca roxa. Kael está juntando tudo o que tem. Quando estiver forte, siga para Kol Kar. A <b>Fenda do Selo</b> fica no cais."</i>',rw:3},
+  {n:'O Selo de Jaogg',start:'ezequiel_vus',back:'selo_jaogg',minLv:350,tasks:[{t:'boss',mon:'kol_guardiao_selo',l:'Derrote o Guardião do Selo, embaixo de Kol Kar'}],
+   intro:'<i>"O selo tem um guardião deixado por Jaogg. Ele não sabe quem é amigo. Você vai precisar vencê-lo para chegar ao selo. Entre pela <b>Fenda do Selo</b>, no cais de Kol Kar."</i>',
+   done:'O guardião se desfaz em luz dourada. No centro da sala, o selo de Jaogg brilha. Embaixo dele, algo roxo pulsa como um coração.',rw:3},
+  {n:'A Armadilha',start:'selo_jaogg',back:'eldoran',minLv:350,tasks:[{t:'event',id:'armadilha',l:'Toque no selo'}],trap:1,intro:'',
+   done:'Eldoran escuta tudo de pé, segurando o cajado com força.<br><br><i>"Jaogg desceu por você. E Kael sabia que ele desceria. Tudo isso, desde o começo, era para tirar um deus do lugar dele."</i>',rw:4},
+  {n:'Depois da Queda',start:'eldoran',back:'eldoran',minLv:350,tasks:[{t:'talk',npc:'elric',l:'Conte ao Sábio Edrin o que aconteceu',line:'<i>"Um deus preso, e o irmão dele com o poder dos dois."</i> Edrin fecha os olhos. <i>"Só sobrou uma coisa que Kael não tem: os dois últimos povos. Juntos."</i>'},{t:'talk',npc:'lyra',l:'Fale com Lyra',line:'Lyra está sentada sozinha. <i>"Eu senti a voz de Kael quando o simbionte me prendia. Ele não grita. Ele sorri. Quando ele sorriu para Jaogg, eu senti de novo."</i><br><br><i>"Eu estava errada sobre o elfo. Ele voltou para nos tirar de lá."</i>'}],
+   intro:'<i>"Fale com Edrin e com Lyra. Precisamos estar todos juntos para o que vem."</i>',
+   done:'Eldoran abre um mapa sobre a mesa.<br><br><i>"Kael tem a Espada Abissal e o poder de Jaogg. Ele não vai mais se esconder. E o hino é claro: ele só cai quando homens e elfos lutarem lado a lado."</i><br><br><i>"Ezequiel voltou a Peace para convencer o rei deles. Nós vamos preparar Vussumi."</i><br><br><b>Fim do Ato IV. A batalha final contra Kael chega em uma próxima atualização.</b>',rw:5}
+ ],
+ elfo:[
+  {n:'O Que Dave Sabe',start:'dave_oraculo',back:'dave_oraculo',minLv:250,tasks:[],
+   intro:'<i>"Você carrega o hino, então já sabe que Jaogg prendeu o poder do irmão. Eu sei onde: debaixo de <b>Kol Kar</b>, a cidade dos Az Abel. É por isso que Kael precisa da marca roxa: ele não consegue tocar o selo com as próprias mãos."</i>',
+   done:'<i>"Volte a Peace. Um humano chegou lá pedindo para falar com Walter, e ninguém sabe se prende ou ouve."</i>',rw:2},
+  {n:'O Enviado',start:'peace_walter',back:'peace_walter',minLv:250,tasks:[{t:'talk',npc:'eldoran_peace',l:'Fale com o mago humano no Arquivo da Coroa',
+    line:'<i>"Sou Eldoran, guardião dos selos de Vussumi. Trinta anos atrás, ajudei a prender um demônio que vocês conheceram como Vorath. Agora quem está solto é algo pior."</i><br><br>Ele olha para Walter: <i>"Seu velho aqui me odeia. Tudo bem. Eu também não confio em elfos. Mas Kael não liga para isso."</i>'}],
+   intro:'Walter está de pé, de braços cruzados, olhando para um velho humano que lê os livros do arquivo como se fosse dono deles.<br><br><i>"Um <b>humano</b> no Arquivo da Coroa. Petrick deixou. Eu não teria deixado."</i>',
+   done:'Walter resmunga: <i>"Ele lutou contra um demônio por trinta anos. Eu luto contra uma memória há mais tempo que isso."</i><br><br><i>"Vá com ele. Mas se ele trair você, eu mesmo vou buscá-lo."</i>',rw:2},
+  {n:'A Estrada de Kol Kar',start:'eldoran_peace',back:'eldoran_peace',minLv:280,tasks:[{t:'kill',mon:KAEL_ABISMO,q:30,l:'Derrote 30 criaturas no Abismo Eterno'}],
+   intro:'<i>"Os Elfos Sombrios que sobraram da Cidadela estão se juntando no <b>Abismo Eterno</b>, com simbiontes e criaturas do vazio. Derrote 30 deles antes que cheguem a Kol Kar."</i>',
+   done:'<i>"Kael está juntando tudo o que tem. Quando estiver forte, vá a Kol Kar. A <b>Fenda do Selo</b> fica no cais."</i>',rw:3},
+  {n:'O Selo de Jaogg',start:'eldoran_peace',back:'selo_jaogg',minLv:350,tasks:[{t:'boss',mon:'kol_guardiao_selo',l:'Derrote o Guardião do Selo, embaixo de Kol Kar'}],
+   intro:'<i>"Jaogg deixou um guardião no selo. Ele não distingue amigos de inimigos. Entre pela <b>Fenda do Selo</b>, no cais de Kol Kar, e vença-o."</i>',
+   done:'O guardião se desfaz em luz dourada. No centro da sala, o selo de Jaogg brilha, e embaixo dele algo roxo pulsa como um coração.',rw:3},
+  {n:'A Armadilha',start:'selo_jaogg',back:'peace_walter',minLv:350,tasks:[{t:'event',id:'armadilha',l:'Toque no selo'}],trap:1,intro:'',
+   done:'Walter escuta tudo em silêncio. Quando você diz que Jaogg desceu para salvar você, ele se senta devagar.<br><br><i>"Na Guerra dos Onze, Kael também deixou os povos se matarem até alguém pedir socorro aos deuses. É sempre o mesmo truque."</i>',rw:4},
+  {n:'Depois da Queda',start:'peace_walter',back:'peace_walter',minLv:350,tasks:[{t:'talk',npc:'peace_petrick',l:'Conte ao Grande Rei Petrick How o que aconteceu',line:'Petrick ouve tudo sem interromper.<br><br><i>"Jaogg nos escolheu no início dos tempos. E agora está preso porque desceu por um de nós."</i><br><br>Ele olha para Eldoran, no fundo da sala. <i>"Se o hino diz que só os dois povos juntos derrubam Kael, então a coroa de Peace vai conversar com os homens. Pela primeira vez desde a guerra."</i>'}],
+   intro:'<i>"O rei precisa ouvir isso de você, não de mim."</i>',
+   done:'Walter pega a espada da Guarda da Lua.<br><br><i>"Petrick vai falar com os humanos. Eu não gosto disso. Mas Lirien gostaria."</i><br><br><b>Fim do Ato III élfico. A batalha final contra Kael chega em uma próxima atualização.</b>',rw:5}
+ ]
+};
+function trapS(){P.fl=P.fl||{};return P.fl.trap||(P.fl.trap={ch:0,started:0,base:{},talked:{},ev:{}})}
+function trapFac(){return P&&P.fac==='elfo'?'elfo':'humano'}
+function trapOpen(){if(!P||!P.fl)return false;return trapFac()==='elfo'?!!(P.fl.elf2&&P.fl.elf2.ch>=ELF_ACT2.length):!!(P.fl.act3&&P.fl.act3.ch>=ACT3.length)}
+function trapCh(){return TRAP_ACT[trapFac()][trapS().ch]}
+function trapActName(){return trapFac()==='elfo'?'Ato III élfico':'Ato IV'}
+function trapStart(){const E=trapS(),C=trapCh();E.started=1;E.base={};E.talked={};for(const t of C.tasks){const ms=t.t==='kill'?t.mon:t.t==='boss'?[t.mon]:[];for(const m of ms)E.base[m]=P.kills[m]||0}save(true);offerTracking('story')}
+function trapN(t){const E=trapS();if(t.t==='talk')return E.talked[t.npc]?1:0;if(t.t==='event')return E.ev[t.id]?1:0;const ms=t.t==='kill'?t.mon:[t.mon];return ms.reduce((s,m)=>s+Math.max(0,(P.kills[m]||0)-(E.base[m]||0)),0)}
+function trapOk(t){return trapN(t)>=(t.t==='kill'?t.q:1)}
+function trapProg(C){return C.tasks.map(t=>(trapOk(t)?'✅ ':'⬜ ')+t.l+(t.t==='kill'?` (${Math.min(trapN(t),t.q)}/${t.q})`:'')).join('<br>')||'⬜ Fale com <b>'+esc(elfNpcName(C.back))+'</b>'}
+function trapComplete(n){const E=trapS(),C=trapCh(),xp=Math.round(need(P.lvl)*C.rw),gold=P.lvl*150*C.rw;P.gold+=gold;gainXp(xp);E.ch++;E.started=0;E.base={};E.talked={};sfx('ach');save(true);
+ const N=trapCh(),cont=N&&N.start===n.id&&!N.trap?[['Continuar',()=>trapTalk(n)]]:[];
+ say(n.n+' · '+trapActName()+' · '+C.n,C.done+'<br><br><b>Recompensa:</b> '+xp.toLocaleString('pt-BR')+' XP · '+gold.toLocaleString('pt-BR')+' ouro'+(N&&N.start!==n.id?'<br><br><small>Próximo: fale com <b>'+esc(elfNpcName(N.start))+'</b>.</small>':''),cont.concat([['Até mais',closeAll]]))}
+function trapTalk(n){
+ if(!trapOpen()||!n)return false;const E=trapS(),C=trapCh();if(!C)return false;const head=n.n+' · '+trapActName()+' · '+C.n;
+ if(E.started){const t=C.tasks.find(t=>t.t==='talk'&&t.npc===n.id&&!E.talked[t.npc]);if(t){E.talked[t.npc]=1;save(true);sfx('lvl');say(n.n+' · '+trapActName(),t.line+'<br><br><small>✅ '+t.l+'</small>',[['Continuar',closeAll]]);return true}}
+ if(n.id===C.start&&!E.started){if(P.lvl<C.minLv){say(n.n,'Ainda é cedo. Volte quando chegar ao <b>nível '+C.minLv+'</b>.',[['Certo',closeAll]]);return true}
+  if(C.trap){trapStart();trapBegin();return true}
+  trapStart();sfx('lvl');if(!C.tasks.length&&C.back===n.id){say(head,C.intro,[['Continuar',()=>trapComplete(n)]]);return true}
+  say(head,C.intro+'<br><br>'+trapProg(C),[['Aceitar',closeAll]]);return true}
+ if(n.id===C.back&&E.started){if(!C.tasks.every(trapOk)){say(head,trapProg(C),[['Até mais',closeAll]]);return true}trapComplete(n);return true}
+ if(n.id===C.start&&E.started){if(C.trap&&!E.ev.armadilha&&!TRAP){trapBegin();return true}say(head,trapProg(C),[['Até mais',closeAll]]);return true}
+ return false;
+}
+function trapFenda(){
+ const E=P&&P.fl&&P.fl.trap,C=trapOpen()&&trapCh(),idx=E?E.ch:0;
+ if(!trapOpen()||idx<3||(idx===3&&!E.started)){say('Fenda do Selo','Uma rachadura no chão do cais, fechada por uma luz dourada. Ninguém em Kol Kar sabe para onde ela leva.',[['Fechar',closeAll]]);return}
+ closeAll();teleport({to:SELO,tx:13,ty:18});
+}
+/* --- O evento: ondas sem fim, Jaogg desce, Kael drena o poder --- */
+let TRAP=null;
+function trapBegin(){
+ if(P.map!==SELO)return;P.fl.trapOpen=1;
+ say('Selo de Jaogg','Quando você toca o selo, o círculo dourado se abre. Embaixo dele, uma luz roxa pulsa: o poder de Kael, preso há eras.<br><br>Então as paredes começam a sangrar sombra. De todos os lados, saem <b>servos de Kael</b>.',[['Lutar',closeAll]]);
+ TRAP={t0:nowT,next:nowT+1500,mons:[],stage:'waves'};
+}
+function trapWave(){const spots=[[3,3],[23,3],[3,17],[23,17],[13,2],[2,10],[24,10]];for(let i=0;i<4;i++){const [x,y]=spots[(Math.random()*spots.length)|0];const o=addMon('kael_sombra',SELO,x,y,360);if(o){o.aggro=true;o.noResp=1;TRAP.mons.push(o)}}}
+function trapCut(){
+ TRAP.stage='cut';P.buffs.divino=nowT+120000;for(const o of TRAP.mons)if(!o.dead){o.dead=true;o.respawnAt=Infinity}
+ const j=NPCS.find(n=>n.id==='jaogg'),k=NPCS.find(n=>n.id==='kael');Object.assign(j,{map:SELO,x:13,y:11,rx:13,ry:11});ring(j,4,'#ffe080');ring(j,6,'#fff4c0');sfx('ach');
+ const step=(i)=>{const s=[
+  ['Jaogg','O teto de pedra se abre como nuvem. Um velho de <b>barba branca</b>, envolto numa <b>aura dourada</b>, desce devagar até o chão. Os servos de Kael viram cinza antes de tocá-lo.<br><br><i>"Ninguém morre por meu irmão enquanto eu ainda respirar. Levante-se, pequeno."</i>',()=>{Object.assign(k,{map:SELO,x:13,y:4,rx:13,ry:4});ring(k,3,'#a050e0')}],
+  ['Kael','Uma risada calma ecoa. No alto da sala, um homem de manto roxo, com a <b>Espada Abissal</b> na mão, observa sem pressa.<br><br><i>"Obrigado, irmão. Eu sabia que você viria por eles. Você sempre vem."</i>',()=>{ring(j,2,'#a050e0');ring(j,3,'#7a2ab0')}],
+  ['Jaogg','Correntes negras sobem do chão, gravadas com a marca roxa, as mesmas correntes forjadas na lava da Ilha Vulcânica. Elas se fecham nos braços de Jaogg. A aura dourada começa a escorrer para dentro da Espada Abissal.<br><br><i>"Kael... foi tudo isso? A marca, a guerra, os dois povos... só para me tirar do céu?"</i>',()=>{ring(k,4,'#c080ff')}],
+  ['Kael','<i>"Eras procurando o que você me tirou. E bastou deixar um herói quase morrer."</i><br><br>Kael não olha para você nenhuma vez. <i>"Não se preocupe com o pequeno, irmão. Quando os dois povos terminarem de se matar, não vai sobrar ninguém para ele salvar."</i>',null],
+  ['Jaogg','Com o último brilho que lhe resta, Jaogg olha para você.<br><br><i>"O hino... lembre-se do hino. Homens e elfos, lado a lado."</i><br><br>Uma luz dourada envolve você. A sala desaparece.',null]
+ ];if(i>=s.length){trapEnd();return}const [who,txt,fx]=s[i];if(fx)fx();say(who,txt,[['Continuar',()=>step(i+1)]])};
+ step(0);
+}
+function trapEnd(){
+ for(const id of ['jaogg','kael']){const n=NPCS.find(o=>o.id===id);if(n)n.map='oculto'}
+ const E=trapS();E.ev.armadilha=1;P.fl.trapOpen=0;TRAP=null;save(true);closeAll();
+ if(trapFac()==='elfo')teleport({to:'e_peace_arquivo',tx:14,ty:17});else teleport({to:'torre_arcana',tx:9,ty:6});
+ setTimeout(()=>say('Longe dali',(trapFac()==='elfo'?'Você acorda no chão do Arquivo da Coroa, em Peace.':'Você acorda no chão da Torre Arcana, em Vussumi.')+' Ainda sente o calor da aura dourada. Jaogg não está mais lá.<br><br><small>✅ Fale com '+(trapFac()==='elfo'?'o Mestre Walter':'o Mago Eldoran')+'.</small>',[['Levantar',closeAll]]),700);
+}
+{
+ const talkBefore=talk;
+ talk=function(n){if(n&&trapTalk(n))return;return talkBefore.apply(this,arguments)};
+ let tT=0;const updateBefore=update;
+ update=function(){const r=updateBefore.apply(this,arguments);
+  if(TRAP&&TRAP.stage==='waves'){if(P.map!==SELO){for(const o of TRAP.mons)if(!o.dead){o.dead=true;o.respawnAt=Infinity}TRAP=null;P.fl.trapOpen=0}
+   else if(nowT>=TRAP.next){TRAP.next=nowT+5000;trapWave()}
+   if(TRAP&&(P.hp<stats().maxHp*.35||nowT-TRAP.t0>26000||P.dead)){if(P.dead){P.dead=false}P.hp=Math.max(P.hp,Math.round(stats().maxHp*.2));trapCut()}}
+  if(P&&nowT>=tT){tT=nowT+900;
+   const ez=NPCS.find(o=>o.id==='ezequiel_vus'),el=NPCS.find(o=>o.id==='eldoran_peace'),E=P.fl&&P.fl.trap,ch=E?E.ch:0,open=trapOpen();
+   if(ez){const want=open&&trapFac()==='humano'&&ch>=1?'torre_arcana':'oculto';if(ez.map!==want)ez.map=want}
+   if(el){const want=open&&trapFac()==='elfo'&&ch>=1?'e_peace_arquivo':'oculto';if(el.map!==want)el.map=want}
+   const j=NPCS.find(o=>o.id==='jaogg');if(j&&j.map===SELO)ring(j,1.6,'#ffe080')}
+  return r};
+ const dieBefore=die;
+ die=function(){if(TRAP&&TRAP.stage==='waves'&&P.map===SELO){P.hp=Math.round(stats().maxHp*.2);trapCut();return}return dieBefore.apply(this,arguments)};
+}
+/* Rastreamento e aba História */
+{
+ const goalBefore=storyGoal;
+ storyGoal=function(){
+  if(trapOpen()){const E=trapS(),C=trapCh();
+   if(C){const nm=trapActName(),who=id=>({name:nm+': falar com '+elfNpcName(id),...npcAt(id)});
+    if(!E.started)return P.lvl<C.minLv?{name:nm+': chegue ao nível '+C.minLv,map:P.map,x:P.x,y:P.y,noArrow:1}:C.start==='selo_jaogg'?{name:nm+': toque no Selo de Jaogg (Fenda do Selo, cais de Kol Kar)',...npcAt('kol_fenda')}:who(C.start);
+    const t=C.tasks.find(t=>!trapOk(t));if(!t)return C.back==='selo_jaogg'&&P.map!==SELO?{name:nm+': volte ao Selo de Jaogg',...npcAt('kol_fenda')}:who(C.back);
+    if(t.t==='talk')return{name:nm+': '+t.l,...npcAt(t.npc)};
+    if(t.t==='event')return P.map===SELO?{name:nm+': toque no selo',map:SELO,x:13,y:12}:{name:nm+': '+t.l,...npcAt('kol_fenda')};
+    if(t.t==='boss')return P.map===SELO?{name:nm+': '+t.l,map:SELO,x:13,y:6}:{name:nm+': '+t.l+' (Fenda do Selo, cais de Kol Kar)',...npcAt('kol_fenda')};
+    const mon=t.mon[0];for(const k in MAPS){const s=(MAPS[k].spawns||[]).find(x=>x[0]===mon);if(s)return{name:nm+': '+t.l,map:k,x:s[1],y:s[2]}}}}
+  return goalBefore.apply(this,arguments)};
+ const qBefore=pQuest;
+ pQuest=function(b){const r=qBefore.apply(this,arguments);
+  try{if(trapOpen()&&typeof QTAB!=='undefined'&&QTAB==='hist'){const E=trapS(),A=TRAP_ACT[trapFac()],C=A[E.ch];
+   const box=el(`<div><div class="sect">👑 ${trapActName()} · A Armadilha de Kael <span>${Math.min(E.ch,A.length)}/${A.length}</span></div><div class="quest ${C?'':'done'}"><h4>${C?'Capítulo '+(E.ch+1)+': '+esc(C.n):'Concluído ✓'}${C?` <button id="trapTrk" style="float:right;font-size:11px;padding:2px 8px" class="${P.track==='story'?'gold':''}">${P.track==='story'?'Rastreando':'Rastrear'}</button>`:''}</h4><p>${C?(E.started?trapProg(C):P.lvl<C.minLv?'Chegue ao nível '+C.minLv+'.':'Fale com <b>'+esc(elfNpcName(C.start))+'</b>.'):'Jaogg foi capturado. Kael tem o poder dos dois irmãos. Só os dois povos juntos podem detê-lo.'}</p></div></div>`);
+   const first=b.querySelector('.sect');const nodes=[...box.childNodes];if(first)first.before(...nodes);else b.append(...nodes);
+   const bt=b.querySelector('#trapTrk');if(bt)bt.onclick=()=>{trackMission('story');renderPanel()}}}catch(e){console.error(e)}
+  return r};
+}
+B70_ROOTS.add(SELO);
+</script>

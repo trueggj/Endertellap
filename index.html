@@ -2667,14 +2667,14 @@ function routeTo(goal){
  const prev={},q=[P.map];prev[P.map]=null;
  while(q.length){const cur=q.shift();if(cur===goal.map)break;for(const pt of links(cur)){if(!(pt.to in prev)){prev[pt.to]={from:cur,pt};q.push(pt.to)}}}
  if(!(goal.map in prev))return null;let k=goal.map,step=null;while(prev[k]&&prev[k].from!==P.map)k=prev[k].from;step=prev[k];if(!step)return null;
- let best=null,bd=1e9;for(const pt of links(P.map))if(pt.to===k){const d=Math.abs(pt.x-P.x)+Math.abs(pt.y-P.y);if(d<bd){bd=d;best=pt}}return best?{x:best.x,y:best.y,via:k,ship:best.ship}:null}
+ let best=null,bd=1e9;for(const pt of links(P.map))if(pt.to===k){const d=Math.abs(pt.x-P.x)+Math.abs(pt.y-P.y);if(d<bd){bd=d;best=pt}}return best?{x:best.x,y:best.y,via:k,ship:best.ship,npcGate:best.npcGate}:null}
 const DEST=[['Templo e cura',()=>npcAt('elna'),'Templo'],['Porto (barcos)',()=>npcAt('leme'),'Porto'],['Depósito',()=>npcAt('dora'),'Depósito'],['Mercado',()=>npcAt('tito'),'Mercado'],
  ['Poções (Nina)',()=>npcAt('nina'),'Loja de poções'],['Ferreiro (Duran)',()=>npcAt('duran'),'Ferreiro'],['Taverna',()=>npcAt('mara'),'Taverna'],['XP, ouro e pets (Edrin)',()=>npcAt('elric'),'Sábio Edrin'],
  ['Entregas diárias (Clara)',()=>npcAt('clara'),'Intendente Clara'],['Chefe Arquidemônio (portal)',()=>({map:'cripta',x:39,y:9}),'Portal do Arquidemônio'],['Castelo',()=>({map:'over',x:70,y:35}),'Castelo'],['Missão dos ratos (Bento)',()=>npcAt('bento'),'Caçador Bento'],['Saída para o Deserto',()=>({map:'over',x:2,y:69}),'Trilha do Deserto'],['Casa da Guilda',()=>({map:'over',x:60,y:97}),'Casa da Guilda'],['Esgotos (nível 1 a 10)',()=>({map:'over',x:62,y:112}),'Escada dos Esgotos'],['Mina Abandonada',()=>({map:'over',x:70,y:133}),'Mina'],['Acampamento Goblin',()=>({map:'over',x:130,y:74}),'Acampamento Goblin']];
 function npcAt(id){const n=NPCS.find(o=>o.id===id);return{map:n.map,x:n.x,y:n.y}}
 function dirWord(dx,dy){if(!dx&&!dy)return'aqui';const a=Math.atan2(-dy,dx)*180/Math.PI,i=Math.round(((a+360)%360)/45)%8;return['a leste','a nordeste','ao norte','a noroeste','a oeste','a sudoeste','ao sul','a sudeste'][i]}
 function drawArrow(g,t,col,camX,camY){
- const dx=t.x-P.x,dy=t.y-P.y,dist=Math.round(Math.hypot(dx,dy));const lbl=g.name+(t.via?` · ${t.ship?'pegue o barco para':'vá para'}: ${MAPN[t.via]||t.via}`:` · ${dist} m`);
+ const dx=t.x-P.x,dy=t.y-P.y,dist=Math.round(Math.hypot(dx,dy));const lbl=g.name+(t.via?` · ${t.ship?'pegue o barco para':t.npcGate?'fale com '+t.npcGate+' para ir a':'vá para'}: ${MAPN[t.via]||t.via}`:` · ${dist} m`);
  ctx.font=`bold ${Math.round(5*Z)}px Verdana,Tahoma,Arial,sans-serif`;ctx.textAlign='center';ctx.lineWidth=Z*1.4;ctx.strokeStyle='#000';
  const tx=t.x*S-camX+S/2,ty=t.y*S-camY+S/2,onScreen=tx>S&&ty>S&&tx<cv.width-S&&ty<cv.height-S,bob=Math.sin(nowT/180)*Z*2;
  if(onScreen){const ax=tx,ay=ty-S*.9+bob;ctx.fillStyle=col;ctx.beginPath();ctx.moveTo(ax-S*.3,ay-S*.35);ctx.lineTo(ax+S*.3,ay-S*.35);ctx.lineTo(ax,ay+S*.05);ctx.closePath();ctx.fill();ctx.stroke();ctx.strokeText(lbl,ax,ay-S*.5);ctx.fillStyle='#ffffff';ctx.fillText(lbl,ax,ay-S*.5);return}
@@ -2691,7 +2691,7 @@ function drawQuest(camX,camY){
  if(!g&&P.guide){const t=routeTo(P.guide);if(P.guide.map===P.map&&Math.abs(P.guide.x-P.x)+Math.abs(P.guide.y-P.y)<=1){toast(null,`Você chegou: ${P.guide.name}`);P.guide=null}else if(t){drawArrow({name:'→ '+P.guide.name},t,'#7fe0ff',camX,camY);return}}
  if(!g||g.noArrow)return;const t=routeTo(g);if(!t)return;
  const dx=t.x-P.x,dy=t.y-P.y,dist=Math.round(Math.hypot(dx,dy));
- const lbl=g.name+(t.via?` · ${t.ship?'pegue o barco para':'vá para'}: ${MAPN[t.via]||t.via}`:` · ${dist} m`);
+ const lbl=g.name+(t.via?` · ${t.ship?'pegue o barco para':t.npcGate?'fale com '+t.npcGate+' para ir a':'vá para'}: ${MAPN[t.via]||t.via}`:` · ${dist} m`);
  ctx.font=`bold ${Math.round(5*Z)}px Verdana,Tahoma,Arial,sans-serif`;ctx.textAlign='center';ctx.lineWidth=Z*1.4;ctx.strokeStyle='#000';
  const tx=t.x*S-camX+S/2,ty=t.y*S-camY+S/2,onScreen=tx>S&&ty>S&&tx<cv.width-S&&ty<cv.height-S;
  const bob=Math.sin(nowT/180)*Z*2;
@@ -12338,7 +12338,7 @@ const ACT3=[
    {npc:'bruna3',l:'Pergunte à Caçadora Celeste sobre o registro do Santuário',line:'O registro do oráculo? Eu guardei a página. Na margem, o escriba anotou que Dave partiu "para onde as nuvens se partem, para ouvir o céu". Só pode ser a Ilha das Nuvens Partidas.'},
    {npc:'taina',l:'Peça à Pajé Tainá que consulte os espíritos',line:'Os espíritos conhecem esse nome. Dave não morreu: ele dorme acordado, esperando alguém que carregue a luz de um herói e o sangue de quem sobreviveu ao mar. Esse alguém é você.'},
    {npc:'elric',l:'Conte tudo ao Sábio Edrin',line:'Maculado... pediu desculpas? Então meu velho amigo voltou no fim. Vá. Desta vez não é só Vussumi: é Endertell inteira. Eu e Eldoran cuidamos de Lyra.'}],
-  done:'Nuvens Partidas... Então é lá que tudo começa de verdade. Prepare-se, '+'<b>herói</b>: a sua jornada contra Kael começa agora.<br><br><i>Continua em uma próxima atualização.</i>'}
+  done:'Nuvens Partidas... Então é lá que tudo começa de verdade. Prepare-se, '+'<b>herói</b>: a sua jornada contra Kael começa agora.<br><br><i>A história continua no <b>Ato IV</b>: quando chegar ao <b>nível 250</b>, procure Dave, o Oráculo, na Ilha das Nuvens Partidas.</i>'}
 ];
 function a3(){P.fl=P.fl||{};return P.fl.act3||(P.fl.act3={ch:0,talked:{}})}
 function a3Ok(t){return !!a3().talked[t.npc]}
@@ -12458,7 +12458,7 @@ function daveTalk(){
  const me=nuvemFac(P),A=P.fl&&P.fl.act3,ready=me==='humano'&&A&&A.ch>=ACT3.length;
  const opts=[['Sobre as onze raças',()=>say('Dave, o Oráculo',daveLore('racas'),[['Voltar',daveTalk]])],['Sobre os deuses',()=>say('Dave, o Oráculo',daveLore('deuses'),[['Voltar',daveTalk]])],['Sobre a guerra',()=>say('Dave, o Oráculo',daveLore('guerra'),[['Voltar',daveTalk]])],['Sobre as marcas',()=>say('Dave, o Oráculo',daveLore('marca'),[['Voltar',daveTalk]])],['Placar da ilha',()=>say('Dave, o Oráculo','Eles contam pontos. Eu conto mortos.<br><br>'+nuvemScore(),[['Voltar',daveTalk]])],['Até mais',closeAll]];
  let intro='Um velho de olhos claros está sentado entre as nuvens, como se esperasse por você há séculos.<br><br><i>"Não sou homem nem elfo, e não lutarei por nenhum dos dois. Quem chega até mim, eu escuto. O que você quer saber?"</i>';
- if(ready&&!A.dave){A.dave=1;save(true);sfx('lvl');intro='Um velho de olhos claros está sentado entre as nuvens.<br><br><i>"Então Maculado falou antes de partir. Kael. Eu sabia que esse nome voltaria a ser dito em voz alta."</i><br><br><i>"Kael está mais perto do que você imagina, e não está sozinho: em cada povo que restou, alguém já carrega a marca roxa. Antes de enfrentá-lo, você vai precisar de algo que nenhum homem consegue sozinho: confiar em um elfo."</i><br><br><b>Ato III continua em uma próxima atualização.</b>'}
+ if(ready&&!A.dave){A.dave=1;save(true);sfx('lvl');intro='Um velho de olhos claros está sentado entre as nuvens.<br><br><i>"Então Maculado falou antes de partir. Kael. Eu sabia que esse nome voltaria a ser dito em voz alta."</i><br><br><i>"Kael está mais perto do que você imagina, e não está sozinho: em cada povo que restou, alguém já carrega a marca roxa. Antes de enfrentá-lo, você vai precisar de algo que nenhum homem consegue sozinho: confiar em um elfo."</i><br><br><b>A história continua no Ato IV, a partir do nível 250. Volte a falar comigo quando chegar lá.</b>'}
  else if(me==='elfo')intro+='<br><br><i>"Sua Árvore-Mãe escurece, eu sei. Não foram os homens. Quando estiver pronto para ouvir isso, volte."</i>';
  say('Dave, o Oráculo',intro,opts);
 }
@@ -12716,7 +12716,7 @@ NEWNPCS.push(
     // esconde a história humana (Sábio Edrin e Mago Eldoran) para elfos
     for(const q of [...b.querySelectorAll('.quest,.sect')])if(/Sábio Edrin|Mago Eldoran/.test(q.textContent))q.remove();
     const E=elfS(),C=ELF_ACT[E.ch],g=C?storyGoal():null;
-    const box=el(`<div><div class="sect">🌿 Ato I élfico · As Raízes Escurecem <span>${Math.min(E.ch,ELF_ACT.length)}/${ELF_ACT.length}</span></div><div class="quest ${C?'':'done'}"><h4>${C?'Capítulo '+(E.ch+1)+': '+esc(C.n):'Concluído ✓'}${C?` <button id="elfTrk" style="float:right;font-size:11px;padding:2px 8px" class="${P.track==='story'?'gold':''}">${P.track==='story'?'Rastreando':'Rastrear'}</button>`:''}</h4><p>${C?(!(P.fl&&P.fl.ekit)?'Fale com a Anciã Ilmara, ao pé da Árvore-Mãe, em Sylvaren.':E.started?elfProg(C):(g?esc(g.name.replace('Ato I élfico: ','')):'')):'Você desmascarou o Lorde Vaelor. O Ato II élfico chega em uma próxima atualização.'}</p></div></div>`);
+    const box=el(`<div><div class="sect">🌿 Ato I élfico · As Raízes Escurecem <span>${Math.min(E.ch,ELF_ACT.length)}/${ELF_ACT.length}</span></div><div class="quest ${C?'':'done'}"><h4>${C?'Capítulo '+(E.ch+1)+': '+esc(C.n):'Concluído ✓'}${C?` <button id="elfTrk" style="float:right;font-size:11px;padding:2px 8px" class="${P.track==='story'?'gold':''}">${P.track==='story'?'Rastreando':'Rastrear'}</button>`:''}</h4><p>${C?(!(P.fl&&P.fl.ekit)?'Fale com a Anciã Ilmara, ao pé da Árvore-Mãe, em Sylvaren.':E.started?elfProg(C):(g?esc(g.name.replace('Ato I élfico: ','')):'')):'Você desmascarou o Lorde Vaelor. O Ato II élfico começa no <b>nível 100</b>, com o Mestre Walter, no Arquivo de Peace.'}</p></div></div>`);
     const nodes=[...box.childNodes];
     if(hist){hist.before(...nodes);hist.remove()}else b.prepend(...nodes);
     const bt=b.querySelector('#elfTrk');if(bt)bt.onclick=()=>{trackMission('story');renderPanel()};
@@ -13070,7 +13070,7 @@ for(const c of ELF_ACT)if(c.n==='O Traidor da Corte')c.done=c.done.replace('O At
 {
  const daveBefore=daveTalk;
  daveTalk=function(){const E=P&&P.fl&&P.fl.elf2;if(P&&P.fac==='elfo'&&E&&E.ch>=ELF_ACT2.length&&!E.dave){E.dave=1;save(true);sfx('lvl');
-  return say('Dave, o Oráculo','Um velho de olhos claros está sentado entre as nuvens.<br><br><i>"Você carrega o hino de Jaogg. Poucos elfos ainda se lembram dele."</i><br><br><i>"Kael não está sozinho, e o seu povo também não. Antes de enfrentá-lo, você vai precisar de algo que nenhum elfo consegue sozinho: <b>confiar em um humano</b>."</i><br><br><b>A história continua em uma próxima atualização.</b>',[['Até mais',closeAll]])}
+  return say('Dave, o Oráculo','Um velho de olhos claros está sentado entre as nuvens.<br><br><i>"Você carrega o hino de Jaogg. Poucos elfos ainda se lembram dele."</i><br><br><i>"Kael não está sozinho, e o seu povo também não. Antes de enfrentá-lo, você vai precisar de algo que nenhum elfo consegue sozinho: <b>confiar em um humano</b>."</i><br><br><b>A história continua no Ato III élfico, a partir do nível 250. Volte a falar comigo quando chegar lá.</b>',[['Até mais',closeAll]])}
   return daveBefore.apply(this,arguments)};
 }
 </script>
@@ -13161,7 +13161,7 @@ const TRAP_ACT={
    done:'Eldoran escuta tudo de pé, segurando o cajado com força.<br><br><i>"Jaogg desceu por você. E Kael sabia que ele desceria. Tudo isso, desde o começo, era para tirar um deus do lugar dele."</i>',rw:4},
   {n:'Depois da Queda',start:'eldoran',back:'eldoran',minLv:340,tasks:[{t:'talk',npc:'elric',l:'Conte ao Sábio Edrin o que aconteceu',line:'<i>"Um deus preso, e o irmão dele com o poder dos dois."</i> Edrin fecha os olhos. <i>"Só sobrou uma coisa que Kael não tem: os dois últimos povos. Juntos."</i>'},{t:'talk',npc:'lyra',l:'Fale com Lyra',line:'Lyra está sentada sozinha. <i>"Eu senti a voz de Kael quando o simbionte me prendia. Ele não grita. Ele sorri. Quando ele sorriu para Jaogg, eu senti de novo."</i><br><br><i>"Eu estava errada sobre o elfo. Ele voltou para nos tirar de lá."</i>'}],
    intro:'<i>"Fale com Edrin e com Lyra. Precisamos estar todos juntos para o que vem."</i>',
-   done:'Eldoran abre um mapa sobre a mesa.<br><br><i>"Kael tem a Espada Abissal e o poder de Jaogg. Ele não vai mais se esconder. E o hino é claro: ele só cai quando homens e elfos lutarem lado a lado."</i><br><br><i>"Ezequiel voltou a Peace para convencer o rei deles. Nós vamos preparar Vussumi."</i><br><br><b>Fim do Ato IV. A batalha final contra Kael chega em uma próxima atualização.</b>',rw:5}
+   done:'Eldoran abre um mapa sobre a mesa.<br><br><i>"Kael tem a Espada Abissal e o poder de Jaogg. Ele não vai mais se esconder. E o hino é claro: ele só cai quando homens e elfos lutarem lado a lado."</i><br><br><i>"Ezequiel voltou a Peace para convencer o rei deles. Nós vamos preparar Vussumi."</i><br><br><b>Fim do Ato IV.</b> Quando chegar ao <b>nível 350</b>, o Mago Eldoran vai chamar você para o <b>Ato Final</b>.',rw:5}
  ],
  elfo:[
   {n:'O Que Dave Sabe',start:'dave_oraculo',back:'dave_oraculo',minLv:250,tasks:[],
@@ -13181,7 +13181,7 @@ const TRAP_ACT={
    done:'Walter escuta tudo em silêncio. Quando você diz que Jaogg desceu para salvar você, ele se senta devagar.<br><br><i>"Na Guerra dos Onze, Kael também deixou os povos se matarem até alguém pedir socorro aos deuses. É sempre o mesmo truque."</i>',rw:4},
   {n:'Depois da Queda',start:'peace_walter',back:'peace_walter',minLv:340,tasks:[{t:'talk',npc:'peace_petrick',l:'Conte ao Grande Rei Petrick How o que aconteceu',line:'Petrick ouve tudo sem interromper.<br><br><i>"Jaogg nos escolheu no início dos tempos. E agora está preso porque desceu por um de nós."</i><br><br>Ele olha para Eldoran, no fundo da sala. <i>"Se o hino diz que só os dois povos juntos derrubam Kael, então a coroa de Peace vai conversar com os homens. Pela primeira vez desde a guerra."</i>'}],
    intro:'<i>"O rei precisa ouvir isso de você, não de mim."</i>',
-   done:'Walter pega a espada da Guarda da Lua.<br><br><i>"Petrick vai falar com os humanos. Eu não gosto disso. Mas Lirien gostaria."</i><br><br><b>Fim do Ato III élfico. A batalha final contra Kael chega em uma próxima atualização.</b>',rw:5}
+   done:'Walter pega a espada da Guarda da Lua.<br><br><i>"Petrick vai falar com os humanos. Eu não gosto disso. Mas Lirien gostaria."</i><br><br><b>Fim do Ato III élfico.</b> Quando chegar ao <b>nível 350</b>, o Mestre Walter vai chamar você para o <b>Ato Final</b>.',rw:5}
  ]
 };
 function trapS(){P.fl=P.fl||{};return P.fl.trap||(P.fl.trap={ch:0,started:0,base:{},talked:{},ev:{}})}
@@ -13845,4 +13845,30 @@ function cronMainWaits(g){if(!g)return true;if(g.noArrow)return true;if(P.fac===
   if(P&&nowT>=tk){tk=nowT+2000;try{const E=cronS(),C=cronCh();if(C&&!E.started&&cronAvail(C)&&!E.notif[E.ch]){E.notif[E.ch]=1;log('📖 Nova crônica: "'+C.n+'". Fale com '+elfNpcName(C.start)+' ('+(MAPN[npcAt(C.start).map]||'')+').','q')}}catch(e){}}
   return r};
 }
+</script>
+<script>
+/* ===== Navegação: o jogador não se perde ===== */
+'use strict';
+/* 1) Passagens por personagem (teleportes) entram na rota da seta */
+const NPC_GATES=[['ivo','gelo'],['ivo','ceu'],['kol_fenda',SELO],['selo_jaogg',TD],['peace_walter','e_clareira_lua']];
+{const lb=links;links=function(map){const L=lb.apply(this,arguments);for(const [id,to] of NPC_GATES){const n=NPCS.find(o=>o.id===id);if(n&&n.map===map&&MAPS[to]&&!L.some(p=>p.to===to))L.push({x:n.x,y:n.y,to,npcGate:n.n})}return L}}
+/* 2) Ato III humano ganha seta */
+function act3Goal(){if(!P||P.fac==='elfo'||!(P.saga2&&P.saga2.freed))return null;const A=(P.fl&&P.fl.act3)||{ch:0,talked:{}},C=ACT3[A.ch||0];if(!C)return null;
+ const at=(id,name)=>{const n=NPCS.find(o=>o.id===id);return n&&n.map!=='oculto'?{name,map:n.map,x:n.x,y:n.y}:null};
+ if(C.t==='talk')return at('eldoran','Ato III: falar com o Mago Eldoran');
+ const t=C.tasks.find(t=>!(A.talked||{})[t.npc]);return t?at(t.npc,'Ato III: '+t.l):at('eldoran','Ato III: falar com o Mago Eldoran')}
+{const qb=questGoal;questGoal=function(){const g=qb.apply(this,arguments);if(!g&&P&&(P.track==='story'||P.track==='story2')){try{const o=P.track==='story'?(typeof story2Goal==='function'?story2Goal():null):storyGoal();if(o)return o;const a=act3Goal();if(a)return a}catch(e){}}return g}}
+/* 3) Guia élfico em Sylvaren: onde upar e como seguir a seta */
+function elfUpDlg(){const L=[];for(const k in MONBY){if(HOUSES.has(k)||/^(arena|dg|torre|selo\d|ship)/.test(k))continue;const ms=(MONBY[k]||[]).filter(o=>!MON[o.type].boss&&!o.tmp);if(ms.length<3)continue;
+  const near=ms.filter(o=>{const l=o.lv||MON[o.type].lv[0];return l>=P.lvl-8&&l<=P.lvl+5});if(near.length<3)continue;const lv=near.map(o=>o.lv||MON[o.type].lv[0]);L.push([k,Math.min(...lv),Math.max(...lv),near[0],k==='sylvaren'||/^e_/.test(k)])}
+ L.sort((a,b)=>(b[4]-a[4])||(a[1]-b[1]));
+ const opts=L.slice(0,10).map(([k,lo,hi,o,elf])=>[`${elf?'🌿':'⛵'} ${MAPN[k]||k} · nível ${lo}–${hi}${lo>P.lvl+2?' ⚠':''}`,()=>{P.guide={map:k,x:o.sx||o.x,y:o.sy||o.y,name:MAPN[k]||k};closeAll();toast(null,`🧭 Seguindo para ${MAPN[k]||k}`)}]);
+ opts.push(['Voltar',elfGuideTalk]);
+ say('Guia Lirael',`Bons lugares para caçar no seu nível (<b>${P.lvl}</b>). 🌿 são terras élficas; ⛵ ficam do outro lado do mar. Escolha um e eu mostro o caminho com a <b>seta azul</b>:`,opts)}
+function navHelp(back){say('Como não se perder','<b>🟡 Seta amarela:</b> mostra o objetivo da missão que você está rastreando. Em outro mapa, ela diz <i>"vá para"</i>, <i>"pegue o barco para"</i> ou <i>"fale com … para ir a"</i>.<br><br><b>📜 Missões → História:</b> toque em <b>Rastrear</b> no ato ou na crônica que quiser seguir.<br><br><b>🔵 Seta azul:</b> aparece quando um guia mostra um lugar para caçar.<br><br><b>🪧 Placas:</b> ficam nas saídas e dizem o nível de cada área.<br><br><b>⛺ Acampamentos:</b> cada área tem um, e é lá que você renasce.<br><br><b>📖 Crônicas:</b> quando a história principal pedir mais nível, elas contam o que acontece no meio do caminho.',[['Voltar',back]])}
+function elfGuideTalk(){say('Guia Lirael','<i>"Perdido, viajante? Eu conheço cada trilha de Sylvaren até as montanhas do crepúsculo."</i>',[['🗺 Onde upar?',elfUpDlg],['🧭 Como não se perder',()=>navHelp(elfGuideTalk)],['Até mais',closeAll]])}
+{const m=MAPS.sylvaren;let spot=[34,17];outer:for(let r=0;r<5;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const x=34+dx,y=17+dy;if(!SOLID.has(getT(m,x,y))&&getT(m,x,y)!==TL.WATER&&!m.portals.some(p=>p.x===x&&p.y===y)&&!NEWNPCS.some(n=>n.map==='sylvaren'&&Math.abs(n.x-x)<=1&&Math.abs(n.y-y)<=1)&&!(x===32&&y===16)){spot=[x,y];break outer}}
+ NEWNPCS.push({id:'guia_lirael',n:'Guia Lirael',map:'sylvaren',x:spot[0],y:spot[1],wander:false,pal:EPAL('#3a7a5a','#e8d8a0'),lines:['Perdido? Fale comigo.','Eu mostro onde caçar.'],talk:elfGuideTalk})}
+/* O Guia Tião também explica a seta */
+{const gb=guideTalk2;guideTalk2=function(){gb.apply(this,arguments);const o=$('#dlgOpts');if(o&&!o.querySelector('[data-nav]')){const b=document.createElement('button');b.dataset.nav=1;b.textContent='🧭 Como não se perder';b.onclick=()=>navHelp(guideTalk2);o.insertBefore(b,o.children[1]||null)}}}
 </script>

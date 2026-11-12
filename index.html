@@ -14286,7 +14286,7 @@ function bossCdTxt(ms){const m=Math.ceil(ms/60000);return m>=60?Math.floor(m/60)
 
 <style>
 /* Barra de baixo: equipamentos · missão rastreada · bolsa */
-#tutBox{display:none!important}
+#tutBox,#nbBox{display:none!important}
 #ctrl{align-items:stretch}
 #eqq{display:grid;grid-template-columns:repeat(3,var(--b));grid-template-rows:repeat(3,var(--b));gap:3px;flex:none}
 #eqq button{position:relative;padding:2px;background:#11141a;display:flex;align-items:center;justify-content:center;font-size:calc(var(--b)*.42)}
@@ -14320,7 +14320,7 @@ function bossCdTxt(ms){const m=Math.ceil(ms/60000);return m>=60?Math.floor(m/60)
  const LS='endertell_left';let mode='eq';try{mode=localStorage.getItem(LS)||'eq'}catch(e){}
  const apply=()=>{eqq.hidden=mode!=='eq';pad.hidden=mode==='eq'};apply();
  box.onclick=ev=>{const t=ev.target;if(t.classList.contains('tg')){mode=mode==='eq'?'pad':'eq';try{localStorage.setItem(LS,mode)}catch(e){}apply();last='';return}
-  if(t.classList.contains('xt')){const x=document.querySelector('#tutBox button');if(x)x.click();last='';return}
+  if(t.classList.contains('xt')){const x=document.querySelector('#nbBox #nbStop');if(x)x.click();last='';return}
   const q=document.getElementById('mQuest');if(q)q.click()};
  let last='',eqSig='';
  const esc2=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
@@ -14329,8 +14329,8 @@ function bossCdTxt(ms){const m=Math.ceil(ms/60000);return m>=60?Math.floor(m/60)
    const sig=CELLS.map(([s])=>s==='bag'?'':(P.eq&&P.eq[s])||'').join('|');
    if(sig!==eqSig){eqSig=sig;for(const b of eqq.children){const s=b.dataset.s;if(s==='bag')continue;const id=P.eq&&P.eq[s];b.innerHTML=id&&IT[id]?`<img src="${itemIcon(id)}" alt="${esc2(IT[id].n)}">`:`<span class="ph">${b.dataset.ph}</span>`;b.title=id&&IT[id]?IT[id].n:(SLOTN[s]||'')+' (vazio)'}}
    /* missão rastreada */
-   const tb=document.getElementById('tutBox');let title='',txt='',hint='',x='';
-   if(tb&&!tb.hidden&&tb.textContent.trim()){const c=tb.cloneNode(true);c.querySelectorAll('button').forEach(b=>b.remove());const parts=c.textContent.replace(/\s+/g,' ').trim();const m=/^(📘?\s*Tutorial\s*\d+\/\d+)\s*(.*)$/.exec(parts);title=m?m[1]:'📘 Tutorial';txt=m?m[2]:parts;if(tb.querySelector('button'))x='<button class="xt" aria-label="Parar de rastrear o tutorial">×</button>'}
+   const tb=document.getElementById('nbBox');let title='',txt='',hint='',x='';
+   if(tb&&tb.textContent.trim()&&((typeof nbOn==='function'&&nbOn())||(P.map==='ship'&&P.tut))){const c=tb.cloneNode(true);c.querySelectorAll('button').forEach(b=>b.remove());const parts=c.textContent.replace(/\s+/g,' ').trim();const m=/^(📘?\s*(?:Tutorial\s*\d+\/\d+|Fuga do navio))\s*(.*)$/.exec(parts);title=m?m[1]:'📘 Tutorial';txt=m?m[2]:parts;if(tb.querySelector('button'))x='<button class="xt" aria-label="Parar de rastrear o tutorial">×</button>'}
    else{let g=null;try{g=questGoal()}catch(e){}const k=String(P.track||'');title=/^mqb?:/.test(k)?'📋 Missão diária':k==='story'||k==='story2'?'📜 História':k==='treasure'?'🗺 Tesouro':'🎯 Missão';
     if(g){txt=g.name;if(!g.noArrow){let t=null;try{t=routeTo(g)}catch(e){}if(t&&t.via)hint=(t.ship?'⛵ pegue o barco para ':t.npcGate?'💬 fale com '+t.npcGate+' para ir a ':'➜ vá para ')+(MAPN[t.via]||t.via);else if(t){const d=Math.round(Math.hypot(t.x-P.x,t.y-P.y));hint=d<=1?'📍 você chegou':'📍 '+d+' m '+dirWord(t.x-P.x,t.y-P.y)}}}
     else{title='📜 Missões';txt='Nenhuma missão rastreada.';hint='Toque aqui para escolher'}}

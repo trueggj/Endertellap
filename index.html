@@ -1,6 +1,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Endertell Online v103</title>
+<title>Endertell Online v104</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600&family=Silkscreen&display=swap" rel="stylesheet">
 <style>
@@ -65,7 +65,7 @@ input{font-family:var(--f-ui);font-size:16px;color:var(--fg);background:#0b0d11;
 .qmk{display:inline-block;background:#ffd040;color:#14110e;font-weight:700;padding:0 4px;border-radius:2px}
 #menuCol button.on{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset}
 #chatBox{position:absolute;left:max(8px,env(safe-area-inset-left,0px));top:142px;width:min(58%,260px);max-height:48px;overflow:hidden;font-size:11px;line-height:1.25;pointer-events:none;text-shadow:1px 1px 0 #000,-1px 0 0 #000,0 0 3px #000;color:#eee;opacity:.8}
-#chatBox.open{top:auto;bottom:74px;max-height:22%;width:auto;right:54px;overflow-y:auto;background:rgba(10,12,16,.38);border:1px solid rgba(255,255,255,.08);border-radius:4px;padding:3px 6px;pointer-events:auto;opacity:1;font-size:12px}
+#chatBox.open{top:auto!important;bottom:var(--chat-bottom,74px);max-height:22%;width:auto;right:54px;overflow-y:auto;background:rgba(10,12,16,.38);border:1px solid rgba(255,255,255,.08);border-radius:4px;padding:3px 6px;pointer-events:auto;opacity:1;font-size:12px}
 #chatBox .cb{color:#ffd870}#chatBox .cp{color:#8fe0ff}#chatBox .cg{color:#c9a0ff;font-style:normal}#chatBox .cs{color:#aab3bb;font-style:italic}
 #chatBar{position:absolute;left:max(8px,env(safe-area-inset-left,0px));right:54px;bottom:6px;background:rgba(14,16,22,.55);border:1px solid var(--line);border-radius:4px;padding:5px;display:flex;flex-direction:column;gap:5px;z-index:6}
 #chatBar[hidden]{display:none}
@@ -380,6 +380,26 @@ button.confirm{background:#2a5a1e!important;border-color:#8fe070!important;color
 </div>
 
 <script>
+function terrainRect(x,y,n,camX,camY){
+ const a=Math.round(x*S),b=Math.round(y*S);
+ return [a-camX,b-camY,Math.round((x+n)*S)-a,Math.round((y+n)*S)-b];
+}
+function syncChatHeight(){
+ const bar=document.getElementById('chatBar'),box=document.getElementById('chatBox');
+ if(bar&&box&&!bar.hidden){
+  const height=bar.offsetHeight+12+'px';
+  if(box.style.getPropertyValue('--chat-bottom')!==height)box.style.setProperty('--chat-bottom',height);
+ }
+}
+function elfShield(it){return P?.fac==='elfo'&&it?.slot==='shield'&&it.ic==='shield'}
+function followsPlayer(b){return P?.map==='dg'?dungeonRoster.has(b.id):b.follow}
+function dungeonVisible(map){return ![DG_ISLAND,'casa_forja_masmorras','dg'].includes(map)||(P?.lvl||0)>=DG_LEVEL}
+function dungeonReturn(lv){
+ if(lv>=DG_LEVEL)return DG_EXIT;
+ const {map,x,y}=PORTS.goodyear;
+ return {map,x,y};
+}
+
 'use strict';
 const CW=16,CH=20,OUTK='#100c0a',DIRS=new WeakMap();
 const CFGKEY='reino-valdor-cfg';
@@ -799,7 +819,7 @@ const MON={
 };
 const EQTYPE={morcego:'helmet',lobo_sombrio:'boots',ent:'armor',cultista:'weapon',gargula:'helmet',rato:'boots',cobra:'legs',lobo:'helmet',goblin:'weapon',goblinG:'shield',troll:'armor',orc:'weapon',esqueleto:'shield',aranha:'legs',slime:'helmet',besouro:'armor',minotauro:'weapon',goblinRei:'weapon',dragao:'armor',sombrio:'armor',escorpiao:'weapon',cobra_areia:'legs',mumia:'armor',escaravelho:'helmet',farao:'weapon',abelha:'boots',jacare:'armor',demonio:'weapon',cerbero:'helmet',behemoth:'armor'};
 function pickEquip(lv,slot,cls=P.cls){
- const all=Object.keys(IT).filter(k=>IT[k].slot&&IT[k].lv&&IT[k].price>0&&!IT[k].noDrop&&!IT[k].custom&&(!slot||IT[k].slot===slot));if(!all.length)return null;
+ const all=Object.keys(IT).filter(k=>IT[k].slot&&IT[k].lv&&IT[k].price>0&&!IT[k].noDrop&&!IT[k].custom&&!elfShield(IT[k])&&(!slot||IT[k].slot===slot));if(!all.length)return null;
  let c=all.filter(k=>IT[k].lv<=lv+2&&IT[k].lv>=lv-8);if(!c.length){const best=Math.min(...all.map(k=>Math.abs(IT[k].lv-lv)));c=all.filter(k=>Math.abs(IT[k].lv-lv)===best)}
  const mine=c.filter(k=>!IT[k].cls||IT[k].cls===cls);if(mine.length&&R()<.75)c=mine;return pick(c)}
 const EVO={knight:['espada_madeira','espada_ferro','machado','espada_mina','lamina_rubi'],mage:['varinha','cajado_carvalho','cajado_cristal','cajado_mina','cajado_estelar']};
@@ -1471,7 +1491,7 @@ function newPlayer_o(name,cls){
 function prepPlayer(){Object.assign(P,{petE:null,rx:P.x,ry:P.y,mv:null,target:null,path:null,hold:null,chase:false,nextStep:0,nextAtk:0,cds:{},buffs:{},dead:false,lastHit:0,nextRegen:0,talkTo:null,pend:null})}
 const legSt=id=>((P&&P.leg)||{})[id]||0,legMul=id=>IT[id]&&IT[id].legendary?1+.1*legSt(id):1;
 function stats0_base(){
- let a=0,d=0,h=0,mp=0;for(const s in P.eq){const id=P.eq[s],it=IT[id];if(!it)continue;const mu=legMul(id);a+=(it.atk||0)*mu;d+=(it.def||0)*mu;h+=(it.hp||0)*mu;mp+=(it.mp||0)*mu}
+ let a=0,d=0,h=0,mp=0;for(const s in P.eq){const id=P.eq[s],it=IT[id];if(!it||elfShield(it))continue;const mu=legMul(id);a+=(it.atk||0)*mu;d+=(it.def||0)*mu;h+=(it.hp||0)*mu;mp+=(it.mp||0)*mu}
  const k=P.cls==='knight';
  return{maxHp:Math.round(40+P.attr.vit*12+(k?0:P.lvl*4)+h+(P.skills.vigor?20:0)),
   maxMp:Math.round(10+P.attr.mag*10+P.lvl*4+mp+(P.skills.mente?20:0)),
@@ -1616,8 +1636,8 @@ function kill_old(mo){
  mo.bt=null;const xp0=Math.round(d.xp*(mo.xpMul||1)*(1+pp('xp')/100)*(myGuild()?1.05:1)*(1+buffV('xp')+.25*(P.reb||0)+(c71XpBonus(mo)?0:(inTerr()?.1:0))+(spouseNear()?.1:0)));const PS=team?{each:xp0,m:team.bots}:partyShare(xp0),xp=PS.each,shownXp=Math.round(xp*(1+c71XpBonus(mo)));XPLOG.push([nowT,shownXp]);gainXp(xp);petGain(shownXp);for(const b of PS.m){if(team)bossCompanionReward(mo,b);else botXp(b,xp)}storyKill(mo);gmisKill(mo.type);sfx('kill');megaKill(mo,PS);text(mo,'+'+shownXp+' XP','#7cc45a',1200);
  const g=economyMobGold(mo);
  P.kills[mo.type]=(P.kills[mo.type]||0)+1;const D=P.drops[mo.type]=P.drops[mo.type]||{};
- const got=[],LOOT=[],put=id=>{if(!id||!IT[id])return false;const e=!IT[id].slot&&LOOT.find(o=>o.id===id);if(e)e.q++;else LOOT.push({id,q:1});return true};const wpick=()=>rollMonsterLoot(d);
- const gotEq=id0=>{const id=id0&&R()<.12*(1+buffV('drop'))?specialize(id0):id0;if(id&&put(id)){D[id]=(D[id]||0)+1;got.push(IT[id].n);text(mo,IT[id].n,'#e9b949',1400)}};
+ const got=[],LOOT=[],put=id=>{if(!id||!IT[id]||elfShield(IT[id]))return false;const e=!IT[id].slot&&LOOT.find(o=>o.id===id);if(e)e.q++;else LOOT.push({id,q:1});return true};const wpick=()=>rollMonsterLoot(d);
+ const gotEq=id0=>{if(elfShield(IT[id0]))return;const id=id0&&R()<.12*(1+buffV('drop'))?specialize(id0):id0;if(id&&put(id)){D[id]=(D[id]||0)+1;got.push(IT[id].n);text(mo,IT[id].n,'#e9b949',1400)}};
  if(d.boss){const id=wpick();if(id&&put(id)){got.push(IT[id].n);D[id]=(D[id]||0)+1}if(mo.type!==KOL_MORVAN&&R()<.5)gotEq(pickEquip(mo.lv||1,EQTYPE[mo.type]))}
  else{const r=mo.type==='caramujo_corrompido'?Infinity:R()/killMast(mo.type);if(r<DROP_EQ&&!mo._c71event)gotEq(pickEquip(mo.lv||1,EQTYPE[mo.type]));else if(r<DROP_ANY&&d.loot.length){const id=wpick();if(id&&put(id)){got.push(IT[id].n);D[id]=(D[id]||0)+1}}}
  if(!d.noPet&&R()<petChance(mo.lv||d.lv[0])+pp('drop')/100){const id='pet_'+mo.type;if(put(id)){D[id]=(D[id]||0)+1;got.push(IT[id].n);log('Item raro no corpo: '+IT[id].n+'! Junte 10 para criar o pet.','lv');text(mo,'ITEM RARO','#ffd040',1400)}}
@@ -1925,7 +1945,7 @@ function botHurt_g(b,mo){pauseNaturalRegen(b);const d=MON[mo.type],st=botSt(b);m
 function botDie(b,by){b.raid=null;b.lead=null;b.dead=true;b.deaths++;b.respawnAt=nowT+12000;b.target=null;CORPSE.push({map:b.map,x:b.x,y:b.y,img:botImg(b),t0:nowT});loseXp(b,need(b.lvl)*.1);
  chatSys(`${b.n} morreu para ${by}.`);setTimeout(()=>botSay(b,pick(['morri kkkk','aff morri','esse '+by.toLowerCase()+' me pegou','to voltando do templo'])),3000+R()*3000)}
 function botTarget(b){
- if(b.follow){const pt=P.target&&!P.target.dead&&P.target.map===b.map&&!MON[P.target.type].immune?P.target:null;if(pt&&cheb(pt,b)<=10)return pt;
+ if(followsPlayer(b)){const pt=P.target&&!P.target.dead&&P.target.map===b.map&&!MON[P.target.type].immune?P.target:null;if(pt&&cheb(pt,b)<=10)return pt;
   return(MONBY[b.map]||[]).filter(o=>!o.dead&&!MON[o.type].immune&&!MON[o.type].passive&&cheb(o,P)<=4&&!inSafe(MAPS[b.map],o.x,o.y)).sort((a,c)=>cheb(a,b)-cheb(c,b))[0]||null}
  {const RD=raidOf(b);if(RD){const bo=(MONBY[b.map]||[]).find(o=>o.type===RD.type&&!o.dead);if(bo)return bo}}
  if(b.lead&&b.lead.placed===b.map){const L=b.lead;if(L.target&&!L.target.dead&&L.target.map===b.map)return L.target;return(MONBY[b.map]||[]).filter(o=>botOK(b,o)&&cheb(o,L)<=4).sort((a,c)=>cheb(a,b)-cheb(c,b))[0]||null}
@@ -1936,13 +1956,13 @@ function botPhys(b){
  if(nowT>=b.nextReg){b.nextReg=nowT+1000;if(!naturalRegenPaused(b))b.hp=Math.min(st.mhp,b.hp+st.mhp*(inSafe(m,b.x,b.y)?.06:.03));b.mp=Math.min(st.mmp,(b.mp==null?st.mmp:b.mp)+st.mmp*.05)}
  if(b.hp<st.mhp*.35&&nowT>=(b.nextPot||0)&&(b.pots==null||b.pots>0)){b.pots=(b.pots==null?15:b.pots)-1;if(b.pots===0)setTimeout(()=>{botSay(b,'acabou minha poção, voltando pra cidade');botGo(b,'over','town')},1500);b.nextPot=nowT+7000;const h=Math.round(st.mhp*.45);b.hp=Math.min(st.mhp,b.hp+h);krakenPotion(b);text(b,'+'+h,'#7cf07c');ring(b,.5,'#ff7070')}
  if(b.cls==='mage'&&!P.dead&&b.map===P.map&&cheb(b,P)<=4&&nowT>=(b.nextHeal||0)){const ps=stats();if(P.hp<ps.maxHp*.4){b.nextHeal=nowT+9000;const h=Math.round(ps.maxHp*.25);P.hp=Math.min(ps.maxHp,P.hp+h);text(P,'+'+h,'#7cf07c');ring(P,.8,'#7cf07c');proj(b,P,'#7cf07c');botSay(b,pick(['te curei!','cuidado aí!','segura que eu curo']))}}
- let t=b.target;if(t&&(t.dead||t.map!==b.map||combatSafe(t)||cheb(t,b)>12||(!b.follow&&!b.lead&&!botOK(b,t)&&!(raidOf(b)&&t.type===raidOf(b).type))))t=b.target=null;
+ let t=b.target;if(t&&(t.dead||t.map!==b.map||combatSafe(t)||cheb(t,b)>12||(!followsPlayer(b)&&!b.lead&&!botOK(b,t)&&!(raidOf(b)&&t.type===raidOf(b).type))))t=b.target=null;
  if(!t){if(nowT<b.nextMove)return;t=b.target=botTarget(b);if(t)b.path=null}
  if(t){const d=cheb(t,b);
   if(d<=st.rng&&canFightMonster(b,t)){if(nowT>=b.nextAtk){if(nowT>=(b.nextSk||0)&&!MON[t.type].immune)botSkill(b,t);else botAttack(b,t)}if(!t.dead&&!(t.aggro&&P.map===t.map&&!P.dead&&cheb(t,P)<=9)&&cheb(t,b)<=(MON[t.type].rng||1)&&nowT>=t.nextAtk&&!MON[t.type].passive)botHurt(b,t);return}
   if(nowT>=b.nextMove){b.nextMove=nowT+320;const p=bfs(b.map,b.x,b.y,(x,y)=>Math.max(Math.abs(x-t.x),Math.abs(y-t.y))<=st.rng&&!inSafe(m,x,y),900);if(p&&p.length&&canWalk(b.map,p[0][0],p[0][1],b))step(b,p[0][0]-b.x,p[0][1]-b.y,300);else{b.target=null}}return}
- {const F=b.follow?P:(b.lead&&b.lead.placed===b.map?b.lead:null);if(F&&!b.follow){if(cheb(b,F)>2&&nowT>=b.nextMove){b.nextMove=nowT+300;const p=bfs(b.map,b.x,b.y,(x,y)=>Math.max(Math.abs(x-F.x),Math.abs(y-F.y))<=1,1500);if(p&&p.length&&canWalk(b.map,p[0][0],p[0][1],b))step(b,p[0][0]-b.x,p[0][1]-b.y,280)}return}}
- if(b.follow){if(cheb(b,P)>2){const g=(x,y)=>Math.max(Math.abs(x-P.x),Math.abs(y-P.y))<=1;if(nowT>=b.nextMove){b.nextMove=nowT+260;const p=bfs(b.map,b.x,b.y,g,1500);if(p&&p.length&&canWalk(b.map,p[0][0],p[0][1],b))step(b,p[0][0]-b.x,p[0][1]-b.y,240)}}return}
+ {const F=followsPlayer(b)?P:(b.lead&&b.lead.placed===b.map?b.lead:null);if(F&&!followsPlayer(b)){if(cheb(b,F)>2&&nowT>=b.nextMove){b.nextMove=nowT+300;const p=bfs(b.map,b.x,b.y,(x,y)=>Math.max(Math.abs(x-F.x),Math.abs(y-F.y))<=1,1500);if(p&&p.length&&canWalk(b.map,p[0][0],p[0][1],b))step(b,p[0][0]-b.x,p[0][1]-b.y,280)}return}}
+ if(followsPlayer(b)){if(cheb(b,P)>2){const g=(x,y)=>Math.max(Math.abs(x-P.x),Math.abs(y-P.y))<=1;if(nowT>=b.nextMove){b.nextMove=nowT+260;const p=bfs(b.map,b.x,b.y,g,1500);if(p&&p.length&&canWalk(b.map,p[0][0],p[0][1],b))step(b,p[0][0]-b.x,p[0][1]-b.y,240)}}return}
  if(b.state==='town'){if(!b.goal)b.goal=pick(TOWNSPOT);const[gx,gy]=b.goal;if(Math.abs(b.x-gx)+Math.abs(b.y-gy)<=2){if(nowT>=b.nextMove){b.nextMove=nowT+2500+R()*5000;b.path=null;if(R()<.25)b.goal=null;else{const[dx,dy]=pick(D4);if(canWalk(b.map,b.x+dx,b.y+dy,b))step(b,dx,dy,420)}}return}
   botWalk(b,(x,y)=>Math.abs(x-gx)+Math.abs(y-gy)<=1,6000);return}
  if(!b.goal){const L=(MONBY[b.map]||[]).filter(o=>botOK(b,o));const o=L.length?pick(L):null;b.goal=o?[o.sx,o.sy]:null;b.path=null;if(!b.goal){b.stateUntil=0;return}}
@@ -1950,11 +1970,12 @@ function botPhys(b){
 function botsTick(){
  if(!P||!BOTS.length)return;extraTick();megaTick();mega4Tick();if(nowT>=(window._dcT||0)){window._dcT=nowT+5000;dailyCheck()}
  for(const b of BOTS){
+  if(b.map==='dg'&&(P.map!=='dg'||!dungeonRoster.has(b.id)))botGo(b,DG_ISLAND,'town');
   if(b.dead){if(nowT>=b.respawnAt){b.dead=false;b.hp=botSt(b).mhp;b.combatUntil=0;b.map='over';b.state='town';b.stateUntil=nowT+30000+R()*40000;b.placed=null;if(P.map==='over')botPlace(b,[39,36])}continue}
-  if(b.follow){if(P.map==='ship'||P.map==='arena'){partyDel(b,`${b.n} saiu da party.`)}else if(b.map!==P.map||b.placed!==P.map||cheb(b,P)>14){b.map=P.map;b.state='hunt';b.placed=null;botPlace(b,[P.x,P.y])}}
+  if(followsPlayer(b)){if(P.map==='ship'||P.map==='arena'){partyDel(b,`${b.n} saiu da party.`)}else if(b.map!==P.map||b.placed!==P.map||cheb(b,P)>14){b.map=P.map;b.state='hunt';b.placed=null;botPlace(b,[P.x,P.y])}}
   else if(b.lead){const L=b.lead;if(L.dead||(!L.follow&&L.state!=='group'&&L.state!=='boss')){b.lead=null;botGo(b,'over','town')}else if(b.map!==L.map){b.map=L.map;b.state=L.follow?'group':L.state;b.placed=null}}
   else if(nowT>=b.stateUntil)botDecide(b);
-  if(b.map===P.map&&P.map!=='ship'&&P.map!=='arena'){if(b.placed!==b.map)botPlace(b);if(b.placed===b.map){const idleFar=b.map==='over'&&!b.follow&&!b.lead&&!b.target&&cheb(b,P)>18;
+  if(b.map===P.map&&P.map!=='ship'&&P.map!=='arena'){if(b.placed!==b.map)botPlace(b);if(b.placed===b.map){const idleFar=b.map==='over'&&!followsPlayer(b)&&!b.lead&&!b.target&&cheb(b,P)>18;
    if(!idleFar||nowT>=(b._remotePhys||0)){botPhys(b);if(idleFar)b._remotePhys=nowT+250}else animate(b)
   }}
   else{if(b.placed!==b.map)b.placed=null;if(nowT>=(b.nextSim||0)){b.nextSim=nowT+1000;if(b.state==='hunt'){botXp(b,botRate(b)*.9);if(R()<.12&&P.gmis&&guildOf(b.id)&&guildOf(b.id)===myGuild()&&(MONBY[b.map]||[]).some(o=>o.type===P.gmis.type))gmisKill(P.gmis.type,1);{const bg=guildOf(b.id);if(bg&&R()<.2){if(bg===myGuild())gwKill('me');else if(P.gw&&bg.n===P.gw.foe)gwKill('en')}}}else if(b.state==='group')botXp(b,botRate(b)*1.1)}}}
@@ -1968,10 +1989,10 @@ function chatSys(t){CHAT.push({t,k:'s',ch:'w',at:nowT});chatNew()}
 let chatRe=0;function chatNew(){if(CHAT.length>60)CHAT.splice(0,CHAT.length-60);if(!chatOpen){chatUnread++}renderChat()}
 function renderChat(){const box=$('#chatBox');if(!box)return;const L=CHAT.filter(c=>chatOpen?(c.ch===chatCh||c.k==='s'||c.ch==='p'):(c.k!=='b'||c.ch!=='w')&&nowT-(c.at||-1e9)<8000).slice(chatOpen?-40:-2);
  box.innerHTML=L.map(c=>c.k==='s'?`<div class="cs">${esc(c.t)}</div>`:`<div>${c.ch==='g'?'<i class="cg">[Guilda]</i> ':c.ch==='p'?'<i class="cpv">[Privado]</i> ':''}<b class="${c.k==='p'?'cp':'cb'}">${esc(c.n)}</b>: ${esc(c.t)}</div>`).join('');box.scrollTop=box.scrollHeight;
- box.classList.toggle('open',chatOpen);$('#chatBar').hidden=!chatOpen;const on=BOTS.filter(b=>!b.dead).length+1;$('#chatOn').textContent=`🟢 ${on} online`;
+ box.classList.toggle('open',chatOpen);$('#chatBar').hidden=!chatOpen;if(chatOpen)syncChatHeight();const on=BOTS.filter(b=>!b.dead).length+1;$('#chatOn').textContent=`🟢 ${on} online`;
  const g=myGuild();$('#chG').hidden=!g;if(!g&&chatCh==='g')chatCh='w';$('#chW').classList.toggle('on',chatCh==='w');$('#chG').classList.toggle('on',chatCh==='g');
  const dt=$('#mChat .dot');if(dt){dt.hidden=chatOpen||!chatUnread;dt.textContent=chatUnread>9?'9+':chatUnread}}
-function chatToggle(f){chatOpen=f==null?!chatOpen:f;if(chatOpen)chatUnread=0;renderChat();if(chatOpen)setTimeout(()=>{try{$('#chatIn').focus()}catch(e){}},50)}
+function chatToggle(f){chatOpen=f==null?!chatOpen:f;if(chatOpen)chatUnread=0;renderChat();if(chatOpen)syncChatHeight()}
 function botReply(txt,ch){const s=norm(txt),on=BOTS.filter(b=>!b.dead||true);let who=on.filter(b=>new RegExp('(^|\\W)'+norm(b.n)+'(\\W|$)').test(s));
  if(!who.length){if(ch==='g'){const g=myGuild();who=on.filter(b=>g&&g.mem.includes(b.id));who=who.length?[pick(who)]:[]}else{const near=on.filter(b=>vis(b)&&cheb(b,P)<=8).sort((a,c)=>cheb(a,P)-cheb(c,P));who=near.length?[near[0]]:(R()<.6?[pick(on)]:[])}}
  who.slice(0,2).forEach((b,i)=>setTimeout(()=>{const r=botAnswer(b,s);if(r)botSay(b,r,ch)},1200+R()*2200+i*1500))}
@@ -2176,7 +2197,7 @@ function importParse(txt){
  if(!obj(o)||typeof o.name!=='string'||!o.name.trim()||o.name.length>40||!['knight','mage'].includes(o.cls)||!Number.isInteger(o.lvl)||o.lvl<1||o.lvl>MAXLV)throw new Error('personagem inválido');
  const map=o.map==='dg'?DG_SIZE:typeof o.map==='string'&&Object.hasOwn(MAPS,o.map)?MAPS[o.map]:null;
  if(!map||!Number.isInteger(o.x)||!Number.isInteger(o.y)||o.x<0||o.y<0||o.x>=map.w||o.y>=map.h)throw new Error('mapa ou posição inválidos');
- if(o.map==='dg')Object.assign(o,DG_EXIT);
+ if(o.map==='dg'||([DG_ISLAND,'casa_forja_masmorras'].includes(o.map)&&o.lvl<DG_LEVEL))Object.assign(o,dungeonReturn(o.lvl));
  // As definições personalizadas ficam no save e só entram no catálogo ao abrir o personagem.
  const custom=o.cust??{};
  if(!obj(custom))throw new Error('itens personalizados inválidos');
@@ -2218,13 +2239,13 @@ function botPetTick(b){const k=BOTPET[b.id];if(!k||!MON[k]){b.petE=null;return}l
 
 /* ---------- Party ---------- */
 const PARTYMAX=7;
-const partyAll=()=>BOTS.filter(b=>b.follow);
-const partyHere=()=>BOTS.filter(b=>b.follow&&!b.dead&&b.map===P.map);
+const partyAll=()=>BOTS.filter(b=>P?.map==='dg'?dungeonRoster.has(b.id):b.follow);
+const partyHere=()=>partyAll().filter(b=>!b.dead&&b.map===P.map);
 function partyShare(xp){const m=partyHere();if(!m.length)return{each:xp,m};const n=m.length+1;return{each:Math.max(1,Math.round(xp*(1+.1*(n-1))/n)),m}}
-function partyAdd(b,quiet){if(b.follow)return true;if(partyAll().length>=PARTYMAX){if(!quiet)toast('',`Party cheia (${PARTYMAX+1} pessoas)`);return false}
+function partyAdd(b,quiet){if(P?.map==='dg')return false;if(b.follow)return true;if(partyAll().length>=PARTYMAX){if(!quiet)toast('',`Party cheia (${PARTYMAX+1} pessoas)`);return false}
  for(const x of BOTS)if(x.lead===b){x.lead=null;botGo(x,'over','town')}
  P.fl.party=1;b.lead=null;b.raid=null;b.follow=true;b.target=null;chatSys(`${b.n} entrou na party. O XP é dividido entre todos (+10% por membro).`);renderParty();return true}
-function partyDel(b,why){if(!b.follow)return;b.follow=false;b.target=null;b.state='hunt';b.stateUntil=nowT+120000;chatSys(why||`${b.n} saiu da party.`);renderParty()}
+function partyDel(b,why){if(P?.map==='dg')return;if(!b.follow)return;b.follow=false;b.target=null;b.state='hunt';b.stateUntil=nowT+120000;chatSys(why||`${b.n} saiu da party.`);renderParty()}
 function partyInvite(b){closeAll();chatSys(`Você convidou ${b.n} para a party.`);
  setTimeout(()=>{if(b.follow)return;if(b.dead){botSay(b,'to morto, me chama quando eu voltar');return}if(raidOf(b)){botSay(b,'to no boss agora, depois eu vou');return}
   if(P.map==='ship'||P.map==='arena'){botSay(b,'agora não dá, me chama quando sair daí');return}
@@ -2326,6 +2347,7 @@ function mobileWorldLite(){return !!(P&&(P.map==='over'||kolMap(P.map)||peaceMap
 function resize(){
  const r=$('#view').getBoundingClientRect();
  if(r.width<=0||r.height<=0)return;
+ syncChatHeight();
  const layoutWidth=Math.round(r.width);
  if(layoutWidth!==cameraLayoutWidth){
   cameraLayoutWidth=layoutWidth;
@@ -2490,7 +2512,7 @@ function draw_old(){
  ctx.fillStyle='#000';ctx.fillRect(0,0,cv.width,cv.height);if(!P)return;
  const m=MAPS[P.map];const camX=Math.round(P.rx*S+S/2-cv.width/2),camY=Math.round(P.ry*S+S/2-cv.height/2);
  const x0=Math.floor(camX/S),y0=Math.floor(camY/S),x1=x0+Math.ceil(cv.width/S)+1,y1=y0+Math.ceil(cv.height/S)+1;const wf=Math.floor(nowT/550)%2;
- if(P.map==='over')drawOverChunks(camX,camY,x0,y0,x1,y1);else if(kolMap(P.map)||peaceMap(P.map))drawKolTerrain(m,camX,camY,x0,y0,x1,y1,wf);else for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const t=getT(m,x,y);const a=TILES[t];const v=(t===TL.WATER||t===TL.BRIDGE||t===TL.LAVA||t===TL.PORTAL||t===TL.BOAT||t===TL.DHOLE||t===TL.FIRE)?wf:((Math.imul(x,374761393)^Math.imul(y,668265263))>>>13)&3;ctx.drawImage((v23Roof(x,y,t)||(isVussumiTile(x,y)&&VUS_TILES[t]?VUS_TILES[t]:a)[v]),x*S-camX,y*S-camY,S,S)}
+ if(P.map==='over')drawOverChunks(camX,camY,x0,y0,x1,y1);else if(kolMap(P.map)||peaceMap(P.map))drawKolTerrain(m,camX,camY,x0,y0,x1,y1,wf);else for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const t=getT(m,x,y);const a=TILES[t];const v=(t===TL.WATER||t===TL.BRIDGE||t===TL.LAVA||t===TL.PORTAL||t===TL.BOAT||t===TL.DHOLE||t===TL.FIRE)?wf:((Math.imul(x,374761393)^Math.imul(y,668265263))>>>13)&3;ctx.drawImage((v23Roof(x,y,t)||(isVussumiTile(x,y)&&VUS_TILES[t]?VUS_TILES[t]:a)[v]),...terrainRect(x,y,1,camX,camY))}
  v73IslandBuildings(camX,camY);
  drawDoors(camX,camY); // cenário antes dos personagens.
  for(const c of CORPSE)if(c.map===P.map&&!c.pile){const bx=c.x*S-camX,by=c.y*S-camY;ctx.fillStyle='rgba(110,10,10,.55)';ctx.fillRect(bx+S*.2,by+S*.65,S*.6,S*.2);ctx.save();ctx.globalAlpha=hasLoot(c)?.6:Math.max(0,.55-(nowT-c.t0)/18000);ctx.translate(bx+S/2,by+S*.7);ctx.rotate(Math.PI/2);ctx.drawImage(c.img,-S*.4,-S*.4,S*.8,S*.8);ctx.restore();if(hasLoot(c)){const o=Math.round(Math.sin(nowT/220)*Z);ctx.fillStyle='#000';ctx.fillRect(bx+S*.68-Z/2,by+S*.18+o-Z/2,Z*3,Z*3);ctx.fillStyle='#ffd040';ctx.fillRect(bx+S*.68,by+S*.18+o,Z*2,Z*2);ctx.fillStyle='#fff';ctx.fillRect(bx+S*.68,by+S*.18+o,Z,Z)}}
@@ -2502,7 +2524,7 @@ function draw_old(){
  for(const b of BOTS)if(vis(b)){ents.push({e:b,img:botImg(b),bot:1});if(b.petE&&b.petE.map===P.map&&BOTPET[b.id])ents.push({e:b.petE,img:MSPR[MON[BOTPET[b.id]].spr],pet:1})}
  ents.sort((a,b)=>a.e.ry-b.e.ry);
  for(const it of ents){const e=it.e;
-  if(it.mo&&P.target===e){ctx.strokeStyle='#ff3a3a';ctx.lineWidth=Z;ctx.strokeRect(e.rx*S-camX+Z/2,e.ry*S-camY+Z/2,S-Z,S-Z)}
+  if(it.mo&&P.target===e){ctx.fillStyle='#ff6960';ctx.fillRect(Math.round((e.rx+.36)*S-camX),Math.round((e.ry+.94)*S-camY),Math.max(3,Math.round(S*.28)),Math.max(2,Math.round(Z)))}
   const r=drawSprite(it.img,e,camX,camY,it.pet?.7:it.big);if(it.mo&&e.dot&&nowT<e.dot.until){ctx.fillStyle='rgba(96,200,64,.35)';ctx.fillRect(r.ox,r.oy,r.w,r.w)}if(it.mo&&e.stun>nowT){ctx.fillStyle='#e0c0ff';const sx=e.rx*S-camX+S/2;for(let i=0;i<3;i++){const a=nowT/200+i*2.1;ctx.fillRect(sx+Math.cos(a)*S*.3-Z,r.oy+Z*2+Math.sin(a)*Z*2,Z*2,Z*2)}}
   const cx=e.rx*S-camX+S/2;
   if(it.npc&&e.say&&nowT-e.sayT<3000)label(e.say,cx,r.oy-Z*5.5,'#ffffff');
@@ -2657,7 +2679,7 @@ function links(map){
  const L=(MAPS[map]?.portals||[]).filter(p=>MAPS[p.to]);
  for(const a in PORTS)if(PORTS[a].map===map){
   const port=PORTS[a],n=NPCS.find(o=>o.id===port.npc&&o.map===map)||port;
-  for(const b in PORTS)if(b!==a&&MAPS[PORTS[b].map])L.push({x:n.x,y:n.y,to:PORTS[b].map,ship:1});
+  for(const b in PORTS)if(b!==a&&MAPS[PORTS[b].map]&&dungeonVisible(PORTS[b].map))L.push({x:n.x,y:n.y,to:PORTS[b].map,ship:1});
  }
  return L;
 }
@@ -2778,7 +2800,7 @@ function hud(){
  const dive=$('#hDive');dive.hidden=!UNDERWATER.has(P.map);
  if(!dive.hidden){const seconds=Math.ceil(diveRemaining()/1000);dive.textContent='Concha · '+Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0')}
  const t=P.target;$('#targetBox').hidden=!t;if(t){$('#tName').textContent=MON[t.type].n+' Nv '+t.lv;$('#tF').style.width=Math.max(0,t.hp/t.mhp*100)+'%';$('#tT').textContent=Math.max(0,Math.ceil(t.hp))+'/'+t.mhp}
- renderBag();renderParty();{const h=$('#hud'),tb=$('#targetBox'),y=h.offsetTop+h.offsetHeight+4;tb.style.top=y+'px';const cb=$('#chatBox');if(cb&&!chatOpen)cb.style.top=(tb.hidden?y:y+tb.offsetHeight+4)+'px';else if(cb)cb.style.top=''}
+ renderBag();renderParty();{const h=$('#hud'),tb=$('#targetBox'),y=h.offsetTop+h.offsetHeight+4;tb.style.top=y+'px';const cb=$('#chatBox');if(cb&&!chatOpen)cb.style.top=(tb.hidden?y:y+tb.offsetHeight+4)+'px'}
  document.querySelectorAll('#hot .sk[data-s]').forEach(el=>{const id=el.dataset.s,cd=(P.cds[id]||0)-nowT;el.querySelector('.cd').style.height=cd>0?(cd/((P.cdMax||{})[id]||SK[id].cd)*100)+'%':'0'})}
 function hotIds(){try{elSync()}catch(e){}return hotIds_e()}
 function hotIds_e(){
@@ -2849,7 +2871,7 @@ let eqSlot='all',eqSort='best';
 function power(id){const it=IT[id],mu=legMul(id);return Math.round(((it.atk||0)*3+(it.def||0)*4+(it.hp||0)*.5+(it.mp||0)*.4)*mu)}
 function pEquip(b){
  const k=P.cls==='knight';
- let h='<div class="eqTop">';for(const s in SLOTN){const id=P.eq[s];h+=`<button class="eqCell ${eqSlot===s?'on':''}" data-s="${s}" title="${SLOTN[s]}">${id?`<img src="${itemIcon(id)}" alt="">`:`<span>${(s==='shield'&&!k?'Mão sec.':SLOTN[s])}</span>`}</button>`}h+='</div>';
+ let h='<div class="eqTop">';for(const s in SLOTN){if(s==='shield'&&P.fac==='elfo'&&P.cls==='knight')continue;const id=P.eq[s];h+=`<button class="eqCell ${eqSlot===s?'on':''}" data-s="${s}" title="${SLOTN[s]}">${id?`<img src="${itemIcon(id)}" alt="">`:`<span>${(s==='shield'&&!k?'Mão sec.':SLOTN[s])}</span>`}</button>`}h+='</div>';
  const st=stats();h+=`<p class="eqSum">✴ ${skPow()} poder das habilidades (arma ${wpnAtk()}) · ⚔ ${st.atk} ataque · ✦ ${st.mag} magia · 🛡 ${st.def} defesa · ♥ ${st.maxHp} · ✦ ${st.maxMp}</p>`;
  h+=`<div class="chips eqF">${[['all','Todos'],...Object.entries(SLOTN)].map(([s,n])=>`<button data-fs="${s}" class="${eqSlot===s?'gold':''}">${n}</button>`).join('')}</div>`;
  h+=`<div class="chips eqF"><span style="font-size:11px;color:var(--muted);align-self:center">Ordenar:</span>${[['best','Melhor'],['worst','Pior'],['atk','Ataque'],['def','Defesa'],['hp','Vida'],['mp','Mana'],['lv','Nível']].map(([s,n])=>`<button data-so="${s}" class="${eqSort===s?'gold':''}">${n}</button>`).join('')}</div><div id="eqList"></div>`;
@@ -2903,13 +2925,13 @@ function pHero(b){
  <div class="sect">Atributos <span>${P.pts} ${P.pts===1?'ponto':'pontos'} livres</span></div><div id="attrs"></div>
  <div class="sect">Equipamento <span style="color:var(--muted)">toque para remover</span></div><div class="eqGrid" id="eqg"></div>`));
  drawPortrait(b.querySelector('#heroCv'),playerImg());
- const A=[['atk','Ataque','+2% de chance de acertar o alvo'],['def','Defesa','+2% de chance de esquivar'],['vit','Vida','+12 de vida máxima'],['mag','Mana','+10 de mana máxima e +2 de poder mágico']];
+ const A=[['atk','Ataque','+2% de chance de acertar o alvo'],['def','Defesa','+2% de chance de esquivar'],['vit','Vida','+12 de vida máxima'],['mag','Mana','+10 de mana máxima']];
  const at=b.querySelector('#attrs');const base=k?{atk:3,def:3,vit:3,mag:1}:{atk:1,def:1,vit:2,mag:5};
  const qrow=el(`<div class="chips" style="align-items:center"><span style="color:var(--muted);font-size:12px">Pontos por toque:</span>${[1,50,100].map(q=>`<button data-q="${q}" class="${q===attQ?'gold':''}">${q}</button>`).join('')}<button data-rst style="margin-left:auto;font-size:11px;border-color:var(--bad)">↺ Devolver todos</button></div>`);
  qrow.querySelectorAll('[data-q]').forEach(bt=>bt.onclick=()=>{attQ=+bt.dataset.q;renderPanel()});
  qrow.querySelector('[data-rst]').onclick=ev=>{const bt=ev.currentTarget;if(!bt.dataset.c){bt.dataset.c=1;bt.textContent='Confirmar: devolver?';return}for(const a in base){P.pts+=Math.max(0,P.attr[a]-base[a]);P.attr[a]=Math.min(P.attr[a],base[a])}renderPanel()};at.append(qrow);
  A.forEach(([key,n,dsc])=>{const r=el(`<div class="attr"><div>${n}<small>${dsc}</small></div><b>${P.attr[key]}</b><button aria-label="Aumentar ${n}" ${P.pts?'':'disabled'}>+${Math.min(attQ,P.pts)||attQ}</button></div>`);r.querySelector('button').onclick=()=>{const q=Math.min(attQ,P.pts);if(q>0){P.pts-=q;P.attr[key]+=q;if(key==='vit')P.hp+=12*q;if(key==='mag')P.mp+=10*q;renderPanel()}};at.append(r)});
- const eg=b.querySelector('#eqg');for(const s in SLOTN){const id=P.eq[s];const nm=s==='shield'&&!k?'Mão secundária':SLOTN[s];
+ const eg=b.querySelector('#eqg');for(const s in SLOTN){if(s==='shield'&&P.fac==='elfo'&&k)continue;const id=P.eq[s];const nm=s==='shield'&&!k?'Mão secundária':SLOTN[s];
   const btn=el(`<button class="eq" ${id?'':'disabled'}>${id?`<img src="${itemIcon(id)}" alt="">`:'<img alt="" style="visibility:hidden">'}<span><em>${nm}</em>${id?IT[id].n+itemDesc(id).replace(/<span class="note">.*$/,''):'vazio'}</span></button>`);
   btn.querySelector('button').onclick=()=>{if(addItem(id)){P.eq[s]=null;menuIcons();renderPanel()}};eg.append(btn)}}
 let skTree=null;
@@ -3304,7 +3326,7 @@ function renderChars(){
   box.append(r)})}
 function begin_x(sv){
  initWorld();
- if(sv){if(sv.cust)for(const k in sv.cust)IT[k]=sv.cust[k];P=Object.assign({},sv);P.attr=Object.assign({atk:1,def:1,vit:1,mag:1},sv.attr);P.eq=Object.assign({},EQ0,sv.eq);for(const s in P.eq)if(P.eq[s]&&!IT[P.eq[s]])P.eq[s]=null;P.wp=sv.wp||0;P.pets=sv.pets||{};P.petXp=sv.petXp||{};P.pet=sv.pet&&MON[sv.pet]?sv.pet:null;P.kills=sv.kills||{};P.drops=sv.drops||{};P.dq=sv.dq||null;P.sl=sv.sl||{};P.pas=sv.pas||{};P.mst=sv.mst!=null?sv.mst:Math.max(0,(sv.lvl||1)-MSTLV+1);P.inv=(sv.inv||[]).filter(e=>IT[e.id]);P.bag=Array.isArray(sv.bag)?sv.bag.filter(e=>IT[e.id]):P.inv.splice(0,Math.min(9,P.inv.length));P.quests=sv.quests||{};P.skills=sv.skills||{};if(P.map==='dg')Object.assign(P,DG_EXIT);else if(!MAPS[P.map])P.map='over';kolRestorePosition();prepPlayer();clearSafeRegenPause(P);if(!(P.hp>0)){P.hp=stats().maxHp;P.mp=stats().maxMp}}
+ if(sv){if(sv.cust)for(const k in sv.cust)IT[k]=sv.cust[k];P=Object.assign({},sv);P.attr=Object.assign({atk:1,def:1,vit:1,mag:1},sv.attr);P.eq=Object.assign({},EQ0,sv.eq);for(const s in P.eq)if(P.eq[s]&&!IT[P.eq[s]])P.eq[s]=null;P.wp=sv.wp||0;P.pets=sv.pets||{};P.petXp=sv.petXp||{};P.pet=sv.pet&&MON[sv.pet]?sv.pet:null;P.kills=sv.kills||{};P.drops=sv.drops||{};P.dq=sv.dq||null;P.sl=sv.sl||{};P.pas=sv.pas||{};P.mst=sv.mst!=null?sv.mst:Math.max(0,(sv.lvl||1)-MSTLV+1);P.inv=(sv.inv||[]).filter(e=>IT[e.id]);P.bag=Array.isArray(sv.bag)?sv.bag.filter(e=>IT[e.id]):P.inv.splice(0,Math.min(9,P.inv.length));P.quests=sv.quests||{};P.skills=sv.skills||{};if(P.map==='dg'||([DG_ISLAND,'casa_forja_masmorras'].includes(P.map)&&P.lvl<DG_LEVEL))Object.assign(P,dungeonReturn(P.lvl));else if(!MAPS[P.map])P.map='over';kolRestorePosition();prepPlayer();clearSafeRegenPause(P);if(!(P.hp>0)){P.hp=stats().maxHp;P.mp=stats().maxMp}}
  else{const nm=($('#inName').value||'').trim().slice(0,14)||'Aventureiro';newPlayer(nm,pickCls)}
  amz69Restore();
  botsInit(sv&&sv.world);
@@ -3403,8 +3425,9 @@ function drawWeather(){if(CFG.weather===false)return;const k=WEA.map===P.map?WEA
 function drawNight(){if(!OUTDOOR.has(P.map))return;const d=darkness();if(d<=0)return;const W=cv.width,H=cv.height,g=ctx.createRadialGradient(W/2,H/2,S*1.2,W/2,H/2,S*5);g.addColorStop(0,'rgba(6,8,24,0)');g.addColorStop(1,`rgba(6,8,24,${d})`);ctx.fillStyle=g;ctx.fillRect(0,0,W,H)}
 function clockTxt(){const h=gameHour(),hh=Math.floor(h),mm=Math.floor((h-hh)*60/10)*10;return`${isNight()?'🌙':'☀'} ${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`}
 /* ========== MASMORRA INSTÁVEL ========== */
-const DGMIN=3;
-const DG_SIZE={w:46,h:34},DG_EXIT={map:'over',x:64,y:99};
+const DG_LEVEL=350, DG_ISLAND='ilha_masmorras';
+const DG_SIZE={w:46,h:34},DG_EXIT={map:DG_ISLAND,x:18,y:12};
+let dungeonRoster=new Set();
 function dgParty(){return partyAll().filter(b=>!b.dead)}
 function dgGen(floor,tier){const seed=(Date.now()&0xffff)+floor*977,r=rng(seed),{w:W,h:H}=DG_SIZE,rooms=[];
  for(let t=0;t<200&&rooms.length<8;t++){const w=5+(r()*6|0),h=4+(r()*4|0),a=2+(r()*(W-w-4)|0),b=2+(r()*(H-h-4)|0),c=a+w,d=b+h;if(rooms.some(([A,B,C,D])=>a<=C+2&&c>=A-2&&b<=D+2&&d>=B-2))continue;rooms.push([a,b,c,d])}
@@ -3474,7 +3497,7 @@ const FORGE={minerio_ferro:[30,'Ferro'],minerio_prata:[70,'Prata'],minerio_ouro:
 const FORGE_LEVELS=[10,30,50,80,120,150,200,250,300,350,400,450,500];
 const FORGE_SLOTS=['weapon','armor','helmet','shield','legs','boots'];
 function forgeRecipes(lv,sl){return Object.keys(IT).filter(id=>{
- const it=IT[id];return it.lv===lv&&it.slot===sl&&!it.custom&&!it.legendary&&!it.frag&&(!it.noDrop||it.forgeRecipe)&&(!it.cls||it.cls===P.cls);
+ const it=IT[id];return it.lv===lv&&it.slot===sl&&!elfShield(it)&&!it.custom&&!it.legendary&&!it.frag&&(!it.noDrop||it.forgeRecipe)&&(!it.cls||it.cls===P.cls);
 })}
 
 function forgeCost(lv,base){
@@ -3723,7 +3746,7 @@ function drawExtra(camX,camY){drawHouse(camX,camY);const T=P.treasure;if(T&&T.ma
 function teleTalk(){const o=[['❄ Montanhas Geladas · nível 60 a 90 · 300 ouro',()=>{if(P.lvl<55){toast('','Recomendado nível 60. Mínimo 55.');return}if(P.gold<300){toast('','Ouro insuficiente');return}P.gold-=300;closeAll();teleport({to:'gelo',tx:40,ty:55})}],['☁ Ilha Flutuante · nível 200+ · 1.000 ouro',()=>{if(P.lvl<190){toast('','Recomendado nível 200. Mínimo 190.');return}if(P.gold<1000){toast('','Ouro insuficiente');return}P.gold-=1000;closeAll();teleport({to:'ceu',tx:38,ty:51})}],['Até mais',closeAll]];
  say('Mago Teleportador Ivo','Posso abrir portais para terras distantes que nenhum barco alcança. Para voltar, pise no portal onde você chegar.',o)}
 const NEWNPCS=[
- {id:'sera',n:'Guardiã Sera',map:'over',x:64,y:98,pal:{h:'#202020',c:'#2a6a6a',d:'#1a4a4a'},talk:()=>dgTalk(),lines:['Masmorra Instável: só com 3 ou mais!','Cada andar é diferente.']},
+ {id:'sera',n:'Guardiã Sera',map:'over',x:64,y:98,pal:{h:'#202020',c:'#2a6a6a',d:'#1a4a4a'},talk:()=>dgTalk(),lines:['Masmorras de treinamento para aventureiros de nível 350 ou mais.','Cada andar é diferente.']},
  {id:'tobi',n:'Artesão Tobi',map:'over',x:107,y:97,pal:{h:'#8a5a2a',c:'#6a5a3a',d:'#4a3a2a'},talk:()=>shop('Artesão Tobi','Ferramentas! Com a vara, toque na água para pescar. Com a picareta, toque nas pedras para minerar.',['vara_pesca','picareta']),lines:['Varas e picaretas!']},
  {id:'mira',n:'Alquimista Mira',map:'over',x:96,y:97,pal:{h:'#40a060',c:'#3a2a6a',d:'#2a1a4a'},talk:()=>craftDlg('Alquimista Mira',ALQ,'alq'),lines:['Poções e elixires!']},
  {id:'nena',n:'Cozinheira Nena',map:'over',x:96,y:97,pal:{h:'#e0e0e0',c:'#c04040',d:'#902a2a'},talk:()=>craftDlg('Cozinheira Nena',COZ,'coz'),lines:['Traga peixes que eu cozinho!']},
@@ -3733,7 +3756,7 @@ const NEWNPCS=[
  {id:'ivo',n:'Mago Teleportador Ivo',map:'over',x:110,y:65,pal:{h:'#d0d0ff',c:'#2a2a8a',d:'#1a1a5a'},talk:()=>teleTalk(),lines:['Portais para terras distantes!']},
  {id:'sCasa',n:'Placa: Casa',map:'over',x:31,y:93,sign:1,talk:()=>houseSign()},
  {id:'alfredo',n:'Mordomo Alfredo',map:'casa',x:3,y:5,pal:{h:'#909090',c:'#1a1a1a',d:'#0a0a0a'},talk:()=>butlerTalk()}];
-DEST.push(['Masmorra Instável (Sera)',()=>npcAt('sera'),'Guardiã Sera'],['Ferramentas (Tobi)',()=>npcAt('tobi'),'Artesão Tobi'],['Alquimia (Mira)',()=>npcAt('mira'),'Alquimista Mira'],['Culinária (Nena)',()=>npcAt('nena'),'Cozinheira Nena'],['Montarias (Beto)',()=>npcAt('beto'),'Cavalariço Beto'],['Visual (Lia)',()=>npcAt('lia'),'Estilista Lia'],['Leilão (Dora)',()=>npcAt('dora'),'Leiloeira Dora'],['Teleportes (Ivo)',()=>npcAt('ivo'),'Mago Teleportador Ivo'],['Casa à venda',()=>({map:'over',x:31,y:93}),'Casa à venda']);
+DEST.push(['Ferramentas (Tobi)',()=>npcAt('tobi'),'Artesão Tobi'],['Alquimia (Mira)',()=>npcAt('mira'),'Alquimista Mira'],['Culinária (Nena)',()=>npcAt('nena'),'Cozinheira Nena'],['Montarias (Beto)',()=>npcAt('beto'),'Cavalariço Beto'],['Visual (Lia)',()=>npcAt('lia'),'Estilista Lia'],['Leilão (Dora)',()=>npcAt('dora'),'Leiloeira Dora'],['Teleportes (Ivo)',()=>npcAt('ivo'),'Mago Teleportador Ivo'],['Casa à venda',()=>({map:'over',x:31,y:93}),'Casa à venda']);
 ACH.push(['pescador','Pescador de Ouro','Pescador','Pesque um Peixe Dourado',()=>false],['casa','Lar Doce Lar','Proprietário','Compre uma casa',()=>!!P.house],['montaria','Cavaleiro Andante','Cavaleiro Andante','Compre uma montaria',()=>Object.keys(P.mounts||{}).length>0],
  ['renascer','Renascido','Renascido','Renasça uma vez',()=>(P.reb||0)>=1],['amigo','Melhores Amigos','Amigo Leal','Chegue a melhor amigo de alguém',()=>false],['casamento','Felizes para Sempre','Casado(a)','Case-se no templo',()=>!!P.spouse],
  ['guerra','Senhor da Guerra','Senhor da Guerra','Vença uma guerra de guildas',()=>false],['explorador','Explorador','Explorador','Ache 3 baús secretos',()=>Object.keys(P.secrets||{}).length>=3],['masmorra10','Mergulhador','Mergulhador do Abismo','Chegue ao andar 10 da masmorra',()=>(P.dgBest||0)>=10],
@@ -3749,7 +3772,7 @@ function aiPrompt(txt,ch,to){const g=myGuild();
  const bots=[...rel].map(b=>{const bg=guildOf(b.id);return`- id "${b.id}" ${b.n}: ${b.cls==='knight'?'cavaleiro':'mago'} nv ${b.lvl}, ${b.dead?'morto (voltando do templo)':b.follow?'no grupo do jogador':botDoing(b)+' em '+botZone(b)}${vis(b)?', perto do jogador':''}${bg?', guilda '+bg.n+(bg.leader===b.id?' (líder)':''):', sem guilda'}. Pet: ${MON[BOTPET[b.id]]?MON[BOTPET[b.id]].n:'nenhum'}. Amizade com o jogador: ${frName(b.id)}${P.spouse===b.id?' (casados)':''}. Jeito: ${PERSONA[b.id]||'simpático'}`}).join('\n');
  const hist=CHAT.filter(c=>c.k!=='s').slice(-12).map(c=>`${c.ch==='g'?'[Guilda] ':c.ch==='p'?'[Privado] ':''}${c.n}: ${c.t}`).join('\n');
  return `Você controla jogadores fictícios de um RPG online para celular (estilo MMORPG antigo). Eles conversam no chat do jogo com o jogador humano "${P.name}" (${P.cls==='knight'?'cavaleiro':'mago'} nível ${P.lvl}, em ${zoneName()}${g?', guilda '+g.n:''}). Hora no jogo: ${clockTxt()}.
-${GAMEINFO} Também existem: Masmorra Instável (Guardiã Sera, só entra com 3+ na party), pesca e mineração (Artesão Tobi), alquimia (Mira), culinária (Nena), montarias (Beto), leilão (Dora), casas à venda, Montanhas Geladas (nv 60-90) e Ilha Flutuante (nv 200+) pelo Mago Ivo, eventos de invasão e chefes mundiais, arena PvP semanal, guerra de guildas.
+${GAMEINFO} Também existem: Ilha das Masmorras (nível 350, solo, party ou guilda), pesca e mineração (Artesão Tobi), alquimia (Mira), culinária (Nena), montarias (Beto), leilão (Dora), casas à venda, Montanhas Geladas (nv 60-90) e Ilha Flutuante (nv 200+) pelo Mago Ivo, eventos de invasão e chefes mundiais, arena PvP semanal, guerra de guildas.
 Jogadores que você controla:
 ${bots}
 
@@ -4046,16 +4069,63 @@ function bossChestOpen(map,x,y){const m=MAPS[map],c=m.bossChest;if(!c||c[0]!==x|
 /* escudo do Vorath */
 const vorathShield=mo=>(mo.shieldT>nowT)||mo.type==='arquidemonio'&&MONS.some(o=>o.map===mo.map&&!o.dead&&o.type.startsWith('cerbero'));
 let shT=0;function shieldTick(){if(P.map!=='arena'||nowT<shT)return;shT=nowT+700;const b=MONS.find(o=>o.type==='arquidemonio'&&!o.dead);if(b&&vorathShield(b))ring(b,1.6,'#ff9040')}
-/* ========== MASMORRAS POR NÍVEL (30 / 60 / 90) ========== */
-const DGT={1:{n:'Masmorra das Sombras',lv:30},2:{n:'Masmorra Congelada',lv:60},3:{n:'Masmorra Abissal',lv:90}};
-function dgTalk(){const n=dgParty().length+1,g=myGuild(),gm=g?BOTS.filter(b=>g.mem.includes(b.id)&&!b.dead&&!b.follow):[];P.dgB=P.dgB||{};
- const o=[];for(const t of[1,2,3]){const T=DGT[t],ok=P.lvl>=T.lv&&n>=DGMIN;o.push([`🌀 ${T.n} · nível ${T.lv}+ · recorde andar ${P.dgB[t]||0}`,()=>{if(P.lvl<T.lv){toast('',`Liberada no nível ${T.lv}`);return}if(n<DGMIN){toast('',`Precisa de ${DGMIN} ou mais na party`);return}closeAll();dgEnter(1,t)}]);const b=P.dgB[t]||0;if(ok&&b>=5)o.push([`   ↳ começar do andar ${Math.floor(b/5)*5}`,()=>{closeAll();dgEnter(Math.floor(b/5)*5,t)}])}
- if(n<DGMIN){if(gm.length)o.push([`Chamar membros da guilda (${gm.length})`,()=>{for(const b of gm.slice(0,PARTYMAX-partyAll().length))partyAdd(b,true);setTimeout(dgTalk,300)}]);o.push(['👥 Convidar para a party',partyPanel])}o.push(['Até mais',closeAll]);
- say('Guardiã Sera',`As masmorras mudam a cada entrada. Cada andar é mais difícil e a cada 5 andares há um chefe.<br>Só entram grupos de <b>${DGMIN} ou mais</b> (party ou guilda). Sua party: <b>${n}</b>.<br>A <b>Abissal</b> acompanha o nível do grupo: é o caminho até o nível 1.000.`,o)}
-function dgEnter(floor,tier){tier=tier||(P.dg&&P.dg.tier)||1;const m=dgGen(floor,tier);MAPS.dg=m;P.dg={floor,tier};if(P.seen)P.seen.dg=null;miniKey='';teleport({to:'dg',tx:m.start[0],ty:m.start[1]});for(const b of partyAll()){b.map='dg';b.placed=null}
- chatSys(`${DGT[tier].n}: andar ${floor}${floor%5===0?' · CHEFE!':''}`);showZone(`${DGT[tier].n} · andar ${floor}`);P.dgB=P.dgB||{};if(floor>(P.dgB[tier]||0)){P.dgB[tier]=floor;if(floor>1)toast(null,`Novo recorde: andar ${floor}!`)}P.dgBest=Math.max(P.dgBest||0,floor);save(true)}
-function dgNext(){dgEnter(((P.dg||{}).floor||1)+1,(P.dg||{}).tier||1)}
-function dgLevel(floor,tier){if(tier===1)return Math.round(30+floor*1.5);if(tier===2)return Math.round(60+floor*1.5);const avg=Math.round((P.lvl+dgParty().reduce((a,b)=>a+b.lvl,0))/(dgParty().length+1));return Math.max(90,avg)+floor*2}
+/* ========== ILHA DAS MASMORRAS ========== */
+const DGT={1:{n:'Masmorra das Sombras',lv:350},2:{n:'Masmorra Congelada',lv:375},3:{n:'Masmorra Abissal',lv:400}};
+function dgTalk(){
+ if(P.map!==DG_ISLAND||P.lvl<DG_LEVEL)return;
+ const options=Object.entries(DGT).filter(([,t])=>P.lvl>=t.lv).map(([key,t])=>[
+  t.n+' · nível '+t.lv,()=>dgMode(Number(key))
+ ]);
+ say('Guardiã Sera','Escolha uma masmorra de treino. Cada tentativa gera seus próprios andares. Há um chefe a cada cinco andares.',options.concat([['Fechar',closeAll]]));
+}
+function dgMode(tier){
+ if(P.map!==DG_ISLAND||!DGT[tier]||P.lvl<DGT[tier].lv)return;
+ const guild=myGuild(),modes=[['solo','Solo']];
+ if(partyAll().some(b=>!b.dead&&b.lvl>=DG_LEVEL))modes.push(['party','Com a party']);
+ if(guild&&BOTS.some(b=>guild.mem.includes(b.id)&&!b.dead&&b.lvl>=DG_LEVEL))modes.push(['guild','Com a guilda']);
+ const best=P.dgB?.[tier]||0,floor=Math.floor(best/5)*5;
+ const options=modes.flatMap(([mode,label])=>[
+  [label,()=>dgEnter(1,tier,mode)],
+  ...(floor>=5?[[label+' · retomar no andar '+floor,()=>dgEnter(floor,tier,mode)]]:[])
+ ]);
+ say(DGT[tier].n,'Escolha quem vai entrar. Só companheiros vivos de nível 350 ou mais podem acompanhar você.',options.concat([['Voltar',dgTalk],['Fechar',closeAll]]));
+}
+function dgEnter(floor,tier,mode){
+ if(!P||P.dead||!DGT[tier]||P.lvl<DGT[tier].lv||!['dg',DG_ISLAND].includes(P.map))return false;
+ if(P.map===DG_ISLAND){
+  if(!['solo','party','guild'].includes(mode))return false;
+  const guild=mode==='guild'?myGuild():null;
+  const members=mode==='party'?partyAll():guild?BOTS.filter(b=>guild.mem.includes(b.id)):[];
+  const eligible=members.filter(b=>!b.dead&&b.lvl>=DG_LEVEL).slice(0,PARTYMAX);
+  if(mode!=='solo'&&!eligible.length){toast(null,'Nenhum companheiro elegível para entrar.');return false}
+  dungeonRoster=new Set(eligible.map(b=>b.id));
+  const runs=b70State().runs;
+  for(const key of Object.keys(runs))if(runs[key].map==='dg'){
+   for(const b of BOTS)if(b._b70===runs[key].id)b._b70=null;
+   delete runs[key];
+  }
+  closeAll();
+ }
+ for(let i=CORPSE.length-1;i>=0;i--)if(CORPSE[i].map==='dg')CORPSE.splice(i,1);
+ const m=dgGen(floor,tier);MAPS.dg=m;P.dg={floor,tier};
+ if(P.seen)P.seen.dg=null;
+ miniKey='';
+ teleport({to:'dg',tx:m.start[0],ty:m.start[1]});
+ for(const b of partyAll()){b.map='dg';b.placed=null;b.target=null;b.path=null}
+ chatSys(DGT[tier].n+' · andar '+floor+(floor%5===0?' · CHEFE!':''));
+ showZone(DGT[tier].n+' · andar '+floor);
+ P.dgB=P.dgB||{};
+ if(floor>(P.dgB[tier]||0))P.dgB[tier]=floor;
+ P.dgBest=Math.max(P.dgBest||0,floor);
+ save(true);
+ return true;
+}
+function dgNext(){if(P.map==='dg'&&P.dg)dgEnter(P.dg.floor+1,P.dg.tier)}
+function dgLevel(floor,tier){
+ const levels=BOTS.filter(b=>dungeonRoster.has(b.id)&&!b.dead).map(b=>b.lvl);
+ const avg=(P.lvl+levels.reduce((a,b)=>a+b,0))/(levels.length+1);
+ return Math.max(DGT[tier].lv,Math.round(avg))+floor*2;
+}
 /* ========== BANCO ========== */
 function bankDlg(body){P.bank=P.bank||0;const box=el(`<div class="quest"><h4>🏦 Banco de ${economyCity()==='amazonia'?'Amazônia':'Vussumi'}</h4><p>No banco: <b>${P.bank.toLocaleString('pt-BR')} ouro</b> · Com você: <b>${P.gold.toLocaleString('pt-BR')} ouro</b><br><small>O ouro do banco nunca é perdido quando você morre.</small></p><div class="chips"><input id="bkV" type="number" min="1" placeholder="quantia" style="width:100px"><button data-b="dep" class="gold">Depositar</button><button data-b="saq">Sacar</button><button data-b="all">Depositar tudo</button></div></div>`);body.append(box);
  const V=()=>Math.max(0,Math.floor(+$('#bkV').value||0));body.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{const k=b.dataset.b;let v=k==='all'?P.gold:V();if(k==='saq'){v=Math.min(v,P.bank);P.bank-=v;P.gold+=v}else{v=Math.min(v,P.gold);P.gold-=v;P.bank+=v}if(v>0){sfx('coin');toast(null,`${k==='saq'?'Sacou':'Depositou'} ${v.toLocaleString('pt-BR')} ouro`)}save(true);depot('bank')})}
@@ -4890,7 +4960,7 @@ function covWaveFx(b){FROST={map:'covil',end:nowT+1200};const alive=(MONBY.covil
  setTimeout(()=>{if(P.map!=='covil'||b.dead)return;text(b,'GUARDIÕES DO GELO, ATAQUEM!','#9fe8ff',1600);log('Reforços de gelo invadem o covil!','bad');for(let i=0;i<5;i++){const a=R()*6.28;addMon(pick(T),'covil',Math.round(P.x+Math.cos(a)*6),Math.round(P.y+Math.sin(a)*4),86)}},700)}
 /* ========== PORTO em ordem de nível · guardas e quadro em ordem alfabética ========== */
 function portLv(d){const m=/nível (\d+)/.exec(d.n);return m?+m[1]:0}
-function travel_e(who,from){const opts=[];const ks=Object.keys(PORTS).filter(k=>k!==from).sort((a,b)=>portLv(PORTS[a])-portLv(PORTS[b]));
+function travel_e(who,from){const opts=[];const ks=Object.keys(PORTS).filter(k=>k!==from&&dungeonVisible(PORTS[k].map)).sort((a,b)=>portLv(PORTS[a])-portLv(PORTS[b]));
  for(const k of ks){
   const d=PORTS[k],fee=from===V75_KOL&&k==='goodyear'?0:100;
   opts.push([`${d.n} · ${fee?fee+' ouro':'retorno gratuito'}`,()=>{
@@ -4907,13 +4977,13 @@ function travel_e(who,from){const opts=[];const ks=Object.keys(PORTS).filter(k=>
 DEST.push(['Salão das Missões',()=>({map:'over',x:79,y:96}),'Salão das Missões'],['Torre Arcana',()=>({map:'over',x:31,y:31}),'Torre Arcana'],['Praça dos Artesãos',()=>({map:'over',x:106,y:79}),'Praça dos Artesãos'],['Provação Arcana (Vesna)',()=>npcAt('vesna'),'Arquimaga Vesna']);
 /* ========== MAPA-MÚNDI com o mapa de cada lugar ========== */
 function mapLv(k){const L=(MONBY[k]||[]).map(o=>o.lv);return L.length?Math.min(...L):0}
-function worldDlg(){const keys=Object.keys(MAPS).filter(k=>!['dg','ship','casa'].includes(k)&&!k.startsWith('dg')&&!HOUSES.has(k)).sort((a,b)=>mapLv(a)-mapLv(b)||(MAPN[a]||a).localeCompare(MAPN[b]||b,'pt'));
+function worldDlg(){const keys=Object.keys(MAPS).filter(k=>!['dg','ship','casa'].includes(k)&&!k.startsWith('dg')&&!HOUSES.has(k)&&dungeonVisible(k)).sort((a,b)=>mapLv(a)-mapLv(b)||(MAPN[a]||a).localeCompare(MAPN[b]||b,'pt'));
  let h=`<small>🟢 bom para você · 🔴 forte demais · ⚪ fraco/sem monstros (nível ${P.lvl}). Toque em um lugar para ver o mapa.</small><div class="wmap" style="margin-top:6px">`;
  for(const k of keys){const L=(MONBY[k]||[]).map(o=>o.lv),a=L.length?Math.min(...L):0,b=L.length?Math.max(...L):0;const c=!L.length?'#7a7a7a':P.lvl>=a&&P.lvl<=b+5?'#3fbf5a':P.lvl<a?'#c0503a':'#7a7a7a';
   h+=`<button data-wm="${k}" style="display:flex;width:100%;gap:8px;align-items:center;padding:6px 4px;border:0;border-bottom:1px solid rgba(255,255,255,.08);background:none;color:inherit;text-align:left"><span style="width:10px;height:10px;border-radius:50%;background:${c};flex:none"></span><span style="flex:1"><b>${MAPN[k]||k}</b>${P.map===k?' 📍':''}</span><small>${L.length?a+'–'+b:ZLV[k]||'—'}</small></button>`}
  say('🗺 Mapa-múndi',h+'</div>',[['Fechar',closeAll]]);$('#dlgText').querySelectorAll('[data-wm]').forEach(b=>b.onclick=()=>mapView(b.dataset.wm))}
 function mapView(k){
- const m=MAPS[k];if(!m)return;
+ const m=MAPS[k];if(!m||!dungeonVisible(k))return;
  const name=areaMapName(k);
  say('🗺 '+name,'',[['Voltar',worldDlg],['Fechar',closeAll]]);
  const body=$('#dlgBody');
@@ -5027,7 +5097,7 @@ function draw_w(){draw_v();if(!P)return;try{const camX=Math.round(P.rx*S+S/2-cv.
 /* ========== FORJA: ver o item como no equipamento (ícone, status e prova no personagem) ========== */
 const PREVSL=new Set(['weapon','armor','helmet','shield','legs','boots']);
 function previewUrl(id){const it=IT[id];if(!it||!PREVSL.has(it.slot))return null;const old=P.eq[it.slot];P.eq[it.slot]=id;pImgKey='';let url=null;try{const f=portrait(playerImg());url=f.toDataURL()}catch(e){}finally{P.eq[it.slot]=old;pImgKey=''}return url}
-function forgeRow(id,costHtml,label,ok,onForge){const it=IT[id];const r=document.createElement('div');r.className='row';r.style.flexWrap='wrap';
+function forgeRow(id,costHtml,label,ok,onForge){const it=IT[id];const r=document.createElement('div');if(elfShield(it)){r.hidden=true;return r}r.className='row';r.style.flexWrap='wrap';
  r.innerHTML=`<img src="${itemIcon(id)}" alt=""><span>${it.n}${itemDesc(id)}<span class="stats">${costHtml}</span></span><span style="display:flex;flex-direction:column;gap:4px">${PREVSL.has(it.slot)?'<button data-pv>👁 Provar</button>':''}<button ${ok?'class="gold"':'disabled'} data-fg>${label}</button></span>`;
  const pv=r.querySelector('[data-pv]');if(pv)pv.onclick=()=>{const o=r.querySelector('.pvBox');if(o){o.remove();return}const u=previewUrl(id);if(!u)return;const b=document.createElement('div');b.className='pvBox';b.style.cssText='width:100%;display:flex;gap:12px;align-items:center;justify-content:center;margin-top:6px';
   const cur=document.createElement('img');cur.src=(()=>{pImgKey='';const f=portrait(playerImg());return f.toDataURL()})();const nw=document.createElement('img');nw.src=u;for(const im of[cur,nw])im.style.cssText='width:64px;height:80px;image-rendering:pixelated;background:rgba(255,255,255,.06);border-radius:8px';
@@ -5746,6 +5816,7 @@ NEWNPCS.push(ARMNPC,IRISNPC);
 DEST.push(['Armeiro Bóris · Cavaleiro',()=>npcAt('armeiro'),'Armeiro Bóris'],['Armeira Íris · Mago',()=>npcAt('armeira_iris'),'Armeira Íris']);
 function starterGearShop(cls){
  const isMage=cls==='mage',catalog=new Set(DURANLIST(cls).concat(isMage?['varinha','cajado_mina','amuleto_arcano','anel_mana']:['espada_madeira','espada_mina','amuleto_vida','anel_forca']));
+ for(const id of starterProtection())catalog.add(id);
  const list=[...catalog].filter(id=>IT[id]?.slot&&IT[id].price>0&&(IT[id].lv||1)<=25&&(!IT[id].cls||IT[id].cls===cls));
  list.sort((a,b)=>(IT[a].lv||1)-(IT[b].lv||1));
  shop(isMage?IRISNPC.n:ARMNPC.n,isMage?'Equipamentos de mago do nível 1 ao 25.':'Equipamentos de cavaleiro do nível 1 ao 25.',list);
@@ -6257,9 +6328,9 @@ function arConv(id){if(!isArch())return id;const it=IT[id];if(!it||it.slot!=='we
  const b=IT[it.base];if(b&&IT[it.base+'_b']){const t=IT[it.base+'_b'];it.n=it.n.replace(b.n,t.n);it.ic=t.ic;it.bow=1;it.base=it.base+'_b'}return id}
 function addItem(id,q){return addItem_w(arConv(id),q)}
 function setKey(id){const it=IT[id];if(!it)return null;const b=IT[it.base||id];if(b&&b.twin)return setKey_t(b.twin);return setKey_t(id)}
-function canEquip(id){const it=IT[id];if(it&&it.slot==='weapon'&&P){if(isArch()&&!it.bow)return'Elfos guerreiros só usam arco ou besta.';if(!isArch()&&it.bow)return'Só os elfos guerreiros usam arcos e bestas.'}return canEquip_b(id)}
+function canEquip(id){const it=IT[id];if(elfShield(it))return 'Elfos não usam escudos.';if(it&&it.slot==='weapon'&&P){if(isArch()&&!it.bow)return'Elfos guerreiros só usam arco ou besta.';if(!isArch()&&it.bow)return'Só os elfos guerreiros usam arcos e bestas.'}return canEquip_b(id)}
 const VUSSUMI_GENERAL_SHOPS=new Set(['Mercadora Nina','Mercador Tito','Mercador Viajante','Mascate Rui','Ferreiro Duran']);
-function shop(name,greet,list,extra){if(Array.isArray(list)){if(VUSSUMI_GENERAL_SHOPS.has(name))list=list.filter(id=>!IT[id]?.slot);list=list.filter(id=>IT[id]&&!(IT[id].bow&&!isArch()));if(isArch()){list=list.map(bowOf);if(!list.includes('flecha')&&list.some(id=>/^pocao/.test(id)||(IT[id]&&IT[id].slot==='weapon')))list.unshift('flecha')}}return shop_b(name,greet,list,extra)}
+function shop(name,greet,list,extra){if(Array.isArray(list)){if(VUSSUMI_GENERAL_SHOPS.has(name))list=list.filter(id=>!IT[id]?.slot);list=list.filter(id=>IT[id]&&!elfShield(IT[id])&&!(IT[id].bow&&!isArch()));if(isArch()){list=list.map(bowOf);if(!list.includes('flecha')&&list.some(id=>/^pocao/.test(id)||(IT[id]&&IT[id].slot==='weapon')))list.unshift('flecha')}}return shop_b(name,greet,list,extra)}
 Object.assign(ICN,{bow:'Arco',crossbow:'Besta',arrow:'Munição'});
 // desenho
 function wpn(x,ic,col){if(ic==='bow'){x.fillStyle=col;x.fillRect(12,2,2,1);x.fillRect(14,3,1,2);x.fillRect(15,5,1,5);x.fillRect(14,10,1,2);x.fillRect(12,12,2,1);x.fillStyle='#e8e0c8';x.fillRect(12,3,1,9);x.fillStyle='#6e4a26';x.fillRect(15,7,1,2);return}
@@ -6699,10 +6770,10 @@ let ENDERTELL_AUDIT_SHOWN=false;function vChunk(cx,cy){if(!ENDERTELL_AUDIT_SHOWN
   }
  }
  cityArt(g,cx*N,cy*N);c={cv:cv2,anim};VCH.set(key,c);if(VCH.size>20)VCH.delete(VCH.keys().next().value);return c}
-function drawOverChunks(camX,camY,x0,y0,x1,y1){const N=VCN,wf=Math.floor(nowT/550)%2,ts=N*S;ctx.imageSmoothingEnabled=false;
- for(let cy=Math.floor(y0/N);cy<=Math.floor(y1/N);cy++)for(let cx=Math.floor(x0/N);cx<=Math.floor(x1/N);cx++){if(cx<0||cy<0||cx*N>=140||cy*N>=140){continue}const c=vChunk(cx,cy);ctx.drawImage(c.cv,cx*ts-camX,cy*ts-camY,ts,ts);
-  if(wf)for(let i=0;i<c.anim.length;i+=3){const x=c.anim[i],y=c.anim[i+1];if(x<x0||x>x1||y<y0||y>y1)continue;ctx.drawImage(TILES[c.anim[i+2]][1],x*S-camX,y*S-camY,S,S)}}
- for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)if(x<0||y<0||x>=140||y>=140){const a=TILES[MAPS.over.edge];if(a)ctx.drawImage(a[0],x*S-camX,y*S-camY,S,S)}}
+function drawOverChunks(camX,camY,x0,y0,x1,y1){const N=VCN,wf=Math.floor(nowT/550)%2;ctx.imageSmoothingEnabled=false;
+ for(let cy=Math.floor(y0/N);cy<=Math.floor(y1/N);cy++)for(let cx=Math.floor(x0/N);cx<=Math.floor(x1/N);cx++){if(cx<0||cy<0||cx*N>=140||cy*N>=140){continue}const c=vChunk(cx,cy);ctx.drawImage(c.cv,...terrainRect(cx*N,cy*N,N,camX,camY));
+  if(wf)for(let i=0;i<c.anim.length;i+=3){const x=c.anim[i],y=c.anim[i+1];if(x<x0||x>x1||y<y0||y>y1)continue;ctx.drawImage(TILES[c.anim[i+2]][1],...terrainRect(x,y,1,camX,camY))}}
+ for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)if(x<0||y<0||x>=140||y>=140){const a=TILES[MAPS.over.edge];if(a)ctx.drawImage(a[0],...terrainRect(x,y,1,camX,camY))}}
 
 /* Endertell v18: validador de mapas e camadas, ativado com ?debugmap=1.
    Ferramenta local integrada: não exige Phaser/Pixi/Tiled no APK. */
@@ -7691,10 +7762,7 @@ draw=function(){
      ctx.beginPath();ctx.arc(x+dx*S*.18,y-S*.32+dy*S*.18,radius*.82,a-.65,a+.7);ctx.stroke();
     }
    }
-   if(kind==='monster'&&e.flash>nowT&&q==='ultra'){
-    ctx.globalAlpha=.25;ctx.strokeStyle='#ffcccc';ctx.lineWidth=Math.max(1,Z);
-    ctx.strokeRect(r.ox,r.oy,r.w,r.h);
-   }
+   
   }finally{ctx.restore()}
   return r;
  };
@@ -8432,7 +8500,7 @@ function marketCraftMaterials(){
  return marketProfessionMaterials=ids;
 }
 function marketBuyMatches(id,filter){
- const it=IT[id];if(!it)return false;if(filter==='all')return true;
+ const it=IT[id];if(!it||elfShield(it))return false;if(filter==='all')return true;
  const root=economyRoot(id);
  if(filter==='weapons')return it.slot==='weapon';
  if(filter==='elf')return it.slot==='weapon'&&!!it.bow;
@@ -9243,7 +9311,7 @@ NEWNPCS.push({id:'amz68_altar',n:'Marcas do Ritual',map:AMZ68.arena,x:19,y:26,si
 for(const [id,n,x,y]of [['amz68_guard1','Guardião do Portão Oeste',26,75],['amz68_guard2','Vigia das Raízes',26,79]])NEWNPCS.push({id,n,map:'amazon',x,y,wander:false,amzTree:true,img0:AMZ_TREE_FRAMES[0],lines:['Além do portão, as raízes foram corrompidas.','Honramos a Árvore Sagrada protegendo esta passagem.'],talk:()=>say(n,'Além deste portão fica a <b>Mata Corrompida</b>. Árvores doentes, trolls contaminados e cogumelos do pavor rondam o caminho. Recomendamos nível 42 a 50.<br><br>Ao fundo existe uma casa abandonada. Nenhum morador se aproxima daquele lugar.',[['Até mais',closeAll]])});
 NEWNPCS.push({id:'amz68_casa_placa',n:'Vestígios na Casa',map:AMZ68.house,x:11,y:7,sign:1,wander:false,talk:()=>say('Vestígios na Casa','Cipós atravessam as tábuas. Um portal pulsa ao norte. Uma inscrição adverte: “Quando o coração surgir, suas raízes ainda o protegerão.”<br><br>Encontro recomendado para nível 50. Entre preparado.',[['Fechar',closeAll]])});
 function amz68Roll(base){const model=forgeModel(base),roll=forgeRoll(model);return makeCustom(base,{...roll.mods,n:IT[base].n,lv:50,amz68:1,price:Math.round(800*roll.mods[model.stat]/IT[base][model.stat])})}
-function amz68Eligible(cls=P.cls,arch=isArch()){return AMZ68_ITEMS.filter(k=>{const d=IT[k];return (!d.cls||d.cls===cls)&&(d.slot!=='weapon'||!!d.bow===arch)})}
+function amz68Eligible(cls=P.cls,arch=isArch()){return AMZ68_ITEMS.filter(k=>{const d=IT[k];return !elfShield(d)&&(!d.cls||d.cls===cls)&&(d.slot!=='weapon'||!!d.bow===arch)})}
 function amz68Craft(base){
  const it=IT[base],cost=it&&it.slot==='weapon'?20:12;
  if(!it||!it.amz68||!amz68Eligible().includes(base))return false;
@@ -9364,7 +9432,7 @@ function b70Bosses(r){return MONS.filter(o=>MON[o.type]?.boss&&b70Contains(r,o.m
 function b70RunFor(o){if(!P||!o||!MON[o.type]?.boss)return null;return b70State().runs[b70Key(o)]||null}
 function b70Members(r){
  if(!P.dead&&!r.blocked.player&&b70Contains(r,P.map,P.x,P.y))r.members.player={name:P.name,level:P.lvl,cls:P.cls};
- for(const b of BOTS)if(!b.dead&&!r.blocked[b.id]&&(b.follow&&b70Contains(r,P.map,P.x,P.y)||b70Contains(r,b.map,b.x,b.y)&&b._b70===r.id)){r.members[b.id]={name:b.n,level:b.lvl,cls:b.cls};b._b70=r.id;}
+ for(const b of BOTS)if(!b.dead&&!r.blocked[b.id]&&(followsPlayer(b)&&b70Contains(r,P.map,P.x,P.y)||b70Contains(r,b.map,b.x,b.y)&&b._b70===r.id)){r.members[b.id]={name:b.n,level:b.lvl,cls:b.cls};b._b70=r.id;}
 }
 function b70Touch(o){
  if(!o||o.dead||!MON[o.type]?.boss||!P)return null;
@@ -9393,7 +9461,7 @@ function b70Reset(r){
 }
 function b70Notice(r){say('Tentativa do chefe',r.status==='failed'?'Todos os participantes caíram. Esta tentativa terminou. Você pode preparar uma nova luta.':'Você morreu nesta tentativa e não pode retornar à luta. Aguarde os sobreviventes vencerem ou a tentativa terminar.<br><br>'+r.name+' · mortes: '+r.deaths+' · dano do chefe: +'+Math.round(r.deaths*10)+'%.',r.status==='failed'?[['Preparar nova tentativa',()=>{b70Reset(r);closeAll()}],['Continuar',closeAll]]:[['Entendi',closeAll]])}
 function b70FailCheck(r){if(r.status==='active'&&Object.keys(r.members).length&&Object.keys(r.members).every(id=>r.blocked[id])){r.status='failed';log('Tentativa encerrada: todos os participantes caíram.','bad');}}
-function b70Win(r){r.status='won';for(const b of BOTS)if(b._b70===r.id){b._b70=null;b.target=null;if(!b.dead&&!r.blocked[b.id]){b.follow=true;b.state='hunt';b.stateUntil=nowT+60000}}}
+function b70Win(r){r.status='won';for(const b of BOTS)if(b._b70===r.id){b._b70=null;b.target=null;if(!b.dead&&!r.blocked[b.id]){if(r.map!=='dg')b.follow=true;b.state='hunt';b.stateUntil=nowT+60000}}}
 function b70Death(id,map,x,y,name){
  let runs=b70Here(map,x,y).filter(r=>r.status==='active');
  if(!runs.length){const o=(MONBY[map]||[]).find(o=>!o.dead&&MON[o.type]?.boss&&(!B70_ROOTS.has(map)||o.aggro));if(o){const r=b70Touch(o);if(r)runs=[r]}}
@@ -9410,6 +9478,7 @@ function b70Capture(){
 function b70Restore(){
  const state=b70State();if(!state)return;
  for(const r of Object.values(state.runs))if(['active','failed'].includes(r.status)){
+  if(r.map==='dg'){r.status='expired';r.snapshot=[];r.bots=[];delete r.layouts;continue}
   if(r.boss==='morvan'){r.status='expired';r.snapshot=[];r.bots=[];continue;}
   for(const [key,data]of Object.entries(r.layouts||{}))if(!MAPS[key]){MAPS[key]={...data,t:new Uint8Array(data.t)};MONBY[key]=[];for(const [type,x,y]of data.spawns||[])if(MON[type])addMon(type,key,x,y,MON[type].lv[0]);}
   for(const s of r.snapshot||[]){let o=(MONBY[s.map]||[]).find(o=>o.type===s.type);if(!o&&!s.dead&&MON[s.type]?.boss&&MAPS[s.map])o=addMon(s.type,s.map,s.x,s.y,s.lv);if(o){Object.assign(o,{lv:s.lv,mhp:s.mhp,atk:s.atk,def:s.def,x:s.x,y:s.y,rx:s.x,ry:s.y,dead:s.dead,combatUntil:s.combatUntil,_b70id:r.id,_b70factor:s.factor||1});o.hp=s.hp;if(o.type==='kraken'&&s.mhp!==MON.kraken.hp){o.mhp=MON.kraken.hp;o.hp=s.dead?0:Math.max(1,Math.min(o.mhp,Math.round(o.mhp*s.hp/Math.max(1,s.mhp))))}if(s.bossHits?.length)o.bossHits=new Set(s.bossHits);}}
@@ -9448,7 +9517,7 @@ function b70Tick(){
  const oldDie=die,oldRevive=revive,oldBotDie=botDie,oldHit=hit,oldAttack=monAttack,oldBotHurt=botHurt,oldKill=kill,oldBotKill=botKill,oldTeleport=teleport,oldWalk=canWalk,oldSave=save_u,oldUpdate=update,oldTarget=botTarget,oldBegin=begin,oldGroup=grpCount,oldPlace=botPlace;
  die=function(by){if(!P||P.dead)return;const map=P.map,x=P.x,y=P.y;const runs=b70Death('player',map,x,y,P.name);const spot=P.tut?{map:'ship',x:7,y:10,name:'Navio'}:b70Spawn(map);b70State().respawn=spot;b70State().pendingDeath=true;
   const v=oldDie.apply(this,arguments);
-  for(const r of runs)for(const b of BOTS)if(b._b70===r.id&&!r.blocked[b.id]&&!b.dead){b.follow=false;b.target=null;b.state='boss';b.stateUntil=Infinity;}
+  for(const r of runs)for(const b of BOTS)if(b._b70===r.id&&!r.blocked[b.id]&&!b.dead){if(r.map!=='dg')b.follow=false;b.target=null;b.state='boss';b.stateUntil=Infinity;}
   $('#btnRevive').textContent='Renascer · '+spot.name;
   $('#deathTxt').textContent+=' Renascerá em: '+spot.name+'.'+(runs.length?' Você está fora desta tentativa.':'');save(true);return v;
  };
@@ -10550,6 +10619,7 @@ function v73IslandBuildings(cx,cy){
  else if(P.map===PEACE)houses=PEACE_HOUSES;
  else if(P.map==='kol_kar')houses=V75_KOL_BUILDINGS;
  else if(P.map===AMZ68.forest)houses=[{id:'casa_abandonada',x:11,y:8,w:11,h:7,door:[16,14],color:'#69584d',style:'ruin'}];
+ houses=houses.concat(ISLAND_FORGE_BUILDINGS[P.map]||[]);
  const palettes={healer:'#bc8958',forja:'#9b6752',alquimia:'#8a8757',bombas:'#ab8058',bank:'#a48359',depot:'#927855',hunts:'#97734e',home:'#ad8655',inn:'#a36f57'};
  for(const b of houses){
   const x=b.x*S-cx,y=b.y*S-cy,w=b.w*S,h=b.h*S;if(x+w<0||y+h<0||x>=cv.width||y>=cv.height)continue;
@@ -11169,7 +11239,7 @@ function kolForgeList(weapon){
   [...options,['Voltar',kolForge]]);
 }
 function kolForge(){
- say('Ferreira Saren','Forjo peças da Vigília Fúnebre com fragmentos do baú de Morvan. A forja é um serviço do cais de Kol Kar.',
+ say('Ferreira Saren','Forjo peças da Vigília Fúnebre com fragmentos do baú de Morvan. Você encontra minha oficina perto do cais de Kol Kar.',
   [['Armas de nível 350',()=>kolForgeList(true)],['Peças do set de nível 350',()=>kolForgeList(false)],['Até mais',closeAll]]);
 }
 v75Person('kol_ferreira','Ferreira Saren',V75_KOL,25,32,v75Pal('#5a4356','#77607d'),['Traga fragmentos da cripta.'],kolForge);
@@ -11182,7 +11252,7 @@ function kolMorvanLoot(base){
 function kolEligible(cls=P.cls,arch=isArch()){
  return KOL_ARMORY.map(([id])=>id).filter(id=>{
   const it=IT[id];
-  return (!it.cls||it.cls===cls)&&(it.slot!=='weapon'||!!it.bow===arch);
+  return !elfShield(it)&&(!it.cls||it.cls===cls)&&(it.slot!=='weapon'||!!it.bow===arch);
  });
 }
 function kolMorvanDefeated(mo){
@@ -11280,11 +11350,11 @@ function drawKolTerrain(map,camX,camY,x0,y0,x1,y1,waterFrame){
   }
   KOL_TERRAIN_CACHE.delete(key);KOL_TERRAIN_CACHE.set(key,chunk);
   if(KOL_TERRAIN_CACHE.size>12)KOL_TERRAIN_CACHE.delete(KOL_TERRAIN_CACHE.keys().next().value);
-  ctx.drawImage(chunk.canvas,startX*S-camX,startY*S-camY,size*S,size*S);
+  ctx.drawImage(chunk.canvas,...terrainRect(startX,startY,size,camX,camY));
  }
  if(waterFrame)for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){
   const t=getT(map,x,y);
-  if(t===TL.WATER||t===TL.PORTAL)ctx.drawImage(TILES[t][1],x*S-camX,y*S-camY,S,S);
+  if(t===TL.WATER||t===TL.PORTAL)ctx.drawImage(TILES[t][1],...terrainRect(x,y,1,camX,camY));
  }
 }
 
@@ -14047,7 +14117,7 @@ const ISL=[
  ['condenados','dos Condenados','Fortaleza dos Condenados',['ilha100','hunt_ilha100'],['malgor'],'fogo',108,'ilha100'],
  ['abismo','do Abismo','Abismo Eterno',['ilha260','hunt_ilha260'],['olho_abismo'],'sombra',300,'ilha260']
 ].filter(r=>r[3].some(m=>MAPS[m])&&r[4].some(b=>MON[b]));
-const ISL_BY={},ISL_MAP={},ISL_BOSS={},ISL_COST={weapon:8,armor:6,shield:5,helmet:4,legs:4,boots:4,amulet:4},ISL_RES=6;
+const ISL_BY={},ISL_MAP={},ISL_BOSS={},ISL_COST={weapon:8,armor:6,shield:5,helmet:4,legs:4,boots:4,amulet:4,ring:4},ISL_RES=6;
 for(const [key,nome,ilha,maps,bosses,el,lv,forge] of ISL){const I={key,nome,ilha,maps:maps.filter(m=>MAPS[m]),bosses:bosses.filter(b=>MON[b]),el,lv,forge};ISL_BY[key]=I;for(const m of I.maps)ISL_MAP[m]=I;for(const b of I.bosses)ISL_BOSS[b]=I}
 /* 1) elemento da ilha: monstros que só existem nela e os chefes */
 {const where={};for(const k in MAPS)for(const s of MAPS[k].spawns||[])(where[s[0]]=where[s[0]]||new Set()).add(k);
@@ -14055,7 +14125,7 @@ for(const [key,nome,ilha,maps,bosses,el,lv,forge] of ISL){const I={key,nome,ilha
   for(const b of I.bosses)MON[b].el=I.el;
   for(const m of I.maps)if(ZLV[m]&&!ZLV[m].includes(ELI[I.el]))ZLV[m]+=' · '+ELI[I.el]+' '+ELN[I.el]}}
 /* 2) itens: fragmento, set forjado (forte) e peças comuns (dropadas pelos monstros) */
-{const SL=[['espada','Espada','weapon','sword','knight',L=>({atk:1.55*L+8})],['cajado','Cajado','weapon','staff','mage',L=>({atk:1.55*L+8,mp:.6*L})],['armadura','Armadura','armor','armor',null,L=>({def:.28*L+3,hp:1.2*L})],['elmo','Elmo','helmet','helmet',null,L=>({def:.13*L+1,hp:.5*L})],['escudo','Escudo','shield','shield','knight',L=>({def:.17*L+2,hp:.4*L})],['tomo','Tomo','shield','book','mage',L=>({def:.15*L+1,mp:1.2*L})],['calca','Calça','legs','legs',null,L=>({def:.1*L+1,hp:.4*L})],['botas','Botas','boots','boots',null,L=>({def:.1*L+1,hp:.3*L})],['amuleto','Amuleto','amulet','amulet',null,L=>({hp:.5*L,mp:1.2*L})]];
+{const SL=[['espada','Espada','weapon','sword','knight',L=>({atk:1.55*L+8})],['cajado','Cajado','weapon','staff','mage',L=>({atk:1.55*L+8,mp:.6*L})],['armadura','Armadura','armor','armor',null,L=>({def:.28*L+3,hp:1.2*L})],['elmo','Elmo','helmet','helmet',null,L=>({def:.13*L+1,hp:.5*L})],['escudo','Escudo','shield','shield','knight',L=>({def:.17*L+2,hp:.4*L})],['tomo','Tomo','shield','book','mage',L=>({def:.15*L+1,mp:1.2*L})],['calca','Calça','legs','legs',null,L=>({def:.1*L+1,hp:.4*L})],['botas','Botas','boots','boots',null,L=>({def:.1*L+1,hp:.3*L})],['amuleto','Amuleto','amulet','amulet',null,L=>({hp:.5*L,mp:1.2*L})],['anel','Anel','ring','ring',null,L=>({hp:.4*L,mp:.6*L})]];
  for(const I of Object.values(ISL_BY)){const c=ELC[I.el],bn=MON[I.bosses[0]].n;
   IT['frag_isl_'+I.key]={n:'Fragmento '+(I.bosses.length>1?'de '+I.ilha:'de '+bn),ic:'frag',c,price:Math.round(30+I.lv*4),loot:1,desc:`Dropado pelo chefe de ${I.ilha}. Forja o Set ${I.nome} (nível ${I.lv}) na forja da ilha.`};
   I.pieces={};I.weak={};
@@ -14070,12 +14140,12 @@ for(const [key,nome,ilha,maps,bosses,el,lv,forge] of ISL){const I={key,nome,ilha
    if(slot==='weapon'&&cls==='knight')for(const id of [sid,wid])if(!IT[id+'_b'])IT[id+'_b']=Object.assign({},IT[id],{n:IT[id].n.replace(/^Espada/,'Arco'),ic:'bow',bow:1,twin:id});
    I.pieces[sk]=sid;I.weak[sk]=wid}}}
 {const sk=setKey_t;setKey_t=function(id){const it=IT[id];if(it){const b=IT[it.base||id];const k=(b&&b.islSet)||it.islSet;if(k)return 'isl_'+k}return sk.apply(this,arguments)};for(const I of Object.values(ISL_BY))if(!SETNAME[I.key])SETNAME['isl_'+I.key]=I.nome}
-function islSlots(){const m=P&&P.cls==='mage';return ['armadura','elmo','calca','botas','amuleto',m?'cajado':'espada',m?'tomo':'escudo']}
+function islSlots(){const m=P&&P.cls==='mage';return ['armadura','elmo','calca','botas','amuleto',m?'cajado':'espada',...(m?['tomo']:P.fac==='elfo'?['anel']:['escudo'])]}
 /* 3) drops: chefe → fragmentos; monstros da ilha → peça comum (rara) */
 {const killB=kill;kill=function(mo){const alive=mo&&!mo.dead;const r=killB.apply(this,arguments);
   try{if(alive&&mo.dead&&!mo.e4sum){const B=ISL_BOSS[mo.type];
-   if(B&&ISL_MAP[mo.map]===B){const n=2+(R()<.5?1:0),id='frag_isl_'+B.key;if(islDrop(mo,id,n)){text(mo,'+'+n+' '+IT[id].n,ELC[B.el],1800);log(`${MON[mo.type].n} deixou ${n} ${IT[id].n} no corpo. Leve à forja de ${B.ilha}.`,'lv')}}
-   else{const I=ISL_MAP[mo.map];if(I&&!MON[mo.type].boss&&!mo.tmp&&R()<.012*(1+buffV('drop'))){const sk=islSlots()[(R()*7)|0],id=I.weak[sk];if(id&&islDrop(mo,id,1)){const it=IT[arConv(id)]||IT[id];text(mo,it.n,'#c0c0c0',1600);log('Peça comum de '+I.ilha+' no corpo: '+it.n+'.','loot')}}}}}catch(e){console.error(e)}
+   if(B&&mo.bossPaidPlayer!==false&&ISL_MAP[mo.map]===B){const n=2+(R()<.5?1:0),id='frag_isl_'+B.key;if(islDrop(mo,id,n)){text(mo,'+'+n+' '+IT[id].n,ELC[B.el],1800);log(`${MON[mo.type].n} deixou ${n} ${IT[id].n} no corpo. Leve à forja de ${B.ilha}.`,'lv')}}
+   else{const I=ISL_MAP[mo.map];if(!MON[mo.type].boss&&!mo.tmp&&R()<.012*(1+buffV('drop'))){const id=monsterElementGear(mo,I);if(id&&islDrop(mo,id,1)){const it=IT[arConv(id)]||IT[id];text(mo,it.n,'#c0c0c0',1600);log('Equipamento elemental no corpo: '+it.n+'.','loot')}}}}}catch(e){console.error(e)}
   return r}}
 /* o Set dos Espinhos e o de Âmbar seguem a mesma regra: sem peças prontas dos monstros e do chefe */
 for(const k of Object.keys(E4_DROP))delete E4_DROP[k];
@@ -14167,7 +14237,7 @@ function islForge(key,who){const I=ISL_BY[key],fid='frag_isl_'+key,have=countIte
 <script>
 /* ===== Mural de Missões e Forja da Ilha: um de cada por ilha, em locais próprios; forja com vitrine; regras gerais ===== */
 'use strict';
-function islDrop(mo,id,q){const CP=[...CORPSE].reverse().find(c=>c.map===mo.map&&c.name===MON[mo.type].n);if(!CP)return addItem(id,q);CP.loot=CP.loot||[];const e=!IT[id].slot&&CP.loot.find(o=>o.id===id);if(e)e.q+=q;else CP.loot.push({id,q});CP.keep=nowT+120000;return true}
+function islDrop(mo,id,q){const CP=CORPSE.findLast(c=>c.map===mo.map&&c.x===mo.x&&c.y===mo.y&&c.name===MON[mo.type].n);if(!CP)return false;CP.loot=CP.loot||[];const e=!IT[id].slot&&CP.loot.find(o=>o.id===id);if(e)e.q+=q;else CP.loot.push({id,q});CP.keep=nowT+120000;return true}
 /* --- grupos: todas as áreas de uma ilha usam o mesmo mural --- */
 var MQ_GROUP={},MQ_MAIN={};
 {const set=(map,main)=>{if(MQ_BOARDS[map]&&MQ_BOARDS[main])MQ_GROUP[map]=main};
@@ -14198,10 +14268,7 @@ elfTile('FORGEFLOOR',(g,r,v)=>{px(g,0,0,16,16,'#4a4a54');for(let y=0;y<16;y+=8)f
   const p=anchor?spot(m,main,anchor.x,anchor.y,2,12,n):(free3(m,main,n.x,n.y,n)?[n.x,n.y]:spot(m,main,n.x,n.y,1,10,n));
   if(p){n.x=p[0];n.y=p[1];B.x=p[0];B.y=p[1];delete MQ_PTS[main]}
   pad(m,main,n.x,n.y,ELF_T.MQFLOOR);delete n.sign;Object.assign(n,{n:'Mural de Missões',still:1,img0:MURAL_IMG,lines:['Missões do dia!']})}
- /* forjas: longe do mural, com piso de pedra e bigorna */
- for(const I of Object.values(ISL_BY)){const n=NEWNPCS.find(o=>o.id==='forja_'+I.key);if(!n)continue;const m=MAPS[I.forge],B=MQ_BOARDS[MQ_GROUP[I.forge]||I.forge]||{x:n.x,y:n.y};
-  const one=(dmin,dmax)=>{const seen=new Map([[B.x+','+B.y,0]]),q=[[B.x,B.y]];while(q.length){const [x,y]=q.shift(),d=seen.get(x+','+y);if(d>=dmin&&plain(m,I.forge,x,y)&&!taken(I.forge,x,y,n))return[x,y];if(d>dmax)continue;for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const k=(x+dx)+','+(y+dy);if(!seen.has(k)&&walk(m,I.forge,x+dx,y+dy)){seen.set(k,d+1);q.push([x+dx,y+dy])}}}return null};const p=spot(m,I.forge,B.x,B.y,5,14,n)||spot(m,I.forge,B.x,B.y,4,24,n)||one(5,30);if(p){n.x=p[0];n.y=p[1];I.fx=p[0];I.fy=p[1]}
-  pad(m,I.forge,n.x,n.y,ELF_T.FORGEFLOOR);delete n.sign;Object.assign(n,{n:'Forja da Ilha',still:1,img0:FORJA_IMG,lines:['Set '+I.nome]})}}
+}
 /* --- mural: escolha a área da ilha, depois as missões --- */
 function mqHead(main){const I=ISL_MAP[main];return I?`<div style="margin:0 0 8px;padding:6px 8px;border-radius:6px;background:rgba(127,127,127,.12)">${ELI[I.el]} <b>Elemento da ilha: ${ELN[I.el]}</b><br><small>Chefe: ${I.bosses.map(b=>MON[b].n).join(', ')} · dropa fragmentos do <b>Set ${I.nome}</b> (nível ${I.lv}), forjado na <b>Forja da Ilha</b>.</small></div>`:''}
 function mqArea(map){const B=MQ_BOARDS[map];if(!B)return;const main=MQ_GROUP[map]||map,L=mqMissions(map),nm=MAPN[map]||map;
@@ -14326,8 +14393,8 @@ function bossCdTxt(ms){const m=Math.ceil(ms/60000);return m>=60?Math.floor(m/60)
  const esc2=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
  const tick=()=>{try{if(typeof P==='undefined'||!P)return;
    /* equipamentos */
-   const sig=CELLS.map(([s])=>s==='bag'?'':(P.eq&&P.eq[s])||'').join('|');
-   if(sig!==eqSig){eqSig=sig;for(const b of eqq.children){const s=b.dataset.s;if(s==='bag')continue;const id=P.eq&&P.eq[s];b.innerHTML=id&&IT[id]?`<img src="${itemIcon(id)}" alt="${esc2(IT[id].n)}">`:`<span class="ph">${b.dataset.ph}</span>`;b.title=id&&IT[id]?IT[id].n:(SLOTN[s]||'')+' (vazio)'}}
+   const sig=P.fac+'|'+P.cls+'|'+CELLS.map(([s])=>s==='bag'?'':(P.eq&&P.eq[s])||'').join('|');
+   if(sig!==eqSig){eqSig=sig;for(const b of eqq.children){const s=b.dataset.s;if(s==='bag')continue;b.hidden=s==='shield'&&P.fac==='elfo'&&P.cls==='knight';const id=P.eq&&P.eq[s];b.innerHTML=id&&IT[id]?`<img src="${itemIcon(id)}" alt="${esc2(IT[id].n)}">`:`<span class="ph">${b.dataset.ph}</span>`;b.title=id&&IT[id]?IT[id].n:(SLOTN[s]||'')+' (vazio)'}}
    /* missão rastreada */
    const tb=document.getElementById('nbBox');let title='',txt='',hint='',x='';
    if(tb&&tb.textContent.trim()&&((typeof nbOn==='function'&&nbOn())||(P.map==='ship'&&P.tut))){const c=tb.cloneNode(true);c.querySelectorAll('button').forEach(b=>b.remove());const parts=c.textContent.replace(/\s+/g,' ').trim();const m=/^(📘?\s*(?:Tutorial\s*\d+\/\d+|Fuga do navio))\s*(.*)$/.exec(parts);title=m?m[1]:'📘 Tutorial';txt=m?m[2]:parts;if(tb.querySelector('button'))x='<button class="xt" aria-label="Parar de rastrear o tutorial">×</button>'}
@@ -14336,9 +14403,6 @@ function bossCdTxt(ms){const m=Math.ceil(ms/60000);return m>=60?Math.floor(m/60)
     else{title='📜 Missões';txt='Nenhuma missão rastreada.';hint='Toque aqui para escolher'}}
    const html=`<b>${esc2(title)}</b><span class="tx">${esc2(txt)}</span>${hint?`<span class="hint">${esc2(hint)}</span>`:''}${x}<button class="tg" aria-label="${mode==='eq'?'Mostrar setas de direção':'Mostrar equipamentos'}">${mode==='eq'?'✥':'🛡'}</button>`;
    if(html!==last){last=html;box.innerHTML=html}
-   /* textos de cima não se atravessam: alvo e chat ficam logo abaixo do painel do jogador */
-   const hud=document.getElementById('hud'),tg=document.getElementById('targetBox'),ch=document.getElementById('chatBox');
-   if(hud){let y=hud.offsetTop+hud.offsetHeight+4;if(tg){tg.style.top=y+'px';if(!tg.hidden)y+=tg.offsetHeight+4}if(ch)ch.style.top=y+'px'}
   }catch(e){}};
  setInterval(tick,400);
 }
@@ -14370,7 +14434,7 @@ setInterval(()=>{try{const p=document.getElementById('pickCard'),l=document.getE
 
 <style>
 /* barra de baixo mais alta */
-#ctrl{--bh:calc(var(--b)*1.4);padding-block:10px}
+#ctrl{--bh:clamp(39px,calc(var(--b)*1.58),62px);padding-block:10px}
 #eqq,#pad{grid-template-rows:repeat(3,var(--bh))}
 #qbag{grid-auto-rows:var(--bh)!important;height:calc(var(--bh)*3 + 6px)!important}
 #midCol #hot .sk{height:var(--bh)}
@@ -14379,4 +14443,201 @@ setInterval(()=>{try{const p=document.getElementById('pickCard'),l=document.getE
 #mqBox b{font-size:11px;margin-bottom:3px}
 #mqBox .tx{-webkit-line-clamp:4}
 #mqBox .hint{font-size:11px;margin-top:4px}
+#eqq button[hidden]{display:none}
 </style>
+
+<script>
+'use strict';
+
+const ISLAND_FORGE_BUILDINGS=Object.create(null);
+
+function forgeHouseSpot(map,anchor,npc){
+ const m=MAPS[map],portals=m.portals;
+ const occupiedTiles=new Set(npcList().filter(n=>n.id!==npc.id&&n.map===map).map(n=>n.x+','+n.y));
+ const reserved=new Set(portals.flatMap(p=>[[p.x,p.y],[p.x,p.y+1]]).map(p=>p.join(',')));
+ const walkable=(x,y)=>x>0&&y>0&&x<m.w-1&&y<m.h-1&&!SOLID.has(getT(m,x,y))&&getT(m,x,y)!==TL.WATER&&!DSOL.has(map+','+x+','+y);
+ const free=(x,y)=>walkable(x,y)&&!reserved.has(x+','+y)&&!occupiedTiles.has(x+','+y)&&![TL.BRIDGE,TL.PLANK,TL.EXIT,TL.STAIRS,TL.PORTAL,TL.CHEST,TL.CHESTO,TL.LAVA].includes(getT(m,x,y));
+ const start=anchor||{x:m.w>>1,y:m.h>>1};
+ const queue=[[start.x,start.y,0]],seen=new Set([start.x+','+start.y]);
+ for(let i=0;i<queue.length;i++){
+  const [x,y,d]=queue[i];
+  for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+   const a=x+dx,b=y+dy,k=a+','+b;
+   if(!seen.has(k)&&walkable(a,b)&&!reserved.has(k)){seen.add(k);queue.push([a,b,d+1])}
+  }
+ }
+ let best=null,score=Infinity;
+ for(const [w,h] of [[5,4],[3,3]]){
+  for(const [dx,dy,d] of queue){
+   const x=dx-(w>>1),y=dy-h;
+   if(!free(dx,dy)||!free(dx,dy+1))continue;
+   let clear=true;
+   for(let b=y-1;b<=dy&&clear;b++)for(let a=x-1;a<=x+w;a++)if(!free(a,b)){clear=false;break}
+   if(!clear)continue;
+   const road=getT(m,dx,dy)===TL.STONE;
+   const value=Math.abs(d-8)+(road?8:0)+(inSafe(m,dx,dy)?0:5);
+   if(value<score){score=value;best={x,y,w,h,door:[dx,dy-1],out:[dx,dy]}}
+  }
+  if(best)return best;
+ }
+ return null;
+}
+
+function buildIslandForge(map,key,name,npc,anchor){
+ const site=forgeHouseSpot(map,anchor,npc);
+ if(!site)return false;
+ const {x,y,w,h,door:[dx,dy],out:[ox,oy]}=site,id='casa_forja_'+key,m=MAPS[map];
+ const room=M(13,9,ELF_T.FORGEFLOOR,TL.WALL);
+ box(room,0,0,12,8,TL.WALL,ELF_T.FORGEFLOOR);
+ setT(room,6,8,TL.EXIT);
+ room.safe.push([0,0,12,8]);
+ room.portals.push({x:6,y:8,to:map,tx:ox,ty:oy});
+ MAPS[id]=room;MAPN[id]=name;HOUSES.add(id);
+ deco(id,3,1,'hearth',2,1,false);deco(id,9,2,'barrel');deco(id,2,5,'crate');
+ fill(m,x,y,x+w-1,y+h-1,TL.WALL);
+ setT(m,dx,dy,ELF_T.FORGEFLOOR);
+ m.safe.push([dx,dy,ox,oy]);
+ m.spawns=m.spawns.filter(([,a,b])=>a<x||a>=x+w||b<y||b>=y+h);
+ addDoor({map,x:dx,y:dy,name,ico:'⚒',to:id,tx:6,ty:7});
+ (ISLAND_FORGE_BUILDINGS[map]||=[]).push({id,x,y,w,h,door:[dx,dy],out:[ox,oy],color:'#916446',style:'house'});
+ Object.assign(npc,{map:id,x:6,y:3,hx:6,hy:3,rx:6,ry:3,wander:false,still:1});
+ if(npc.img0===FORJA_IMG||npc.id.startsWith('forja_')){delete npc.sign;npc.img0=FORJA_IMG}
+ if(!NEWNPCS.includes(npc))NEWNPCS.push(npc);
+ return true;
+}
+
+{
+ for(const I of Object.values(ISL_BY)){
+  const id='forja_'+I.key;
+  let n=NEWNPCS.find(o=>o.id===id);
+  const name=I.key==='selva'?'Forja das Raízes':'Forja de '+I.ilha;
+  if(!n)n={id,n:name,still:1,wander:false,img0:FORJA_IMG,talk:()=>islForge(I.key,name)};
+  n.n=name;
+  if(I.key==='selva'&&MAPS.amz63_forja){
+   HOUSES.add('amz63_forja');
+   Object.assign(n,{map:'amz63_forja',x:10,y:4,img0:FORJA_IMG,wander:false,still:1});
+   delete n.sign;if(!NEWNPCS.includes(n))NEWNPCS.push(n);
+   continue;
+  }
+  const anchor=PORTS[I.forge]||MQ_BOARDS[I.forge]||n;
+  if(!buildIslandForge(I.forge,I.key,name,n,anchor))throw new Error('Sem espaço para '+name);
+  const artisans={espinho:'e4_ilvana',ambar:'e4_fenwe'};
+  const artisan=NEWNPCS.find(o=>o.id===artisans[I.key]);
+  if(artisan)Object.assign(artisan,{map:n.map,x:8,y:3,wander:false});
+ }
+ const extra=[
+  ['kol_kar','vigilia','Forja da Vigília','kol_ferreira'],
+  ['ilha_selos','cinco_selos','Forja dos Cinco Selos','runa']
+ ];
+ for(const [map,key,name,id] of extra){
+  const n=NEWNPCS.find(o=>o.id===id);
+  if(n&&!buildIslandForge(map,key,name,n,PORTS[map]))throw new Error('Sem espaço para '+name);
+ }
+ for(const [map,key,name,anchor] of [
+  ['ilha230','nuvens','Forja das Nuvens Partidas',PORTS.ilha230],
+  [PEACE,'peace','Forja de Peace',MAPS[PEACE].portals[0]]
+ ]){
+  const n={id:'forja_'+key,n:name,img0:FORJA_IMG,talk:()=>workstationMenu('ferreiro')};
+  if(!buildIslandForge(map,key,name,n,anchor))throw new Error('Sem espaço para '+name);
+ }
+}
+
+function elementalHuntingGear(el,lv,slot){
+ const lvBand=Math.max(1,Math.min(500,lv<10?lv:lv<50?Math.floor(lv/10)*10:Math.floor(lv/25)*25));
+ const id='caca_'+el+'_'+lvBand+'_'+slot;
+ if(IT[id])return id;
+ const armor=slot==='armor',weapon=slot==='weapon',staff=slot==='cajado',name={armor:'Armadura',amulet:'Amuleto',weapon:'Espada',cajado:'Cajado'}[slot];
+ const it={n:name+' de Caça '+ELDE[el],lv:lvBand,slot:staff?'weapon':slot,ic:staff?'staff':weapon?'sword':slot,c:ELC[el],price:Math.round(45+lvBand*10+lvBand*lvBand*.22),noDrop:1};
+ if(weapon||staff)Object.assign(it,{el,atk:Math.round(lvBand*1.24+6),cls:staff?'mage':'knight'});
+ else Object.assign(it,{res:{[el]:lvBand<10?5:3},hp:Math.round(lvBand*.55+4),...(armor?{def:Math.round(lvBand*.22+2)}:{})});
+ IT[id]=it;
+ if(weapon)IT[id+'_b']={...it,n:it.n.replace('Espada','Arco'),ic:'bow',bow:1,twin:id};
+ return id;
+}
+
+const huntingElements=map=>[...new Set((MAPS[map].spawns||[]).map(([type])=>MON[type]?.el).filter(el=>ELS.includes(el)))];
+function starterProtection(){
+ return huntingElements(P.fac==='elfo'?'sylvaren':'over').flatMap(el=>[
+  elementalHuntingGear(el,1,'amulet'),elementalHuntingGear(el,5,'armor')
+ ]);
+}
+function monsterElementGear(mo,area){
+ const el=MON[mo.type].el;
+ if(!ELS.includes(el))return null;
+ if(area?.el===el)return area.weak[pick(islSlots())];
+ return elementalHuntingGear(el,mo.lv||MON[mo.type].lv[0],pick(['armor','amulet',P.cls==='mage'?'cajado':'weapon']));
+}
+
+{
+ // Register deterministic item IDs before saves are read.
+ for(const el of ELS)for(const lv of [1,2,3,4,5,6,7,8,9,10,20,30,40,...Array.from({length:19},(_,i)=>50+i*25)])
+  for(const slot of ['armor','amulet','weapon','cajado'])elementalHuntingGear(el,lv,slot);
+ const sylwen=NEWNPCS.find(n=>n.id==='sylwen');
+ if(sylwen){
+  const talk=sylwen.talk;
+  sylwen.talk=()=>say(sylwen.n,'Equipamentos e proteção para as primeiras caçadas.',[
+   ['Armas e equipamentos',talk],['Proteção elemental',()=>shop(sylwen.n,'Proteção contra os elementos dos monstros das primeiras caçadas.',starterProtection())],['Fechar',closeAll]
+  ]);
+ }
+ const prevPrep=prepPlayer;
+ prepPlayer=function(){
+  const house=(ISLAND_FORGE_BUILDINGS[P.map]||[]).find(b=>P.x>=b.x&&P.x<b.x+b.w&&P.y>=b.y&&P.y<b.y+b.h);
+  if(house&&SOLID.has(getT(MAPS[P.map],P.x,P.y)))[P.x,P.y]=house.out;
+  if(P?.eq?.shield&&elfShield(IT[P.eq.shield])){
+   const id=P.eq.shield;P.eq.shield=null;
+   if(!addItem(id))(P.depot||=[]).push({id,q:1});
+  }
+  prevPrep.apply(this,arguments);
+ };
+ const oldCanForge=forgeBlock;
+ forgeBlock=function(lv,id,ore){
+  if(elfShield(IT[id]))return 'Elfos não usam escudos.';
+  return oldCanForge(lv,id,ore);
+ };
+}
+
+{
+ const m=M(36,27,TL.WATER,TL.WATER);
+ fill(m,5,4,30,21,TL.GRASS);
+ fill(m,15,10,22,21,TL.STONE);
+ for(let x=6;x<=29;x+=3){setT(m,x,5,TL.PINE);setT(m,x,8,TL.PINE)}
+ for(let y=22;y<=25;y++)for(let x=17;x<=19;x++)setT(m,x,y,TL.PLANK);
+ setT(m,20,25,TL.BOAT);
+ m.safe.push([5,4,30,25]);
+ MAPS[DG_ISLAND]=m;MAPN[DG_ISLAND]='Ilha das Masmorras';ZLV[DG_ISLAND]='Nível 350+';
+ OUTDOOR.add(DG_ISLAND);
+ PORTS[DG_ISLAND]={map:DG_ISLAND,x:18,y:21,npc:'porto_masmorras',n:'Ilha das Masmorras (nível 350+)',minLevel:DG_LEVEL};
+ const sera=NEWNPCS.find(n=>n.id==='sera');
+ Object.assign(sera,{map:DG_ISLAND,x:18,y:10,still:1,wander:false});
+ NEWNPCS.push({id:'porto_masmorras',n:'Barqueira Mirela',map:DG_ISLAND,x:20,y:21,still:1,wander:false,
+  pal:{h:'#442c30',c:'#3b6574',d:'#253b52'},talk:()=>travel('Barqueira Mirela',DG_ISLAND)});
+ const forge={id:'forja_masmorras',n:'Forja das Masmorras',img0:FORJA_IMG,talk:()=>workstationMenu('ferreiro')};
+ if(!buildIslandForge(DG_ISLAND,'masmorras',forge.n,forge,PORTS[DG_ISLAND]))throw new Error('Sem espaço para '+forge.n);
+ const previousTeleport=teleport;
+ teleport=function(pt){
+  if(P&&pt?.to&&!dungeonVisible(pt.to))return false;
+  if(P&&pt?.to==='dg'&&(![DG_ISLAND,'dg'].includes(P.map)||!MAPS.dg))return false;
+  const wasInside=P?.map==='dg';
+  const result=previousTeleport.apply(this,arguments);
+  if(wasInside&&P.map!=='dg'){
+   for(const b of BOTS)if(b.map==='dg')botGo(b,DG_ISLAND,'town');
+   dungeonRoster.clear();
+   for(let i=CORPSE.length-1;i>=0;i--)if(CORPSE[i].map==='dg')CORPSE.splice(i,1);
+  }
+  return result;
+ };
+ const previousBotDeath=botDie;
+ botDie=function(b){
+  if(b.map!=='dg')return previousBotDeath.apply(this,arguments);
+  const previousFollow=b.follow;
+  dungeonRoster.delete(b.id);
+  const result=previousBotDeath.apply(this,arguments);
+  b.follow=previousFollow;
+  return result;
+ };
+ const spawn=b70Spawn;
+ b70Spawn=function(map){
+  return ['dg',DG_ISLAND,'casa_forja_masmorras'].includes(map)?{...DG_EXIT,name:'Ilha das Masmorras'}:spawn.apply(this,arguments);
+ };
+}
+</script>
